@@ -143,13 +143,13 @@ function formatSheetPhanCa(sheet) {
       const cell = sheet.getRange(r + 1, c + 1);
 
       if (v === 'TN') {
-        cell.setBackground('#dbeafe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'KHO') {
-        cell.setBackground('#dcfce7').setFontColor('#15803d').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#ffedd5').setFontColor('#c2410c').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'X') {
         cell.setBackground('#fee2e2').setFontColor('#dc2626').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'HC') {
-        cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#e0f2fe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
       }
     }
   }
@@ -437,13 +437,13 @@ function saveScheduleToSheet(payload) {
             const cell = sheet.getRange(staffItem.row, wConfig.dayStart + d);
             const val = String(newVals[d] || '').trim().toUpperCase();
             if (val === 'TN') {
-              cell.setBackground('#dbeafe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'KHO') {
-              cell.setBackground('#dcfce7').setFontColor('#15803d').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#ffedd5').setFontColor('#c2410c').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'X') {
               cell.setBackground('#fee2e2').setFontColor('#dc2626').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'HC') {
-              cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#e0f2fe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
             } else {
               cell.setBackground('#ffffff').setFontColor('#000000').setFontWeight('normal').setHorizontalAlignment('center');
             }

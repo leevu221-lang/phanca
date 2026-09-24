@@ -193,29 +193,26 @@ function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData) {
       else if (upperVal === 'KHO') khoCount++;
       else if (upperVal === 'X') offCount++;
 
-      let cellClass = 'shift-cell';
-      let displayText = shiftVal;
-
+      let cellContent = '';
       if (upperVal === 'TN') {
-        cellClass += ' cell-shift-tn';
+        cellContent = '<span class="shift-badge badge-tn">TN</span>';
       } else if (upperVal === 'KHO') {
-        cellClass += ' cell-shift-kho';
+        cellContent = '<span class="shift-badge badge-kho">KHO</span>';
       } else if (upperVal === 'HC') {
-        cellClass += ' cell-shift-hc';
+        cellContent = '<span class="shift-badge badge-hc">HC</span>';
       } else if (upperVal === 'X') {
-        cellClass += ' cell-shift-off';
+        cellContent = '<span class="shift-badge badge-off">x</span>';
       } else {
-        cellClass += ' cell-shift-empty';
-        displayText = '-';
+        cellContent = '<span class="shift-empty">-</span>';
       }
 
       const isSunday = day === 'CN';
       daysHtml += `
-        <td class="${cellClass} ${isSunday ? 'col-sunday' : ''}" 
+        <td class="shift-cell ${isSunday ? 'col-sunday' : ''}" 
             data-staff="${staffName}" 
             data-day="${day}" 
             data-week="${AppState.currentWeek}">
-          ${displayText}
+          ${cellContent}
         </td>
       `;
     });
@@ -232,7 +229,7 @@ function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData) {
         </div>
       </td>
       <td class="col-group">
-        <span class="badge ${groupNum === 1 ? 'pill-tn' : 'pill-kho'}" style="font-size: 0.72rem; padding: 2px 6px;">
+        <span class="badge ${groupNum === 1 ? 'pill-group-1' : 'pill-group-2'}" style="font-size: 0.72rem; padding: 2px 6px;">
           Nhóm ${groupNum}
         </span>
       </td>
@@ -297,18 +294,22 @@ function renderAllWeeksView(container) {
         else if (upperVal === 'KHO') khoCount++;
         else if (upperVal === 'X') offCount++;
 
-        let cellClass = 'shift-cell';
-        let displayText = shiftVal;
-
-        if (upperVal === 'TN') cellClass += ' cell-shift-tn';
-        else if (upperVal === 'KHO') cellClass += ' cell-shift-kho';
-        else if (upperVal === 'HC') cellClass += ' cell-shift-hc';
-        else if (upperVal === 'X') cellClass += ' cell-shift-off';
-        else { cellClass += ' cell-shift-empty'; displayText = '-'; }
+        let cellContent = '';
+        if (upperVal === 'TN') {
+          cellContent = '<span class="shift-badge badge-tn">TN</span>';
+        } else if (upperVal === 'KHO') {
+          cellContent = '<span class="shift-badge badge-kho">KHO</span>';
+        } else if (upperVal === 'HC') {
+          cellContent = '<span class="shift-badge badge-hc">HC</span>';
+        } else if (upperVal === 'X') {
+          cellContent = '<span class="shift-badge badge-off">x</span>';
+        } else {
+          cellContent = '<span class="shift-empty">-</span>';
+        }
 
         daysCells += `
-          <td class="${cellClass}" data-staff="${staffName}" data-day="${day}" data-week="${weekName}">
-            ${displayText}
+          <td class="shift-cell" data-staff="${staffName}" data-day="${day}" data-week="${weekName}">
+            ${cellContent}
           </td>
         `;
       });
@@ -400,7 +401,12 @@ function setupTableInteractions() {
       if (AppState.activeStamp === 'CLEAR') {
         newShift = '';
       } else {
-        newShift = AppState.activeStamp;
+        // Toggle: Click lần 1 gán ca, Click lần 2 nếu ô đã là ca đó thì xóa thành ô trống
+        if (currentShift.trim().toUpperCase() === AppState.activeStamp.trim().toUpperCase()) {
+          newShift = '';
+        } else {
+          newShift = AppState.activeStamp;
+        }
       }
     } else {
       // Chuột thường: xoay vòng ca (Trống -> TN -> KHO -> HC -> x -> Trống)
