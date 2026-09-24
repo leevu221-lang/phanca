@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Phân Ca Hành Chính - Tone Pastel Xanh Dương</title>
+  <meta name="description" content="Hệ thống phân ca hành chính tự động & trực quan, đồng bộ Google Sheet tức thì, xuất ảnh theo tuần và theo tháng.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- html2canvas for High Resolution Image Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-group">
+        <div class="brand-logo">
+          <i class="fa-solid fa-calendar-check"></i>
+        </div>
+        <div class="brand-info">
+          <h1 class="brand-title">PHÂN CA HÀNH CHÍNH</h1>
+          <p class="brand-subtitle">
+            <span class="sheet-tag"><i class="fa-solid fa-table-cells"></i> Sheet: <strong>phanca</strong></span>
+            <span class="dot-separator">•</span>
+            <span class="sync-status" id="syncStatus">
+              <span class="status-pulse"></span>
+              <span id="syncStatusText">Sẵn sàng đồng bộ</span>
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Google Sheet">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Đồng bộ ngay</span>
+        </button>
+        <button id="btnOpenSettings" class="btn btn-ghost" title="Cài đặt kết nối Google Apps Script">
+          <i class="fa-solid fa-gear"></i>
+          <span>Cài đặt API</span>
+        </button>
+        <button id="btnSaveToSheet" class="btn btn-primary" title="Lưu phân ca trực tiếp vào sheet phanca">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Lưu Vào Google Sheet</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Wrapper -->
+  <main class="main-content">
+    <div class="container">
+      
+      <!-- Notification Banner / Alert -->
+      <div id="alertBanner" class="alert-banner hidden">
+        <div class="alert-content">
+          <i id="alertIcon" class="fa-solid fa-circle-check"></i>
+          <span id="alertMessage">Thông báo</span>
+        </div>
+        <button class="alert-close" onclick="closeAlert()">&times;</button>
+      </div>
+
+      <!-- Quick Stats & Overview Cards -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon bg-blue-subtle">
+            <i class="fa-solid fa-users text-blue"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Tổng Nhân Viên</span>
+            <h3 class="stat-value" id="statTotalStaff">11 Người</h3>
+            <span class="stat-desc">Nhóm 1: 6 • Nhóm 2: 5</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bg-cyan-subtle">
+            <i class="fa-solid fa-cash-register text-cyan"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Ca Thu Ngân (TN)</span>
+            <h3 class="stat-value" id="statTNCount">0 Ca</h3>
+            <span class="stat-desc">Tuần đang chọn</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bg-emerald-subtle">
+            <i class="fa-solid fa-boxes-stacked text-emerald"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Ca Kho (KHO)</span>
+            <h3 class="stat-value" id="statKHOCount">0 Ca</h3>
+            <span class="stat-desc">Tuần đang chọn</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bg-indigo-subtle">
+            <i class="fa-solid fa-clock-rotate-left text-indigo"></i>
+          </div>
+          <div class="stat-details">
+            <span class="stat-label">Trạng Thái Lưu</span>
+            <h3 class="stat-value" id="statSaveState">Đã đồng bộ</h3>
+            <span class="stat-desc" id="statLastSavedTime">Chưa có thay đổi</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Control Bar: Month, Week & Filter Selection -->
+      <section class="control-panel card-panel">
+        <div class="control-row">
+          <!-- Month Selector -->
+          <div class="control-item">
+            <label class="control-label" for="selectMonth">
+              <i class="fa-regular fa-calendar"></i> Chọn Tháng
+            </label>
+            <div class="select-wrapper">
+              <select id="selectMonth" class="custom-select">
+                <option value="THÁNG 09">THÁNG 09</option>
+                <option value="THÁNG 10">THÁNG 10</option>
+                <option value="THÁNG 11">THÁNG 11</option>
+                <option value="THÁNG 12">THÁNG 12</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Week Tabs Selector -->
+          <div class="control-item flex-grow">
+            <label class="control-label">
+              <i class="fa-solid fa-list-check"></i> Chọn Tuần Xem & Phân Ca
+            </label>
+            <div class="week-tabs" id="weekTabs">
+              <button class="week-tab active" data-week="Tuần 1">Tuần 1</button>
+              <button class="week-tab" data-week="Tuần 2">Tuần 2</button>
+              <button class="week-tab" data-week="Tuần 3">Tuần 3</button>
+              <button class="week-tab" data-week="Tuần 4">Tuần 4</button>
+              <button class="week-tab all-weeks-tab" data-week="all">
+                <i class="fa-solid fa-table-columns"></i> Cả Tháng
+              </button>
+            </div>
+          </div>
+
+          <!-- Export Image Group -->
+          <div class="control-item export-group">
+            <label class="control-label">
+              <i class="fa-solid fa-camera"></i> Xuất Ảnh Bảng Ca
+            </label>
+            <div class="btn-group">
+              <button id="btnExportWeek" class="btn btn-export" title="Xuất ảnh tuần đang chọn thành file PNG">
+                <i class="fa-solid fa-image"></i>
+                <span>Ảnh Tuần</span>
+              </button>
+              <button id="btnExportMonth" class="btn btn-export-month" title="Xuất ảnh toàn bộ cả tháng 4 tuần">
+                <i class="fa-solid fa-panorama"></i>
+                <span>Ảnh Cả Tháng</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assignment Hub: "Phân Ca Ai" (Who works which shift) -->
+      <section class="assignment-hub card-panel">
+        <div class="hub-header">
+          <div class="hub-title">
+            <span class="hub-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân Ca "Ai"</span>
+            <h2>Gán Ca Cho Nhân Viên & Công Cụ Nhanh</h2>
+          </div>
+          <div class="hub-toggle-mode">
+            <button id="btnAutoRotateModal" class="btn btn-outline-primary">
+              <i class="fa-solid fa-rotate"></i>
+              <span>⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hub-body">
+          <!-- Sub-panel 1: Form Phân Ca Cho "Ai" -->
+          <div class="assign-form-box">
+            <h4 class="box-title"><i class="fa-solid fa-user-pen"></i> Form Phân Ca Cho Nhân Viên:</h4>
+            <div class="assign-inputs-grid">
+              <!-- Chọn Nhân Viên (Ai) -->
+              <div class="form-group">
+                <label for="assignStaffSelect"><i class="fa-solid fa-user"></i> Nhân viên (Ai):</label>
+                <select id="assignStaffSelect" class="custom-select">
+                  <optgroup label="🔵 Nhóm 1">
+                    <option value="NHẠN">NHẠN</option>
+                    <option value="MẠNH">MẠNH</option>
+                    <option value="MI">MI</option>
+                    <option value="MỸ">MỸ</option>
+                    <option value="GIANG Ý">GIANG Ý</option>
+                    <option value="NGỌC ANH">NGỌC ANH</option>
+                  </optgroup>
+                  <optgroup label="🟢 Nhóm 2">
+                    <option value="THẮM">THẮM</option>
+                    <option value="MY">MY</option>
+                    <option value="PHÚC">PHÚC</option>
+                    <option value="ĐẠI">ĐẠI</option>
+                    <option value="LÂM Ý">LÂM Ý</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <!-- Chọn Ca -->
+              <div class="form-group">
+                <label for="assignShiftSelect"><i class="fa-solid fa-tag"></i> Chọn Ca Làm:</label>
+                <select id="assignShiftSelect" class="custom-select">
+                  <option value="TN">💳 TN (Thu Ngân)</option>
+                  <option value="KHO">📦 KHO (Thủ Kho / Kho)</option>
+                  <option value="HC">🏢 HC (Hành Chính)</option>
+                  <option value="x">🏖️ x (Nghỉ Off)</option>
+                  <option value="">⚪ Trống (Xoá ca)</option>
+                </select>
+              </div>
+
+              <!-- Chọn Thứ trong tuần -->
+              <div class="form-group">
+                <label><i class="fa-solid fa-calendar-day"></i> Áp dụng các thứ:</label>
+                <div class="days-checkboxes" id="daysCheckboxes">
+                  <label class="day-check"><input type="checkbox" value="T2" checked> T2</label>
+                  <label class="day-check"><input type="checkbox" value="T3" checked> T3</label>
+                  <label class="day-check"><input type="checkbox" value="T4" checked> T4</label>
+                  <label class="day-check"><input type="checkbox" value="T5" checked> T5</label>
+                  <label class="day-check"><input type="checkbox" value="T6" checked> T6</label>
+                  <label class="day-check"><input type="checkbox" value="T7" checked> T7</label>
+                  <label class="day-check"><input type="checkbox" value="CN"> CN</label>
+                </div>
+              </div>
+
+              <!-- Nút Áp dụng -->
+              <div class="form-group form-actions">
+                <label>&nbsp;</label>
+                <div class="assign-buttons">
+                  <button id="btnApplyShift" class="btn btn-apply">
+                    <i class="fa-solid fa-check"></i> Áp Dụng Ca
+                  </button>
+                  <button id="btnApplyWorkDaysOnly" class="btn btn-outline" title="Chỉ áp dụng vào các ngày đi làm (giữ nguyên ngày nghỉ 'x')">
+                    <i class="fa-solid fa-filter"></i> Bỏ qua ngày nghỉ 'x'
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-panel 2: Quick Stamp Brushes (Bút phân ca trực tiếp) -->
+          <div class="stamp-brushes-box">
+            <div class="stamp-header">
+              <h4 class="box-title"><i class="fa-solid fa-paintbrush"></i> Bút Chọn Ca Nhanh:</h4>
+              <span class="stamp-tip">Chọn bút rồi click trực tiếp vào bất kỳ ô nào trên bảng để gán ngay!</span>
+            </div>
+            <div class="stamp-buttons">
+              <button class="stamp-btn active" data-stamp="none">
+                <i class="fa-solid fa-arrow-pointer"></i> Chuột thường
+              </button>
+              <button class="stamp-btn stamp-tn" data-stamp="TN">
+                <span class="badge-dot badge-tn"></span> Bút TN (Thu Ngân)
+              </button>
+              <button class="stamp-btn stamp-kho" data-stamp="KHO">
+                <span class="badge-dot badge-kho"></span> Bút KHO (Kho)
+              </button>
+              <button class="stamp-btn stamp-hc" data-stamp="HC">
+                <span class="badge-dot badge-hc"></span> Bút HC (Hành Chính)
+              </button>
+              <button class="stamp-btn stamp-off" data-stamp="x">
+                <span class="badge-dot badge-off"></span> Bút Nghỉ (x)
+              </button>
+              <button class="stamp-btn stamp-clear" data-stamp="CLEAR">
+                <i class="fa-solid fa-eraser"></i> Tẩy Xoá
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Schedule Display Area (This container is captured for Image Export) -->
+      <section class="schedule-export-container" id="scheduleExportArea">
+        <!-- Printable / Exportable Header -->
+        <div class="export-header-card">
+          <div class="export-branding">
+            <div class="export-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <div>
+              <h2 class="export-title" id="exportScheduleTitle">BẢNG PHÂN CA HÀNH CHÍNH - TUẦN 1 - THÁNG 09</h2>
+              <p class="export-meta">
+                <span>Cửa hàng / Bộ phận: 1841 - Hành Chính</span>
+                <span class="dot-separator">•</span>
+                <span id="exportDateStamp">Đồng bộ: 24/09/2026</span>
+                <span class="dot-separator">•</span>
+                <span>Lưu trữ: Google Sheets (phanca)</span>
+              </p>
+            </div>
+          </div>
+          <div class="export-legends">
+            <span class="legend-pill pill-tn"><strong>TN</strong> Thu Ngân</span>
+            <span class="legend-pill pill-kho"><strong>KHO</strong> Phụ Kho</span>
+            <span class="legend-pill pill-hc"><strong>HC</strong> Hành Chính</span>
+            <span class="legend-pill pill-off"><strong>x</strong> Nghỉ Off</span>
+          </div>
+        </div>
+
+        <!-- Weekly Single View Table Container -->
+        <div id="singleWeekView" class="table-card">
+          <div class="table-responsive">
+            <table class="schedule-table" id="scheduleTableSingle">
+              <thead>
+                <tr>
+                  <th class="col-stt">STT</th>
+                  <th class="col-name">NHÂN VIÊN</th>
+                  <th class="col-group">NHÓM</th>
+                  <th class="col-day">T2</th>
+                  <th class="col-day">T3</th>
+                  <th class="col-day">T4</th>
+                  <th class="col-day">T5</th>
+                  <th class="col-day">T6</th>
+                  <th class="col-day">T7</th>
+                  <th class="col-day col-sunday">CN</th>
+                  <th class="col-summary">Tổng TN</th>
+                  <th class="col-summary">Tổng KHO</th>
+                  <th class="col-summary">Số Ngày Nghỉ</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleTableBodySingle">
+                <!-- Rows injected dynamically via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All Weeks (Full Month) View Container -->
+        <div id="allWeeksMonthView" class="all-weeks-grid hidden">
+          <!-- 4 Weekly Tables stacked or grid injected by app.js -->
+        </div>
+
+        <!-- Schedule Footer Notes in Export Area -->
+        <div class="export-footer">
+          <div class="footer-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Quy tắc: Mỗi tuần mỗi nhóm có 1 người trực KHO và 1 người trực THU NGÂN. Ngày nghỉ ký hiệu 'x'.</span>
+          </div>
+          <div class="footer-sign">
+            <span>Người lập bảng: ................................</span>
+            <span>Quản lý xác nhận: ................................</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Floating / Sticky Save Toolbar -->
+      <div class="floating-save-bar" id="floatingSaveBar">
+        <div class="save-bar-content">
+          <div class="save-bar-info">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span id="unsavedChangesBadge" class="badge-changes">Chưa có thay đổi</span>
+          </div>
+          <div class="save-bar-buttons">
+            <button id="btnResetChanges" class="btn btn-secondary btn-sm" disabled>
+              <i class="fa-solid fa-rotate-left"></i> Hoàn tác
+            </button>
+            <button id="btnFloatingSave" class="btn btn-primary btn-sm">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Vào Sheet "phanca"
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Modal: Auto Rotate Shifts 4 Weeks (KHO & TN) -->
+  <div class="modal-backdrop hidden" id="modalAutoRotate">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-rotate text-blue"></i>
+          <h3>Tự Động Xoay Tua Ca KHO & Thu Ngân (4 Tuần)</h3>
+        </div>
+        <button class="modal-close" id="btnCloseAutoRotate">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Chọn nhân viên trực <strong>KHO</strong> và <strong>Thu Ngân (TN)</strong> cho <strong>Tuần 1</strong>. Hệ thống sẽ tự động tính toán xoay tua đều 4 tuần cho cả 2 nhóm, giữ nguyên tất cả ngày nghỉ 'x' của nhân viên.
+        </p>
+
+        <!-- Nhóm 1 Config -->
+        <div class="rotate-group-card">
+          <h4 class="group-title text-blue"><i class="fa-solid fa-circle-dot"></i> 🔵 Nhóm 1: NHẠN, MẠNH, MI, MỸ, GIANG Ý, NGỌC ANH</h4>
+          <div class="rotate-inputs">
+            <div class="form-group">
+              <label>Tuần 1 - Thu Ngân (TN):</label>
+              <select id="rotG1TN" class="custom-select">
+                <option value="NHẠN" selected>NHẠN</option>
+                <option value="MẠNH">MẠNH</option>
+                <option value="MI">MI</option>
+                <option value="MỸ">MỸ</option>
+                <option value="GIANG Ý">GIANG Ý</option>
+                <option value="NGỌC ANH">NGỌC ANH</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tuần 1 - Kho (KHO):</label>
+              <select id="rotG1KHO" class="custom-select">
+                <option value="NHẠN">NHẠN</option>
+                <option value="MẠNH">MẠNH</option>
+                <option value="MI" selected>MI</option>
+                <option value="MỸ">MỸ</option>
+                <option value="GIANG Ý">GIANG Ý</option>
+                <option value="NGỌC ANH">NGỌC ANH</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nhóm 2 Config -->
+        <div class="rotate-group-card">
+          <h4 class="group-title text-emerald"><i class="fa-solid fa-circle-dot"></i> 🟢 Nhóm 2: THẮM, MY, PHÚC, ĐẠI, LÂM Ý</h4>
+          <div class="rotate-inputs">
+            <div class="form-group">
+              <label>Tuần 1 - Thu Ngân (TN):</label>
+              <select id="rotG2TN" class="custom-select">
+                <option value="THẮM" selected>THẮM</option>
+                <option value="MY">MY</option>
+                <option value="PHÚC">PHÚC</option>
+                <option value="ĐẠI">ĐẠI</option>
+                <option value="LÂM Ý">LÂM Ý</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tuần 1 - Kho (KHO):</label>
+              <select id="rotG2KHO" class="custom-select">
+                <option value="THẮM">THẮM</option>
+                <option value="MY">MY</option>
+                <option value="PHÚC" selected>PHÚC</option>
+                <option value="ĐẠI">ĐẠI</option>
+                <option value="LÂM Ý">LÂM Ý</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Plan Table -->
+        <div class="rotate-preview-box">
+          <h5><i class="fa-solid fa-eye"></i> Xem Trước Kế Hoạch 4 Tuần:</h5>
+          <div class="preview-table-wrapper">
+            <table class="preview-table" id="rotatePreviewTable">
+              <thead>
+                <tr>
+                  <th>Tuần</th>
+                  <th>Nhóm 1 (TN)</th>
+                  <th>Nhóm 1 (KHO)</th>
+                  <th>Nhóm 2 (TN)</th>
+                  <th>Nhóm 2 (KHO)</th>
+                </tr>
+              </thead>
+              <tbody id="rotatePreviewBody">
+                <!-- Injected via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelAutoRotate">Huỷ Bỏ</button>
+        <button class="btn btn-primary" id="btnExecuteAutoRotate">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Áp Dụng Xoay Tua Vào Lịch
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Image Preview & Download -->
+  <div class="modal-backdrop hidden" id="modalImagePreview">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-file-image text-blue"></i>
+          <h3 id="imageModalTitle">Xem Trước Ảnh Phân Ca</h3>
+        </div>
+        <button class="modal-close" id="btnCloseImageModal">&times;</button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="modal-desc">Hình ảnh chất lượng cao sắc nét, sẵn sàng gửi qua Zalo / Facebook hoặc in ấn:</p>
+        <div class="image-preview-container">
+          <img id="exportedImageElement" src="" alt="Ảnh phân ca" class="img-fluid rounded shadow-sm">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnClosePreviewBtn">Đóng</button>
+        <a id="btnDownloadImageLink" href="#" download="Bang_Phan_Ca.png" class="btn btn-primary">
+          <i class="fa-solid fa-download"></i> Tải Ảnh PNG Về Máy
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Settings & Apps Script Web App URL -->
+  <div class="modal-backdrop hidden" id="modalSettings">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-gear text-blue"></i>
+          <h3>Cấu Hình Kết Nối Google Sheet</h3>
+        </div>
+        <button class="modal-close" id="btnCloseSettings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-form">
+          <div class="form-group">
+            <label for="inputScriptUrl"><strong>URL Web App (Google Apps Script):</strong></label>
+            <input type="text" id="inputScriptUrl" class="custom-input" placeholder="https://script.google.com/macros/s/.../exec">
+            <small class="form-hint">Dán đường dẫn Web App đã triển khai từ Google Sheets của bạn vào đây.</small>
+          </div>
+
+          <div class="info-guide-box">
+            <h4><i class="fa-solid fa-book-open"></i> Hướng Dẫn Lấy Link Web App trong 3 Bước:</h4>
+            <ol>
+              <li>Mở file Google Sheet <strong>1841 - CA HÀNH CHÍNH</strong> > Vào <strong>Tiện ích mở rộng</strong> > <strong>Apps Script</strong>.</li>
+              <li>Dán mã nguồn từ file <code>Code.gs</code> vào và bấm nút 💾 <strong>Lưu dự án</strong>.</li>
+              <li>Bấm nút <strong>Triển khai (Deploy)</strong> > <strong>Triển khai mới (New deployment)</strong> > Chọn loại <strong>Ứng dụng web (Web app)</strong>:
+                <ul>
+                  <li>Thực thi dưới dạng: <strong>Tôi (Me)</strong></li>
+                  <li>Ai có quyền truy cập: <strong>Bất kỳ ai (Anyone)</strong></li>
+                </ul>
+              </li>
+              <li>Sao chép URL Web App vừa tạo và dán vào ô bên trên rồi bấm <strong>Lưu cấu hình</strong>.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelSettings">Huỷ</button>
+        <button class="btn btn-primary" id="btnSaveSettings">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
