@@ -7,10 +7,10 @@
  * =========================================================================
  */
 
-// Tên sheet mục tiêu theo yêu cầu
+// Tên sheet mục tiêu theo yêu cầu tuyệt đối
 const TARGET_SHEET_NAME = "phanca";
 
-// Danh sách nhân viên chuẩn
+// Danh sách 11 nhân viên chuẩn (2 nhóm)
 const DEFAULT_STAFF = [
   { name: 'NHẠN', group: 1, defaultOff: ['T3', 'CN'] },
   { name: 'MẠNH', group: 1, defaultOff: ['T2', 'CN'] },
@@ -45,43 +45,40 @@ function onOpen() {
 }
 
 /**
- * Tạo hoặc lấy Sheet "phanca"
+ * Đảm bảo Sheet "phanca" luôn tồn tại và có đầy đủ dữ liệu cấu trúc
  */
-function getOrCreateTargetSheet() {
+function ensurePhanCaSheetReady() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(TARGET_SHEET_NAME);
+  
   if (!sheet) {
     sheet = ss.insertSheet(TARGET_SHEET_NAME);
   }
-  return sheet;
-}
 
-/**
- * Khởi tạo dữ liệu mẫu đẹp mắt cho Sheet "phanca" nếu chưa có dữ liệu
- */
-function initializePhanCaSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = getOrCreateTargetSheet();
-
-  // Kiểm tra nếu sheet "HC mới" có dữ liệu mẫu thì có thể sao chép qua
-  const srcSheet = ss.getSheetByName('HC mới') || ss.getSheetByName('Trang tính1');
-
-  if (sheet.getLastRow() < 4) {
+  // Nếu sheet phanca trống hoặc chưa có đủ dòng tháng (< 10 dòng)
+  if (sheet.getLastRow() < 10) {
+    const srcSheet = ss.getSheetByName('HC mới') || ss.getSheetByName('Trang tính1');
     if (srcSheet && srcSheet.getLastRow() >= 10) {
-      // Sao chép từ sheet gốc sang "phanca"
+      sheet.clear();
       const range = srcSheet.getDataRange();
       const vals = range.getValues();
-      sheet.clear();
       sheet.getRange(1, 1, vals.length, vals[0].length).setValues(vals);
     } else {
-      // Tự xây dựng khung bảng chuẩn 4 tháng, 4 tuần
       buildStandardTemplate(sheet);
     }
     formatSheetPhanCa(sheet);
   }
 
+  return sheet;
+}
+
+/**
+ * Khởi tạo dữ liệu mẫu đẹp mắt cho Sheet "phanca" nếu người dùng bấm trên menu
+ */
+function initializePhanCaSheet() {
+  const sheet = ensurePhanCaSheetReady();
   SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet);
-  SpreadsheetApp.getUi().alert('Thông báo', `Sheet "${TARGET_SHEET_NAME}" đã sẵn sàng và được đồng bộ định dạng!`, SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert('Thông báo', `Sheet "${TARGET_SHEET_NAME}" đã sẵn sàng và được đồng bộ dữ liệu chuẩn!`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /**
@@ -157,7 +154,7 @@ function formatSheetPhanCa(sheet) {
     }
   }
 
-  // Tinh chỉnh chiều cao các dòng cho cân xứng, gọn gàng
+  // Tinh chỉnh chiều cao các dòng cho cân xứng, gọn gàng (25px)
   try {
     sheet.setRowHeights(1, maxRow, 25);
   } catch (e) {}
@@ -170,7 +167,7 @@ function formatSheetPhanCa(sheet) {
  */
 
 /**
- * Xử lý GET request: Lấy dữ liệu phân ca gửi cho Website GitHub
+ * Xử lý GET request: Lấy dữ liệu hoặc Lưu dữ liệu (khi fetch POST gặp CORS redirect)
  */
 function doGet(e) {
   try {
@@ -178,6 +175,19 @@ function doGet(e) {
 
     if (action === 'ping') {
       return createJsonResponse({ status: 'ok', time: new Date().toISOString() });
+    }
+
+    // Hỗ trợ Lưu qua GET để 100% không bị chặn CORS
+    if (action === 'saveSchedule') {
+      let payload = {};
+      if (e.parameter.data) {
+        payload = JSON.parse(e.parameter.data);
+      } else {
+        payload = e.parameter;
+      }
+      payload.action = 'saveSchedule';
+      const result = saveScheduleToSheet(payload);
+      return createJsonResponse(result);
     }
 
     if (action === 'getData') {
@@ -192,7 +202,7 @@ function doGet(e) {
       });
     }
 
-    return createJsonResponse({ status: 'error', message: 'Hành động không hợp lệ' });
+    return createJsonResponse({ status: 'error', message: 'Hành động không hợp lệ: ' + action });
   } catch (err) {
     return createJsonResponse({ status: 'error', message: err.message, stack: err.stack });
   }
@@ -208,6 +218,8 @@ function doPost(e) {
       payload = JSON.parse(e.postData.contents);
     } else if (e.parameter && e.parameter.data) {
       payload = JSON.parse(e.parameter.data);
+    } else if (e.parameter) {
+      payload = e.parameter;
     }
 
     const action = payload.action || 'saveSchedule';
@@ -232,32 +244,15 @@ function createJsonResponse(data) {
 }
 
 /**
- * Trích xuất toàn bộ dữ liệu phân ca từ Sheet "phanca"
+ * Tìm kiếm khối tháng trong mảng dữ liệu sheet
  */
-function extractAllScheduleData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(TARGET_SHEET_NAME);
-  if (!sheet || sheet.getLastRow() < 4) {
-    // Nếu sheet phanca trống, dùng tạm sheet HC mới hoặc Trang tính1
-    sheet = ss.getSheetByName('HC mới') || ss.getSheetByName('Trang tính1') || sheet;
-  }
-
-  if (!sheet) {
-    return { months: DEFAULT_MONTHS, staff: DEFAULT_STAFF.map(s => s.name), schedule: {} };
-  }
-
-  const maxRow = sheet.getLastRow();
-  const maxCol = Math.max(sheet.getLastColumn(), 38);
-  const values = sheet.getRange(1, 1, maxRow, maxCol).getValues();
-
-  // Xác định vị trí các tháng
-  const monthsFound = [];
-  for (let r = 0; r < maxRow; r++) {
+function findMonthInfo(values, targetMonth) {
+  for (let r = 0; r < values.length; r++) {
     const val = String(values[r][1] || '').trim().toUpperCase(); // Cột B
-    if (val.startsWith('THÁNG') || val.startsWith('THANG')) {
+    if (val === targetMonth) {
       // Tìm dòng header nhân viên
       let hRow = r + 2;
-      for (let h = r; h < Math.min(r + 5, maxRow); h++) {
+      for (let h = r; h < Math.min(r + 5, values.length); h++) {
         const dVal = String(values[h][3] || '').trim().toUpperCase(); // Cột D
         if (dVal.includes('NHÂN VIÊN') || dVal.includes('NHAN VIEN')) {
           hRow = h;
@@ -265,31 +260,51 @@ function extractAllScheduleData() {
         }
       }
 
-      // Quét nhân viên
+      // Quét danh sách nhân viên
       const staffList = [];
-      let endRow = hRow + 1;
-      for (let e = hRow + 1; e < Math.min(hRow + 18, maxRow); e++) {
-        const empName = String(values[e][3] || '').trim();
+      let yCount = 0;
+      for (let e = hRow + 1; e < Math.min(hRow + 18, values.length); e++) {
+        let empName = String(values[e][3] || '').trim();
         if (empName && !empName.toUpperCase().startsWith('THÁNG')) {
-          staffList.push(empName);
-          endRow = e;
+          if (empName.toUpperCase() === 'Ý' || empName.toUpperCase() === 'Y') {
+            yCount++;
+            empName = (yCount === 1) ? 'GIANG Ý' : 'LÂM Ý';
+          }
+          staffList.push({ name: empName, row: e + 1 });
         } else {
           break;
         }
       }
 
-      monthsFound.push({
+      return {
         name: val,
         monthRow: r + 1,
         headerRow: hRow + 1,
         startEmpRow: hRow + 2,
-        endEmpRow: endRow + 1,
+        endEmpRow: hRow + 1 + staffList.length,
         staff: staffList
-      });
+      };
     }
   }
+  return null;
+}
 
-  // Cột các tuần
+/**
+ * Trích xuất toàn bộ dữ liệu phân ca từ Sheet "phanca"
+ */
+function extractAllScheduleData() {
+  const sheet = ensurePhanCaSheetReady();
+  const maxRow = Math.max(sheet.getLastRow(), 55);
+  const maxCol = Math.max(sheet.getLastColumn(), 38);
+  const values = sheet.getRange(1, 1, maxRow, maxCol).getValues();
+
+  // Xác định vị trí các tháng
+  const monthsFound = [];
+  DEFAULT_MONTHS.forEach((mName) => {
+    const info = findMonthInfo(values, mName);
+    if (info) monthsFound.push(info);
+  });
+
   const weekDefs = [
     { weekIndex: 1, weekName: 'Tuần 1', nameCol: 4, dayStartCol: 5 },
     { weekIndex: 2, weekName: 'Tuần 2', nameCol: 13, dayStartCol: 14 },
@@ -305,80 +320,56 @@ function extractAllScheduleData() {
     weekDefs.forEach((w) => {
       scheduleResult[m.name][w.weekName] = {};
 
-      for (let r = m.startEmpRow - 1; r < m.endEmpRow; r++) {
-        let empName = String(values[r][w.nameCol - 1] || values[r][3] || '').trim();
-        if (!empName) continue;
-
-        // Chuẩn hóa nếu có 2 nhân viên tên "Ý"
-        if (empName === 'Ý') {
-          empName = (r - m.startEmpRow < 6) ? 'GIANG Ý' : 'LÂM Ý';
-        }
-
+      m.staff.forEach((staffItem) => {
+        const rIdx = staffItem.row - 1;
         const daysObj = {};
         DAYS.forEach((day, dIdx) => {
           const colIdx = w.dayStartCol - 1 + dIdx;
-          const shiftVal = String(values[r][colIdx] || '').trim();
+          const shiftVal = String(values[rIdx][colIdx] || '').trim();
           daysObj[day] = shiftVal;
         });
 
-        scheduleResult[m.name][w.weekName][empName] = daysObj;
-      }
+        scheduleResult[m.name][w.weekName][staffItem.name] = daysObj;
+      });
     });
   });
 
   return {
     months: monthsFound.map(m => m.name),
-    staff: (monthsFound.length > 0 && monthsFound[0].staff.length > 0) ? monthsFound[0].staff : DEFAULT_STAFF.map(s => s.name),
+    staff: (monthsFound.length > 0 && monthsFound[0].staff.length > 0) ? monthsFound[0].staff.map(s => s.name) : DEFAULT_STAFF.map(s => s.name),
     schedule: scheduleResult
   };
 }
 
 /**
  * Lưu dữ liệu phân ca vào sheet "phanca"
- * @param {Object} payload { month, week, schedule: { [staffName]: { T2: 'TN', T3: '', ... } } }
+ * @param {Object} payload { month, week, schedule: { [week]: { [staff]: { T2, T3... } } } }
  */
 function saveScheduleToSheet(payload) {
+  // ĐẢM BẢO 100% SHEET ĐÍCH LÀ "phanca"
+  const sheet = ensurePhanCaSheetReady();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(TARGET_SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(TARGET_SHEET_NAME);
-    buildStandardTemplate(sheet);
-  }
+  ss.setActiveSheet(sheet);
 
-  // Quét cấu trúc sheet "phanca"
   const maxRow = Math.max(sheet.getLastRow(), 55);
   const maxCol = Math.max(sheet.getLastColumn(), 38);
   const values = sheet.getRange(1, 1, maxRow, maxCol).getValues();
 
   const targetMonth = (payload.month || 'THÁNG 09').trim().toUpperCase();
   const targetWeek = payload.week; // 'Tuần 1', 'Tuần 2', ... hoặc null nếu lưu cả tháng
-  const scheduleData = payload.schedule; // { [week]: { [staff]: { T2, T3... } } } hoặc { [staff]: { T2... } }
+  const scheduleData = payload.schedule || {};
 
-  // Tìm khối tháng trong sheet
-  let monthInfo = null;
-  for (let r = 0; r < values.length; r++) {
-    const val = String(values[r][1] || '').trim().toUpperCase();
-    if (val === targetMonth) {
-      let hRow = r + 2;
-      for (let h = r; h < Math.min(r + 5, maxRow); h++) {
-        const dVal = String(values[h][3] || '').trim().toUpperCase();
-        if (dVal.includes('NHÂN VIÊN') || dVal.includes('NHAN VIEN')) {
-          hRow = h;
-          break;
-        }
-      }
-      monthInfo = {
-        monthRow: r + 1,
-        headerRow: hRow + 1,
-        startEmpRow: hRow + 2,
-        endEmpRow: hRow + 12
-      };
-      break;
-    }
+  // Tìm khối tháng trong sheet "phanca"
+  let monthInfo = findMonthInfo(values, targetMonth);
+
+  // Nếu vẫn không tìm thấy, ép khởi tạo lại template chuẩn
+  if (!monthInfo) {
+    buildStandardTemplate(sheet);
+    const updatedValues = sheet.getRange(1, 1, Math.max(sheet.getLastRow(), 55), 38).getValues();
+    monthInfo = findMonthInfo(updatedValues, targetMonth);
   }
 
   if (!monthInfo) {
-    // Nếu chưa có tháng đó, tạo thêm hoặc trả về thông báo
     return { status: 'error', message: `Không tìm thấy khối ${targetMonth} trên sheet "${TARGET_SHEET_NAME}"` };
   }
 
@@ -390,38 +381,39 @@ function saveScheduleToSheet(payload) {
   };
 
   let totalUpdatedCells = 0;
-
-  // Lấy danh sách tuần cần ghi
-  const weeksToProcess = targetWeek ? [targetWeek] : ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
+  const weeksToProcess = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
 
   weeksToProcess.forEach((wName) => {
+    // Nếu chỉ lưu 1 tuần cụ thể
+    if (targetWeek && targetWeek !== 'all' && targetWeek !== wName) return;
+
     const wConfig = weekColsMap[wName];
     if (!wConfig) return;
 
-    const weekSchedule = targetWeek ? scheduleData : (scheduleData[wName] || {});
+    // Lấy dữ liệu tuần tương ứng
+    let weekSchedule = {};
+    if (scheduleData[wName]) {
+      weekSchedule = scheduleData[wName];
+    } else if (targetWeek === wName) {
+      weekSchedule = scheduleData;
+    }
+
     if (!weekSchedule) return;
 
-    // Duyệt qua từng nhân viên trong tháng
-    let yFoundCount = 0;
-    for (let r = monthInfo.startEmpRow; r <= monthInfo.endEmpRow; r++) {
-      let sheetEmpName = String(sheet.getRange(r, wConfig.nameCol).getValue() || sheet.getRange(r, 4).getValue() || '').trim().toUpperCase();
-      if (!sheetEmpName) continue;
+    // Duyệt qua từng nhân viên đã tìm thấy trong tháng
+    monthInfo.staff.forEach((staffItem) => {
+      const cleanTargetName = staffItem.name.trim().toUpperCase();
 
-      if (sheetEmpName === 'Ý') {
-        yFoundCount++;
-        sheetEmpName = (yFoundCount === 1) ? 'GIANG Ý' : 'LÂM Ý';
-      }
-
-      // Tìm dữ liệu tương ứng của nhân viên này
-      let empShifts = weekSchedule[sheetEmpName];
+      // Tìm ca của nhân viên này trong weekSchedule
+      let empShifts = weekSchedule[cleanTargetName];
       if (!empShifts) {
         // Thử tìm theo key không dấu hoặc tên gần đúng
-        const foundKey = Object.keys(weekSchedule).find(k => k.trim().toUpperCase() === sheetEmpName);
+        const foundKey = Object.keys(weekSchedule).find(k => k.trim().toUpperCase() === cleanTargetName);
         if (foundKey) empShifts = weekSchedule[foundKey];
       }
 
       if (empShifts) {
-        const rowRange = sheet.getRange(r, wConfig.dayStart, 1, 7);
+        const rowRange = sheet.getRange(staffItem.row, wConfig.dayStart, 1, 7);
         const currentVals = rowRange.getValues()[0];
         const newVals = [...currentVals];
         let changed = false;
@@ -439,9 +431,10 @@ function saveScheduleToSheet(payload) {
 
         if (changed) {
           rowRange.setValues([newVals]);
-          // Định dạng ô
+
+          // Cập nhật định dạng màu sắc cho 7 ngày của dòng này
           for (let d = 0; d < 7; d++) {
-            const cell = sheet.getRange(r, wConfig.dayStart + d);
+            const cell = sheet.getRange(staffItem.row, wConfig.dayStart + d);
             const val = String(newVals[d] || '').trim().toUpperCase();
             if (val === 'TN') {
               cell.setBackground('#dbeafe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
@@ -457,13 +450,19 @@ function saveScheduleToSheet(payload) {
           }
         }
       }
-    }
+    });
   });
+
+  // Tinh chỉnh chiều cao các dòng gọn gàng, cân đối
+  try {
+    sheet.setRowHeights(monthInfo.startEmpRow, monthInfo.endEmpRow - monthInfo.startEmpRow + 1, 25);
+  } catch (e) {}
 
   return {
     status: 'success',
-    message: `Đã lưu thành công vào sheet "${TARGET_SHEET_NAME}"! Cập nhật ${totalUpdatedCells} ô ca.`,
+    message: `Đã lưu thành công vào đúng sheet "${TARGET_SHEET_NAME}"! Cập nhật ${totalUpdatedCells} ô ca.`,
     updatedCells: totalUpdatedCells,
+    targetSheet: TARGET_SHEET_NAME,
     timestamp: new Date().toISOString()
   };
 }
@@ -472,7 +471,7 @@ function saveScheduleToSheet(payload) {
  * Chuẩn hóa tên hai nhân viên "Ý" thành "GIANG Ý" và "LÂM Ý" trên toàn bộ sheet "phanca"
  */
 function standardizeStaffNames() {
-  const sheet = getOrCreateTargetSheet();
+  const sheet = ensurePhanCaSheetReady();
   const maxRow = sheet.getLastRow();
   if (maxRow < 4) return;
 
@@ -483,8 +482,7 @@ function standardizeStaffNames() {
     cols.forEach(col => {
       const cell = sheet.getRange(r, col);
       const val = String(cell.getValue() || '').trim().toUpperCase();
-      if (val === 'Ý') {
-        // Xác định dòng 1 hay dòng 2 trong khối
+      if (val === 'Ý' || val === 'Y') {
         const prevVal = String(sheet.getRange(r - 1, col).getValue() || '').trim().toUpperCase();
         if (prevVal.includes('MỸ') || prevVal.includes('MI')) {
           cell.setValue('GIANG Ý');
@@ -508,14 +506,14 @@ function openWebAppUrlDialog() {
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 15px; color: #1e293b;">
       <h3 style="color: #0284c7; margin-top: 0;">🌐 Web Phân Ca Hành Chính (GitHub)</h3>
-      <p>Truy cập link bên dưới để phân ca trực quan và đồng bộ tức thì với Google Sheet:</p>
+      <p>Truy cập link bên dưới để phân ca trực quan và đồng bộ tức thì với Google Sheet "phanca":</p>
       <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; margin: 15px 0;">
         <a href="${githubUrl}" target="_blank" style="color: #0369a1; font-weight: bold; text-decoration: none; word-break: break-all;">
           ${githubUrl} ↗
         </a>
       </div>
       <p style="font-size: 13px; color: #64748b;">
-        Mẹo: Bạn có thể lưu link này vào Bookmark trên điện thoại hoặc máy tính để phân ca bất cứ lúc nào!
+        Mẹo: Mọi thao tác lưu từ Web sẽ tự động được ghi thẳng vào sheet "phanca".
       </p>
       <button onclick="google.script.host.close()" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; float: right;">Đóng</button>
     </div>
@@ -528,15 +526,15 @@ function openWebAppUrlDialog() {
  */
 function showDeploymentGuide() {
   const msg = 
-    "HƯỚNG DẪN TRIỂN KHAI WEB APP ĐỒNG BỘ 2 CHIỀU:\n\n" +
-    "1. Bấm vào nút 'Triển khai' (Deploy) màu xanh ở góc phải trên Apps Script.\n" +
+    "HƯỚNG DẪN TRIỂN KHAI WEB APP ĐỒNG BỘ VÀO SHEET PHANCA:\n\n" +
+    "1. Bấm nút 'Triển khai' (Deploy) màu xanh ở góc phải trên Apps Script.\n" +
     "2. Chọn 'Triển khai mới' (New deployment).\n" +
-    "3. Bấm vào icon bánh răng ⚙️ > Chọn 'Ứng dụng web' (Web app).\n" +
+    "3. Bấm icon bánh răng ⚙️ > Chọn 'Ứng dụng web' (Web app).\n" +
     "4. Cấu hình:\n" +
-    "   - Mô tả: Phân Ca API\n" +
+    "   - Mô tả: API Phân Ca\n" +
     "   - Thực thi dưới dạng (Execute as): 'Tôi' (Me)\n" +
     "   - Ai có quyền truy cập (Who has access): 'Bất kỳ ai' (Anyone)\n" +
     "5. Bấm 'Triển khai' (Deploy) và Sao chép URL Web App.\n" +
-    "6. Mở link GitHub Pages, bấm icon ⚙️ Cài đặt và dán URL Web App vào để kết nối!";
+    "6. Mở link GitHub Pages, bấm ⚙️ Cài đặt API và dán URL vào để kết nối!";
   SpreadsheetApp.getUi().alert('⚙️ Hướng Dẫn Triển Khai', msg, SpreadsheetApp.getUi().ButtonSet.OK);
 }

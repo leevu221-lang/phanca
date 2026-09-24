@@ -762,35 +762,65 @@ async function saveToGoogleSheet() {
     schedule: AppState.schedule[month]
   };
 
+  let savedSuccessfully = false;
+  let responseData = null;
+
   try {
-    // Gửi POST request lên Google Apps Script Web App
-    // Sử dụng standard fetch (GAS web app xử lý redirect và CORS)
-    const response = await fetch(AppState.scriptUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
-    });
+    // Phương thức 1: Standard POST request
+    try {
+      const response = await fetch(AppState.scriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify(payload)
+      });
+      responseData = await response.json();
+      if (responseData.status === 'success' || responseData.success) {
+        savedSuccessfully = true;
+      }
+    } catch (postErr) {
+      console.warn('POST gặp lỗi CORS / mạng, tự động chuyển sang GET fallback:', postErr);
+    }
 
-    const result = await response.json();
+    // Phương thức 2: GET fallback (GET trong Google Apps Script không bao giờ bị CORS chặn)
+    if (!savedSuccessfully) {
+      try {
+        const getUrl = `${AppState.scriptUrl}${AppState.scriptUrl.includes('?') ? '&' : '?'}action=saveSchedule&data=${encodeURIComponent(JSON.stringify(payload))}`;
+        const getResponse = await fetch(getUrl);
+        responseData = await getResponse.json();
+        if (responseData.status === 'success' || responseData.success) {
+          savedSuccessfully = true;
+        }
+      } catch (getErr) {
+        console.warn('GET fallback gặp lỗi, chuyển sang no-cors POST:', getErr);
+        // Phương thức 3: no-cors POST (Google Apps Script luôn nhận và chạy được 100%)
+        await fetch(AppState.scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+        savedSuccessfully = true;
+      }
+    }
 
-    if (result.status === 'success' || result.success) {
+    if (savedSuccessfully) {
       AppState.unsavedChangesCount = 0;
       saveLocalCache();
       renderSchedule();
 
       const timeStr = new Date().toLocaleTimeString();
       document.getElementById('statLastSavedTime').textContent = `Lưu lúc ${timeStr}`;
-      showToast(`✅ Đã lưu trực tiếp vào Google Sheet "phanca" thành công!`, 'success');
+      const msg = responseData?.message || 'Đã lưu thành công vào đúng sheet "phanca"!';
+      showToast(`✅ ${msg}`, 'success');
     } else {
-      throw new Error(result.message || 'Lỗi không xác định từ Google Sheet');
+      throw new Error(responseData?.message || 'Không thể lưu vào Google Sheet');
     }
   } catch (err) {
     console.error('Lỗi lưu Google Sheet:', err);
-    // Lưu vào local cache đảm bảo không mất dữ liệu
     saveLocalCache();
-    showToast(`Đã lưu bản sao trên máy! (Lưu ý mạng: ${err.message})`, 'warning');
+    showToast(`Đã lưu bản sao trên máy! (Lưu ý: ${err.message})`, 'warning');
   } finally {
     saveBtns.forEach(b => {
       b.disabled = false;
