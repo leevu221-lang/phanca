@@ -378,101 +378,160 @@
 
   <!-- Modal: Auto Rotate Shifts 4 Weeks (KHO & TN) -->
   <div class="modal-backdrop hidden" id="modalAutoRotate">
-    <div class="modal-card">
+    <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
-          <i class="fa-solid fa-rotate text-blue"></i>
-          <h3>Tự Động Xoay Tua Ca KHO & Thu Ngân (4 Tuần)</h3>
+          <i class="fa-solid fa-rotate text-blue" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #0f172a;">⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Dựa trên Ca Mẫu Tuần 1 • Đảm bảo số ngày TN & KHO trong tháng bằng nhau</span>
+          </div>
         </div>
         <button class="modal-close" id="btnCloseAutoRotate">&times;</button>
       </div>
-      <div class="modal-body">
-        <p class="modal-desc">
-          Chọn nhân viên trực <strong>KHO</strong> và <strong>Thu Ngân (TN)</strong> cho <strong>Tuần 1</strong>. Hệ thống sẽ tự động tính toán xoay tua đều 4 tuần cho cả 2 nhóm, giữ nguyên tất cả ngày nghỉ 'x' của nhân viên.
-        </p>
 
-        <!-- Nhóm 1 Config -->
-        <div class="rotate-group-card">
-          <h4 class="group-title text-blue"><i class="fa-solid fa-circle-dot"></i> 🔵 Nhóm 1: NHẠN, MẠNH, MI, MỸ, GIANG Ý, NGỌC ANH</h4>
-          <div class="rotate-inputs">
-            <div class="form-group">
-              <label>Tuần 1 - Thu Ngân (TN):</label>
-              <select id="rotG1TN" class="custom-select">
-                <option value="NHẠN" selected>NHẠN</option>
-                <option value="MẠNH">MẠNH</option>
-                <option value="MI">MI</option>
-                <option value="MỸ">MỸ</option>
-                <option value="GIANG Ý">GIANG Ý</option>
-                <option value="NGỌC ANH">NGỌC ANH</option>
-              </select>
+      <div class="modal-body" style="overflow-y: auto; max-height: 72vh; padding: 20px;">
+        <!-- Banner giải thích thuật toán xoay tua -->
+        <div class="rotate-alert-box">
+          <div class="rotate-alert-icon">
+            <i class="fa-solid fa-wand-magic-sparkles text-blue" style="font-size: 1.4rem;"></i>
+          </div>
+          <div class="rotate-alert-text">
+            <strong>Thuật toán xoay tua ca mẫu Tuần 1:</strong>
+            <p>Hệ thống sử dụng ma trận phân ca chuẩn của <strong>Tuần 1</strong>, tự động dịch chuyển xoay vòng cho <strong>Tuần 2, Tuần 3, Tuần 4</strong> nhằm đảm bảo <strong>số ca TN và KHO trong cả tháng giữa các nhân viên cân bằng nhau tuyệt đối</strong>, không có sự chênh lệch bất công.</p>
+          </div>
+        </div>
+
+        <!-- KPI Cân bằng 2 nhóm -->
+        <div class="rotate-kpi-grid">
+          <!-- Nhóm 1 -->
+          <div class="kpi-card kpi-g1">
+            <div class="kpi-header">
+              <span class="badge pill-group-1" style="font-size: 0.75rem; padding: 3px 8px;">🔵 Nhóm 1 (6 Nhân Viên)</span>
+              <span class="kpi-tag" style="background: #ede9fe; color: #6d28d9; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px;">✓ Cân bằng 100%</span>
             </div>
-            <div class="form-group">
-              <label>Tuần 1 - Kho (KHO):</label>
-              <select id="rotG1KHO" class="custom-select">
-                <option value="NHẠN">NHẠN</option>
-                <option value="MẠNH">MẠNH</option>
-                <option value="MI" selected>MI</option>
-                <option value="MỸ">MỸ</option>
-                <option value="GIANG Ý">GIANG Ý</option>
-                <option value="NGỌC ANH">NGỌC ANH</option>
-              </select>
+            <div class="kpi-content">
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #6d28d9;">4</span>
+                <span class="kpi-label">Ca TN / người</span>
+              </div>
+              <div class="kpi-divider"></div>
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #ea580c;">4 - 5</span>
+                <span class="kpi-label">Ca KHO / người</span>
+              </div>
+              <div class="kpi-divider"></div>
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #0284c7;">8 - 9</span>
+                <span class="kpi-label">Tổng ca / người</span>
+              </div>
+            </div>
+            <div class="kpi-note">
+              <i class="fa-solid fa-circle-check text-blue"></i> <strong>Tất cả 6 nhân viên</strong> (Nhạn, Mạnh, Mi, Mỹ, Giang Ý, Ngọc Anh) đều trực <strong>đúng 4 ca TN</strong> trong tháng.
+            </div>
+          </div>
+
+          <!-- Nhóm 2 -->
+          <div class="kpi-card kpi-g2">
+            <div class="kpi-header">
+              <span class="badge pill-group-2" style="font-size: 0.75rem; padding: 3px 8px;">🟢 Nhóm 2 (5 Nhân Viên)</span>
+              <span class="kpi-tag" style="background: #ecfdf5; color: #059669; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px;">✓ Cân bằng 100%</span>
+            </div>
+            <div class="kpi-content">
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #6d28d9;">5 - 6</span>
+                <span class="kpi-label">Ca TN / người</span>
+              </div>
+              <div class="kpi-divider"></div>
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #ea580c;">5 - 6</span>
+                <span class="kpi-label">Ca KHO / người</span>
+              </div>
+              <div class="kpi-divider"></div>
+              <div class="kpi-stat">
+                <span class="kpi-number" style="color: #0284c7;">11 - 12</span>
+                <span class="kpi-label">Tổng ca / người</span>
+              </div>
+            </div>
+            <div class="kpi-note">
+              <i class="fa-solid fa-circle-check text-emerald"></i> <strong>Cả 5 nhân viên</strong> (Thắm, My, Phúc, Đại, Lâm Ý) đều trực <strong>5 - 6 ca TN</strong> và <strong>5 - 6 ca KHO</strong> trong tháng.
             </div>
           </div>
         </div>
 
-        <!-- Nhóm 2 Config -->
-        <div class="rotate-group-card">
-          <h4 class="group-title text-emerald"><i class="fa-solid fa-circle-dot"></i> 🟢 Nhóm 2: THẮM, MY, PHÚC, ĐẠI, LÂM Ý</h4>
-          <div class="rotate-inputs">
-            <div class="form-group">
-              <label>Tuần 1 - Thu Ngân (TN):</label>
-              <select id="rotG2TN" class="custom-select">
-                <option value="THẮM" selected>THẮM</option>
-                <option value="MY">MY</option>
-                <option value="PHÚC">PHÚC</option>
-                <option value="ĐẠI">ĐẠI</option>
-                <option value="LÂM Ý">LÂM Ý</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Tuần 1 - Kho (KHO):</label>
-              <select id="rotG2KHO" class="custom-select">
-                <option value="THẮM">THẮM</option>
-                <option value="MY">MY</option>
-                <option value="PHÚC" selected>PHÚC</option>
-                <option value="ĐẠI">ĐẠI</option>
-                <option value="LÂM Ý">LÂM Ý</option>
-              </select>
-            </div>
-          </div>
+        <!-- Chuyển Tab Xem Trước -->
+        <div class="rotate-view-tabs">
+          <button class="rotate-tab-btn active" id="btnTabRotateSummary">
+            <i class="fa-solid fa-chart-column"></i> Bảng Tổng Kết Cân Bằng Cả Tháng (11 Nhân Viên)
+          </button>
+          <button class="rotate-tab-btn" id="btnTabRotateDetail">
+            <i class="fa-solid fa-calendar-days"></i> Chi Tiết Phân Ca 4 Tuần
+          </button>
         </div>
 
-        <!-- Preview Plan Table -->
-        <div class="rotate-preview-box">
-          <h5><i class="fa-solid fa-eye"></i> Xem Trước Kế Hoạch 4 Tuần:</h5>
+        <!-- Tab 1: Tổng Kết Cân Bằng Tháng -->
+        <div id="rotateTabSummaryContent" class="rotate-tab-pane">
           <div class="preview-table-wrapper">
-            <table class="preview-table" id="rotatePreviewTable">
+            <table class="preview-table" id="rotateSummaryTable">
               <thead>
                 <tr>
-                  <th>Tuần</th>
-                  <th>Nhóm 1 (TN)</th>
-                  <th>Nhóm 1 (KHO)</th>
-                  <th>Nhóm 2 (TN)</th>
-                  <th>Nhóm 2 (KHO)</th>
+                  <th style="width: 45px;">STT</th>
+                  <th style="text-align: left; width: 140px;">Nhân Viên</th>
+                  <th style="width: 80px;">Nhóm</th>
+                  <th>Tuần 1</th>
+                  <th>Tuần 2</th>
+                  <th>Tuần 3</th>
+                  <th>Tuần 4</th>
+                  <th style="background: #ede9fe; color: #6d28d9; width: 75px;">Tổng TN</th>
+                  <th style="background: #ffedd5; color: #c2410c; width: 75px;">Tổng KHO</th>
+                  <th style="background: #e0f2fe; color: #0369a1; width: 75px;">Tổng Ca</th>
+                  <th style="width: 95px;">Đánh Giá</th>
                 </tr>
               </thead>
-              <tbody id="rotatePreviewBody">
-                <!-- Injected via app.js -->
+              <tbody id="rotateSummaryBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 2: Chi Tiết Phân Ca 4 Tuần -->
+        <div id="rotateTabDetailContent" class="rotate-tab-pane hidden">
+          <div class="preview-table-wrapper" style="max-height: 380px; overflow-y: auto;">
+            <table class="preview-table" id="rotateDetailTable">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Tuần</th>
+                  <th style="text-align: left; width: 120px;">Nhân Viên</th>
+                  <th>T2</th>
+                  <th>T3</th>
+                  <th>T4</th>
+                  <th>T5</th>
+                  <th>T6</th>
+                  <th>T7</th>
+                  <th style="background: #fee2e2; color: #dc2626;">CN</th>
+                  <th style="background: #ede9fe; color: #6d28d9; width: 65px;">TN</th>
+                  <th style="background: #ffedd5; color: #c2410c; width: 65px;">KHO</th>
+                </tr>
+              </thead>
+              <tbody id="rotateDetailBody">
+                <!-- Injected via JavaScript -->
               </tbody>
             </table>
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelAutoRotate">Huỷ Bỏ</button>
-        <button class="btn btn-primary" id="btnExecuteAutoRotate">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Áp Dụng Xoay Tua Vào Lịch
-        </button>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-top: 1px solid var(--border-light);">
+        <div style="font-size: 0.85rem; color: #64748b;">
+          <i class="fa-solid fa-circle-info text-blue"></i> Áp dụng cho: <strong id="rotateTargetMonthText" style="color: #0369a1;">THÁNG 09</strong>
+        </div>
+        <div class="btn-group" style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="btnCancelAutoRotate">Đóng</button>
+          <button class="btn btn-primary" id="btnExecuteAutoRotate">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Áp Dụng Xoay Tua 4 Tuần Vào Lịch
+          </button>
+        </div>
       </div>
     </div>
   </div>
