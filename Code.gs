@@ -146,16 +146,21 @@ function formatSheetPhanCa(sheet) {
       const cell = sheet.getRange(r + 1, c + 1);
 
       if (v === 'TN') {
-        cell.setBackground('#e0f2fe').setFontColor('#0369a1').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#dbeafe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'KHO') {
-        cell.setBackground('#d1fae5').setFontColor('#065f46').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#dcfce7').setFontColor('#15803d').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'X') {
-        cell.setBackground('#fee2e2').setFontColor('#b91c1c').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#fee2e2').setFontColor('#dc2626').setFontWeight('bold').setHorizontalAlignment('center');
       } else if (v === 'HC') {
-        cell.setBackground('#e0e7ff').setFontColor('#3730a3').setFontWeight('bold').setHorizontalAlignment('center');
+        cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
       }
     }
   }
+
+  // Tinh chỉnh chiều cao các dòng cho cân xứng, gọn gàng
+  try {
+    sheet.setRowHeights(1, maxRow, 25);
+  } catch (e) {}
 }
 
 /**
@@ -439,13 +444,13 @@ function saveScheduleToSheet(payload) {
             const cell = sheet.getRange(r, wConfig.dayStart + d);
             const val = String(newVals[d] || '').trim().toUpperCase();
             if (val === 'TN') {
-              cell.setBackground('#e0f2fe').setFontColor('#0369a1').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#dbeafe').setFontColor('#0284c7').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'KHO') {
-              cell.setBackground('#d1fae5').setFontColor('#065f46').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#dcfce7').setFontColor('#15803d').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'X') {
-              cell.setBackground('#fee2e2').setFontColor('#b91c1c').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#fee2e2').setFontColor('#dc2626').setFontWeight('bold').setHorizontalAlignment('center');
             } else if (val === 'HC') {
-              cell.setBackground('#e0e7ff').setFontColor('#3730a3').setFontWeight('bold').setHorizontalAlignment('center');
+              cell.setBackground('#ede9fe').setFontColor('#6d28d9').setFontWeight('bold').setHorizontalAlignment('center');
             } else {
               cell.setBackground('#ffffff').setFontColor('#000000').setFontWeight('normal').setHorizontalAlignment('center');
             }
