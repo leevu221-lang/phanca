@@ -46,20 +46,21 @@ const GROUP2_SLOTS = [
 
 // Ma trận hoán vị xoay tua 4 tuần tối ưu toán học:
 // - Mỗi ngày (T2, T3, T4, T5, T6, T7, CN) mỗi nhóm đều có ĐÚNG 1 KHO và 1 TN
+// - Tuyệt đối không trùng lặp 2 ngày TN hoặc 2 ngày KHO trong 2 tuần liên tiếp cho bất kỳ nhân viên nào
 // - Nhóm 1: Tất cả 6 nhân viên đều có 4-5 ca TN, 4-5 ca KHO (Tổng ca: 9-10 ca/người)
 // - Nhóm 2: Tất cả 5 nhân viên đều có 5-6 ca TN, 5-6 ca KHO (Tổng ca: 11-12 ca/người)
 const GROUP1_PERMUTATIONS = [
-  [0, 1, 2, 3, 4, 5], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày)
-  [1, 0, 3, 2, 5, 4], // Tuần 2
-  [2, 3, 4, 5, 0, 1], // Tuần 3
-  [4, 5, 0, 1, 2, 3]  // Tuần 4
+  [0, 1, 2, 3, 4, 5], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày: Nhạn 2 TN, Mạnh 2 KHO)
+  [2, 3, 0, 1, 5, 4], // Tuần 2 (Nhạn & Mạnh chỉ 1 TN 1 KHO; chuyển 2 TN cho Mi, 2 KHO cho Mỹ)
+  [4, 5, 3, 2, 0, 1], // Tuần 3 (Mi & Mỹ về 1 TN 1 KHO; chuyển 2 TN cho Giang Ý, 2 KHO cho Ngọc Anh)
+  [1, 0, 4, 5, 2, 3]  // Tuần 4 (Đảo lại cho Mạnh 2 TN, Nhạn 2 KHO để cân bằng tháng)
 ];
 
 const GROUP2_PERMUTATIONS = [
-  [0, 1, 2, 3, 4], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày)
-  [1, 0, 3, 4, 2], // Tuần 2
-  [2, 3, 4, 0, 1], // Tuần 3
-  [3, 4, 1, 2, 0]  // Tuần 4
+  [0, 1, 2, 3, 4], // Tuần 1 (Ca mẫu: Thắm 2 TN, My 2 TN, Phúc 2 KHO, Đại 2 KHO, Lâm Ý 1 TN 1 KHO)
+  [2, 3, 0, 4, 1], // Tuần 2 (Thắm & My đảo sang 1 TN; Phúc & Đại đảo sang 1 KHO; Lâm Ý xoay 2 TN)
+  [1, 0, 4, 2, 3], // Tuần 3 (Tiếp tục đảo ca đảm bảo không nhân viên nào trực 2 ngày cùng vai trò 2 tuần liền)
+  [4, 2, 3, 1, 0]  // Tuần 4 (Hoàn tất chu kỳ 4 tuần cân bằng tuyệt đối toàn tháng)
 ];
 
 /**
@@ -157,7 +158,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v5_daily_1tn_1kho_dates';
+const CURRENT_CACHE_VERSION = 'v6_no_consecutive_2days';
 
 // ==========================================================================
 // KHỞI TẠO DỮ LIỆU BAN ĐẦU
