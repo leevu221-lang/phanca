@@ -1174,6 +1174,82 @@ function setupSettingsModal() {
       syncFromGoogleSheet();
     }
   });
+
+  // Xuất file sao lưu (JSON)
+  const btnExportBackup = document.getElementById('btnExportBackup');
+  if (btnExportBackup) {
+    btnExportBackup.addEventListener('click', () => {
+      const backupData = {
+        app: 'phanca',
+        exportDate: new Date().toISOString(),
+        version: CURRENT_CACHE_VERSION,
+        staffGroup1: STAFF_GROUP_1,
+        staffGroup2: STAFF_GROUP_2,
+        schedule: AppState.schedule
+      };
+
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      const fileName = `phanca_backup_${dateStr}.json`;
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`📦 Đã xuất file sao lưu: ${fileName}`, 'success');
+    });
+  }
+
+  // Khôi phục từ file sao lưu (JSON)
+  const inputRestoreBackup = document.getElementById('inputRestoreBackup');
+  if (inputRestoreBackup) {
+    inputRestoreBackup.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (!imported || typeof imported !== 'object' || !imported.schedule) {
+            throw new Error('File không đúng định dạng dữ liệu phân ca!');
+          }
+
+          if (confirm('Khôi phục dữ liệu từ file sao lưu này? Dữ liệu hiện tại trên màn hình sẽ được thay thế.')) {
+            if (Array.isArray(imported.staffGroup1) && Array.isArray(imported.staffGroup2)) {
+              STAFF_GROUP_1 = imported.staffGroup1.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+              STAFF_GROUP_2 = imported.staffGroup2.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+              ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+              saveCustomStaffList();
+            }
+
+            AppState.schedule = imported.schedule;
+            ensureStaffScheduleIntegrity();
+            saveLocalCache();
+            updateAssignStaffDropdown();
+            renderSchedule();
+            updateStats();
+
+            AppState.unsavedChangesCount += 1;
+            closeModal();
+            showToast('🎉 Đã khôi phục dữ liệu từ bản sao lưu thành công! Hãy bấm "Lưu Vào Google Sheet" nếu muốn đồng bộ.', 'success');
+          }
+        } catch (err) {
+          console.error('Lỗi khôi phục backup:', err);
+          showToast('Không thể đọc file sao lưu: ' + err.message, 'error');
+        } finally {
+          inputRestoreBackup.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
 }
 
 // ==========================================================================

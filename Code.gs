@@ -38,6 +38,7 @@ function onOpen() {
     .addItem('🌐 Mở Web Phân Ca (GitHub)', 'openWebAppUrlDialog')
     .addSeparator()
     .addItem('🔄 Khởi Tạo / Đồng Bộ Sheet "phanca"', 'initializePhanCaSheet')
+    .addItem('💾 Tạo Bản Sao Lưu Sheet "phanca" (Backup)', 'createBackupSheet')
     .addItem('🏷️ Chuẩn Hóa Tên "Ý" -> Giang Ý & Lâm Ý', 'standardizeStaffNames')
     .addSeparator()
     .addItem('ℹ️ Hướng Dẫn & Cài Đặt Web App', 'showDeploymentGuide')
@@ -79,6 +80,34 @@ function initializePhanCaSheet() {
   const sheet = ensurePhanCaSheetReady();
   SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sheet);
   SpreadsheetApp.getUi().alert('Thông báo', `Sheet "${TARGET_SHEET_NAME}" đã sẵn sàng và được đồng bộ dữ liệu chuẩn!`, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+/**
+ * Tạo bản sao lưu an toàn cho Sheet "phanca" thành sheet mới có mốc thời gian
+ */
+function createBackupSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const srcSheet = ss.getSheetByName(TARGET_SHEET_NAME);
+  if (!srcSheet) {
+    SpreadsheetApp.getUi().alert('Thông báo', `Không tìm thấy sheet "${TARGET_SHEET_NAME}" để sao lưu!`, SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+
+  const now = new Date();
+  const timeStr = Utilities.formatDate(now, Session.getScriptTimeZone() || 'GMT+7', 'dd_MM_yyyy_HHmm');
+  const backupName = `phanca_backup_${timeStr}`;
+
+  let finalName = backupName;
+  let count = 1;
+  while (ss.getSheetByName(finalName)) {
+    finalName = `${backupName}_${count++}`;
+  }
+
+  const backupSheet = srcSheet.copyTo(ss);
+  backupSheet.setName(finalName);
+  ss.setActiveSheet(backupSheet);
+
+  SpreadsheetApp.getUi().alert('Thành công', `Đã tạo bản sao lưu thành công thành sheet: "${finalName}"!`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /**
