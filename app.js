@@ -836,11 +836,18 @@ async function generateAndExportImage(fileName, modalTitle) {
   const captureEl = document.getElementById('scheduleExportArea');
   if (!captureEl) return;
 
+  const exportButtons = document.getElementById('exportHeaderButtons');
+  const exportHeaderLegends = document.getElementById('exportHeaderLegends');
+
   showToast('📸 Đang tạo ảnh chất lượng cao...', 'info');
 
   try {
-    // Đợi 200ms để DOM ổn định
-    await new Promise(r => setTimeout(r, 200));
+    // Tạm ẩn 2 nút xuất ảnh và hiện legend trên ảnh để ảnh chụp chuẩn chỉnh
+    if (exportButtons) exportButtons.style.display = 'none';
+    if (exportHeaderLegends) exportHeaderLegends.classList.remove('hidden');
+
+    // Đợi 100ms để DOM ổn định
+    await new Promise(r => setTimeout(r, 100));
 
     const canvas = await html2canvas(captureEl, {
       scale: 2, // 2x resolution cho hình ảnh sắc nét
@@ -849,6 +856,10 @@ async function generateAndExportImage(fileName, modalTitle) {
       logging: false,
       windowWidth: 1440
     });
+
+    // Khôi phục lại giao diện hiển thị web
+    if (exportButtons) exportButtons.style.display = 'flex';
+    if (exportHeaderLegends) exportHeaderLegends.classList.add('hidden');
 
     const imgDataUrl = canvas.toDataURL('image/png');
 
@@ -872,6 +883,8 @@ async function generateAndExportImage(fileName, modalTitle) {
 
     showToast('✅ Đã xuất ảnh thành công và tải về máy!', 'success');
   } catch (err) {
+    if (exportButtons) exportButtons.style.display = 'flex';
+    if (exportHeaderLegends) exportHeaderLegends.classList.add('hidden');
     console.error('Lỗi khi xuất ảnh:', err);
     showToast('Lỗi khi tạo ảnh: ' + err.message, 'error');
   }

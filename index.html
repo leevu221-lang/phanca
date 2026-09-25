@@ -162,22 +162,11 @@
           <div class="hub-title">
             <span class="hub-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân Ca "Ai"</span>
             <h2>Gán Ca Cho Nhân Viên & Công Cụ Nhanh</h2>
-          </div>
-          <div class="hub-toggle-mode" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div class="hub-toggle-mode">
             <button id="btnAutoRotateModal" class="btn btn-outline-primary" title="Mở hộp thoại xoay tua 4 tuần cân bằng KHO & TN">
               <i class="fa-solid fa-rotate"></i>
-              <span>⚡ Xoay Tua KHO & TN (4 Tuần)</span>
+              <span>⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</span>
             </button>
-            <div class="btn-group export-hub-btn-group">
-              <button id="btnExportWeek" class="btn btn-export" title="Xuất ảnh tuần đang chọn thành file PNG">
-                <i class="fa-solid fa-camera"></i>
-                <span>Xuất Ảnh Tuần</span>
-              </button>
-              <button id="btnExportMonth" class="btn btn-export-month" title="Xuất ảnh toàn bộ cả tháng 4 tuần">
-                <i class="fa-solid fa-images"></i>
-                <span>Xuất Ảnh Cả Tháng</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -296,7 +285,20 @@
               </p>
             </div>
           </div>
-          <div class="export-legends">
+          <!-- Export Buttons replacing Legend pills as requested -->
+          <div class="export-header-actions" id="exportHeaderButtons">
+            <button id="btnExportWeek" class="btn-pill-export-week" title="Xuất ảnh tuần đang chọn thành file PNG">
+              <i class="fa-solid fa-camera"></i>
+              <span>Xuất Ảnh Tuần</span>
+            </button>
+            <button id="btnExportMonth" class="btn-pill-export-month" title="Xuất ảnh toàn bộ cả tháng 4 tuần">
+              <i class="fa-solid fa-images"></i>
+              <span>Xuất Ảnh Cả Tháng</span>
+            </button>
+          </div>
+
+          <!-- Printable Legend (shown when generating image) -->
+          <div class="export-legends hidden" id="exportHeaderLegends">
             <span class="legend-pill pill-tn"><strong>TN</strong> Thu Ngân</span>
             <span class="legend-pill pill-kho"><strong>KHO</strong> Phụ Kho</span>
             <span class="legend-pill pill-hc"><strong>HC</strong> Hành Chính</span>
@@ -374,9 +376,17 @@
 
         <!-- Schedule Footer Notes in Export Area -->
         <div class="export-footer">
-          <div class="footer-note">
-            <i class="fa-solid fa-circle-info"></i>
-            <span>Quy tắc: Mỗi nhóm đều có 1 người trực KHO và 1 người trực THU NGÂN mỗi ngày. Ngày nghỉ ký hiệu 'x'.</span>
+          <div class="footer-note-group">
+            <div class="footer-note">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Quy tắc: Mỗi nhóm đều có 1 người trực KHO và 1 người trực THU NGÂN mỗi ngày. Ngày nghỉ ký hiệu 'x'.</span>
+            </div>
+            <div class="export-legends footer-legends">
+              <span class="legend-pill pill-tn"><strong>TN</strong> Thu Ngân</span>
+              <span class="legend-pill pill-kho"><strong>KHO</strong> Phụ Kho</span>
+              <span class="legend-pill pill-hc"><strong>HC</strong> Hành Chính</span>
+              <span class="legend-pill pill-off"><strong>x</strong> Nghỉ Off</span>
+            </div>
           </div>
           <div class="footer-sign">
             <span>Người lập bảng: ................................</span>
