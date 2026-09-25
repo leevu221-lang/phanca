@@ -152,21 +152,6 @@
             </div>
           </div>
 
-          <!-- Export Image Group -->
-          <div class="control-item export-group">
-            <label class="control-label">
-              <i class="fa-solid fa-camera"></i> Xuất Ảnh Bảng Ca
-            </label>
-            <div class="btn-group">
-              <button id="btnExportWeek" class="btn btn-export" title="Xuất ảnh tuần đang chọn thành file PNG">
-                <i class="fa-solid fa-image"></i>
-                <span>Ảnh Tuần</span>
-              </button>
-              <button id="btnExportMonth" class="btn btn-export-month" title="Xuất ảnh toàn bộ cả tháng 4 tuần">
-                <i class="fa-solid fa-panorama"></i>
-                <span>Ảnh Cả Tháng</span>
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -178,11 +163,21 @@
             <span class="hub-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân Ca "Ai"</span>
             <h2>Gán Ca Cho Nhân Viên & Công Cụ Nhanh</h2>
           </div>
-          <div class="hub-toggle-mode">
-            <button id="btnAutoRotateModal" class="btn btn-outline-primary">
+          <div class="hub-toggle-mode" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button id="btnAutoRotateModal" class="btn btn-outline-primary" title="Mở hộp thoại xoay tua 4 tuần cân bằng KHO & TN">
               <i class="fa-solid fa-rotate"></i>
-              <span>⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</span>
+              <span>⚡ Xoay Tua KHO & TN (4 Tuần)</span>
             </button>
+            <div class="btn-group export-hub-btn-group">
+              <button id="btnExportWeek" class="btn btn-export" title="Xuất ảnh tuần đang chọn thành file PNG">
+                <i class="fa-solid fa-camera"></i>
+                <span>Xuất Ảnh Tuần</span>
+              </button>
+              <button id="btnExportMonth" class="btn btn-export-month" title="Xuất ảnh toàn bộ cả tháng 4 tuần">
+                <i class="fa-solid fa-images"></i>
+                <span>Xuất Ảnh Cả Tháng</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -318,13 +313,48 @@
                   <th class="col-stt">STT</th>
                   <th class="col-name">NHÂN VIÊN</th>
                   <th class="col-group">NHÓM</th>
-                  <th class="col-day">T2</th>
-                  <th class="col-day">T3</th>
-                  <th class="col-day">T4</th>
-                  <th class="col-day">T5</th>
-                  <th class="col-day">T6</th>
-                  <th class="col-day">T7</th>
-                  <th class="col-day col-sunday">CN</th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T2</span>
+                      <span class="day-sub-date" id="dateHeader_T2">21/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T3</span>
+                      <span class="day-sub-date" id="dateHeader_T3">22/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T4</span>
+                      <span class="day-sub-date" id="dateHeader_T4">23/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T5</span>
+                      <span class="day-sub-date" id="dateHeader_T5">24/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T6</span>
+                      <span class="day-sub-date" id="dateHeader_T6">25/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">T7</span>
+                      <span class="day-sub-date" id="dateHeader_T7">26/09</span>
+                    </div>
+                  </th>
+                  <th class="col-day col-sunday">
+                    <div class="day-header-wrapper">
+                      <span class="day-label">CN</span>
+                      <span class="day-sub-date" id="dateHeader_CN">27/09</span>
+                    </div>
+                  </th>
                   <th class="col-summary">Tổng TN</th>
                   <th class="col-summary">Tổng KHO</th>
                   <th class="col-summary">Số Ngày Nghỉ</th>
@@ -346,7 +376,7 @@
         <div class="export-footer">
           <div class="footer-note">
             <i class="fa-solid fa-circle-info"></i>
-            <span>Quy tắc: Mỗi tuần mỗi nhóm có 1 người trực KHO và 1 người trực THU NGÂN. Ngày nghỉ ký hiệu 'x'.</span>
+            <span>Quy tắc: Mỗi nhóm đều có 1 người trực KHO và 1 người trực THU NGÂN mỗi ngày. Ngày nghỉ ký hiệu 'x'.</span>
           </div>
           <div class="footer-sign">
             <span>Người lập bảng: ................................</span>
@@ -412,7 +442,7 @@
             </div>
             <div class="kpi-content">
               <div class="kpi-stat">
-                <span class="kpi-number" style="color: #6d28d9;">4</span>
+                <span class="kpi-number" style="color: #6d28d9;">4 - 5</span>
                 <span class="kpi-label">Ca TN / người</span>
               </div>
               <div class="kpi-divider"></div>
@@ -422,12 +452,12 @@
               </div>
               <div class="kpi-divider"></div>
               <div class="kpi-stat">
-                <span class="kpi-number" style="color: #0284c7;">8 - 9</span>
+                <span class="kpi-number" style="color: #0284c7;">9 - 10</span>
                 <span class="kpi-label">Tổng ca / người</span>
               </div>
             </div>
             <div class="kpi-note">
-              <i class="fa-solid fa-circle-check text-blue"></i> <strong>Tất cả 6 nhân viên</strong> (Nhạn, Mạnh, Mi, Mỹ, Giang Ý, Ngọc Anh) đều trực <strong>đúng 4 ca TN</strong> trong tháng.
+              <i class="fa-solid fa-circle-check text-blue"></i> Mỗi ngày đều có đúng <strong>1 TN & 1 KHO</strong>. Nhân viên Nhóm 1 trực đều <strong>4 - 5 ca TN</strong> và <strong>4 - 5 ca KHO</strong> trong tháng.
             </div>
           </div>
 

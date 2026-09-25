@@ -17,47 +17,98 @@ const MONTHS = ['THÁNG 09', 'THÁNG 10', 'THÁNG 11', 'THÁNG 12'];
 
 // ==========================================================================
 // CẤU HÌNH CA MẪU TUẦN 1 VÀ MA TRẬN XOAY TUA 4 TUẦN CÂN BẰNG TUYỆT ĐỐI
+// Đảm bảo: Mỗi nhóm đều có đúng 1 KHO và 1 TN mỗi ngày (T2 -> CN)
 // ==========================================================================
 
 // Lịch nghỉ cố định mặc định (để trống để mặc định không có 'x', khớp với ca mẫu tuần 1)
 const DEFAULT_OFF_DAYS = {};
 
 // Định nghĩa 6 Slot xoay ca chuẩn theo Ca Mẫu Tuần 1 (Nhóm 1 - 6 nhân viên)
+// Đảm bảo mỗi ngày từ T2 -> CN đều có đúng 1 TN và 1 KHO
 const GROUP1_SLOTS = [
-  { T2: 'TN', T3: '', T4: '', T5: '', T6: 'KHO', T7: '', CN: 'TN' }, // Slot 0: NHẠN (2 TN, 1 KHO)
-  { T2: '', T3: '', T4: 'KHO', T5: '', T6: '', T7: '', CN: 'KHO' },  // Slot 1: MẠNH (0 TN, 2 KHO)
-  { T2: 'KHO', T3: '', T4: '', T5: 'TN', T6: '', T7: '', CN: '' },   // Slot 2: MI (1 TN, 1 KHO)
-  { T2: '', T3: 'KHO', T4: '', T5: '', T6: 'TN', T7: '', CN: '' },   // Slot 3: MỸ (1 TN, 1 KHO)
-  { T2: '', T3: '', T4: 'TN', T5: '', T6: '', T7: 'KHO', CN: '' },   // Slot 4: GIANG Ý (1 TN, 1 KHO)
-  { T2: '', T3: '', T4: '', T5: 'KHO', T6: '', T7: 'TN', CN: '' }    // Slot 5: NGỌC ANH (1 TN, 1 KHO)
+  { T2: 'TN', T3: '', T4: '', T5: '', T6: 'KHO', T7: '', CN: 'TN' },  // Slot 0: NHẠN (2 TN, 1 KHO)
+  { T2: '', T3: 'TN', T4: 'KHO', T5: '', T6: '', T7: '', CN: 'KHO' }, // Slot 1: MẠNH (1 TN, 2 KHO) - T3: TN
+  { T2: 'KHO', T3: '', T4: '', T5: 'TN', T6: '', T7: '', CN: '' },    // Slot 2: MI (1 TN, 1 KHO)
+  { T2: '', T3: 'KHO', T4: '', T5: '', T6: 'TN', T7: '', CN: '' },    // Slot 3: MỸ (1 TN, 1 KHO)
+  { T2: '', T3: '', T4: 'TN', T5: '', T6: '', T7: 'KHO', CN: '' },    // Slot 4: GIANG Ý (1 TN, 1 KHO)
+  { T2: '', T3: '', T4: '', T5: 'KHO', T6: '', T7: 'TN', CN: '' }     // Slot 5: NGỌC ANH (1 TN, 1 KHO)
 ];
 
 // Định nghĩa 5 Slot xoay ca chuẩn theo Ca Mẫu Tuần 1 (Nhóm 2 - 5 nhân viên)
+// Đảm bảo mỗi ngày từ T2 -> CN đều có đúng 1 TN và 1 KHO
 const GROUP2_SLOTS = [
-  { T2: 'TN', T3: '', T4: '', T5: 'KHO', T6: '', T7: '', CN: 'TN' }, // Slot 0: THẮM (2 TN, 1 KHO)
-  { T2: '', T3: 'TN', T4: '', T5: '', T6: 'TN', T7: '', CN: 'KHO' }, // Slot 1: MY (2 TN, 1 KHO)
-  { T2: 'KHO', T3: '', T4: 'TN', T5: '', T6: 'KHO', T7: '', CN: '' },// Slot 2: PHÚC (1 TN, 2 KHO)
-  { T2: '', T3: 'KHO', T4: '', T5: 'TN', T6: '', T7: 'KHO', CN: '' },// Slot 3: ĐẠI (1 TN, 2 KHO)
-  { T2: '', T3: '', T4: 'KHO', T5: '', T6: '', T7: 'TN', CN: '' }    // Slot 4: LÂM Ý (1 TN, 1 KHO)
+  { T2: 'TN', T3: '', T4: '', T5: 'KHO', T6: '', T7: '', CN: 'TN' },  // Slot 0: THẮM (2 TN, 1 KHO)
+  { T2: '', T3: 'TN', T4: '', T5: '', T6: 'TN', T7: '', CN: 'KHO' },  // Slot 1: MY (2 TN, 1 KHO)
+  { T2: 'KHO', T3: '', T4: 'TN', T5: '', T6: 'KHO', T7: '', CN: '' }, // Slot 2: PHÚC (1 TN, 2 KHO)
+  { T2: '', T3: 'KHO', T4: '', T5: 'TN', T6: '', T7: 'KHO', CN: '' }, // Slot 3: ĐẠI (1 TN, 2 KHO)
+  { T2: '', T3: '', T4: 'KHO', T5: '', T6: '', T7: 'TN', CN: '' }     // Slot 4: LÂM Ý (1 TN, 1 KHO)
 ];
 
 // Ma trận hoán vị xoay tua 4 tuần tối ưu toán học:
-// - Nhóm 1: Tất cả 6 nhân viên đều có ĐÚNG 4 ca TN, 4-5 ca KHO (Tổng ca: 8 - 9 ca/người)
-// - Nhóm 2: Tất cả 5 nhân viên đều có 5-6 ca TN, 5-6 ca KHO (Tổng ca: 11 - 12 ca/người)
-// - Đảm bảo không trùng vị trí giữa các tuần và mỗi ngày luôn có đúng 1 TN và 1 KHO mỗi nhóm
+// - Mỗi ngày (T2, T3, T4, T5, T6, T7, CN) mỗi nhóm đều có ĐÚNG 1 KHO và 1 TN
+// - Nhóm 1: Tất cả 6 nhân viên đều có 4-5 ca TN, 4-5 ca KHO (Tổng ca: 9-10 ca/người)
+// - Nhóm 2: Tất cả 5 nhân viên đều có 5-6 ca TN, 5-6 ca KHO (Tổng ca: 11-12 ca/người)
 const GROUP1_PERMUTATIONS = [
-  [0, 1, 2, 3, 4, 5], // Tuần 1 (Ca mẫu ảnh)
+  [0, 1, 2, 3, 4, 5], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày)
   [1, 0, 3, 2, 5, 4], // Tuần 2
   [2, 3, 4, 5, 0, 1], // Tuần 3
-  [3, 2, 5, 4, 1, 0]  // Tuần 4
+  [4, 5, 0, 1, 2, 3]  // Tuần 4
 ];
 
 const GROUP2_PERMUTATIONS = [
-  [0, 1, 2, 3, 4], // Tuần 1 (Ca mẫu ảnh)
+  [0, 1, 2, 3, 4], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày)
   [1, 0, 3, 4, 2], // Tuần 2
   [2, 3, 4, 0, 1], // Tuần 3
   [3, 4, 1, 2, 0]  // Tuần 4
 ];
+
+/**
+ * Tính toán ngày theo định dạng DD/MM cho các thứ (T2 -> CN) trong tuần được chọn
+ * Ví dụ: T6 tuần 4 tháng 09 -> 25/09
+ */
+function getWeekDates(monthName, weekName) {
+  const mMatch = String(monthName || '').match(/\d+/);
+  const monthNum = mMatch ? parseInt(mMatch[0], 10) : 9;
+  const year = 2026;
+
+  const wMatch = String(weekName || '').match(/\d+/);
+  const weekIdx = wMatch ? Math.max(0, parseInt(wMatch[0], 10) - 1) : 0;
+
+  // Ngày 1 của tháng
+  const firstDay = new Date(year, monthNum - 1, 1);
+  const dayOfWeek = firstDay.getDay(); // 0: CN, 1: T2, 2: T3, ...
+  
+  // Thứ 2 của tuần 1 trong tháng
+  const diff = (dayOfWeek === 0) ? -6 : (1 - dayOfWeek);
+  const mondayWeek1 = new Date(year, monthNum - 1, 1 + diff);
+
+  // Thứ 2 của tuần được chọn
+  const weekMonday = new Date(mondayWeek1);
+  weekMonday.setDate(mondayWeek1.getDate() + (weekIdx * 7));
+
+  const result = {};
+  DAYS.forEach((d, idx) => {
+    const curDate = new Date(weekMonday);
+    curDate.setDate(weekMonday.getDate() + idx);
+    const dayStr = String(curDate.getDate()).padStart(2, '0');
+    const mStr = String(curDate.getMonth() + 1).padStart(2, '0');
+    result[d] = `${dayStr}/${mStr}`;
+  });
+  return result;
+}
+
+/**
+ * Cập nhật ngày dưới các cột T2, T3... trong header bảng tuần
+ */
+function updateTableDateHeaders() {
+  const dates = getWeekDates(AppState.currentMonth, AppState.currentWeek);
+  DAYS.forEach((d) => {
+    const el = document.getElementById(`dateHeader_${d}`);
+    if (el) {
+      el.textContent = dates[d] || '';
+    }
+  });
+}
 
 /**
  * Sinh lịch 4 tuần cân bằng tuyệt đối từ Ca Mẫu Tuần 1
@@ -106,7 +157,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v4_rotate_balanced_w1_sample';
+const CURRENT_CACHE_VERSION = 'v5_daily_1tn_1kho_dates';
 
 // ==========================================================================
 // KHỞI TẠO DỮ LIỆU BAN ĐẦU
@@ -201,6 +252,9 @@ function renderSchedule() {
 function renderSingleWeekView() {
   const tbody = document.getElementById('scheduleTableBodySingle');
   tbody.innerHTML = '';
+
+  // Cập nhật ngày tháng dưới tiêu đề T2, T3...
+  updateTableDateHeaders();
 
   const month = AppState.currentMonth;
   const week = AppState.currentWeek;
@@ -302,23 +356,31 @@ function renderAllWeeksView(container) {
     weekBlock.className = 'month-week-block table-responsive';
 
     const weekData = (AppState.schedule[month] && AppState.schedule[month][weekName]) ? AppState.schedule[month][weekName] : {};
+    const weekDates = getWeekDates(month, weekName);
+
+    let daysThHtml = '';
+    DAYS.forEach((d) => {
+      const isSun = d === 'CN';
+      daysThHtml += `
+        <th class="col-day ${isSun ? 'col-sunday' : ''}">
+          <div class="day-header-wrapper">
+            <span class="day-label">${d}</span>
+            <span class="day-sub-date">${weekDates[d] || ''}</span>
+          </div>
+        </th>
+      `;
+    });
 
     let tableHtml = `
       <div class="week-block-title">
-        <i class="fa-regular fa-calendar-check"></i> ${weekName} - ${month}
+        <i class="fa-regular fa-calendar-check"></i> ${weekName} - ${month} (${weekDates['T2']} - ${weekDates['CN']})
       </div>
       <table class="schedule-table">
         <thead>
           <tr>
             <th class="col-stt">STT</th>
             <th class="col-name">NHÂN VIÊN</th>
-            <th class="col-day">T2</th>
-            <th class="col-day">T3</th>
-            <th class="col-day">T4</th>
-            <th class="col-day">T5</th>
-            <th class="col-day">T6</th>
-            <th class="col-day">T7</th>
-            <th class="col-day col-sunday">CN</th>
+            ${daysThHtml}
             <th class="col-summary">TN</th>
             <th class="col-summary">KHO</th>
             <th class="col-summary">Nghỉ</th>
@@ -675,10 +737,10 @@ function updateRotatePreview() {
   // 2. RENDER BẢNG CHI TIẾT 4 TUẦN
   detailBody.innerHTML = '';
   WEEKS.forEach((wName) => {
-    // Header phân cách tuần
+    const weekDates = getWeekDates(AppState.currentMonth, wName);
     const sepRow = document.createElement('tr');
     sepRow.style.background = '#f0f7ff';
-    sepRow.innerHTML = `<td colspan="11" style="text-align: left; font-weight: 800; color: #0369a1; padding: 6px 12px;"><i class="fa-solid fa-calendar-check"></i> ${wName.toUpperCase()}</td>`;
+    sepRow.innerHTML = `<td colspan="11" style="text-align: left; font-weight: 800; color: #0369a1; padding: 6px 12px;"><i class="fa-solid fa-calendar-check"></i> ${wName.toUpperCase()} (${weekDates['T2']} - ${weekDates['CN']})</td>`;
     detailBody.appendChild(sepRow);
 
     ALL_STAFF.forEach((staff) => {

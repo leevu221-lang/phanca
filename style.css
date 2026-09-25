@@ -862,8 +862,51 @@ body {
 .col-stt { width: 36px; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
 .col-name { width: 135px; text-align: left !important; padding-left: 10px !important; }
 .col-group { width: 75px; }
-.col-day { width: 50px; }
+.col-day { width: 58px; padding: 4px 2px !important; }
 .col-summary { width: 68px; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); }
+
+/* Day Header with Date Sub-badge (VD: 25/09) */
+.day-header-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.day-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #0369a1;
+  display: block;
+  line-height: 1.1;
+}
+
+.col-sunday .day-label {
+  color: #dc2626;
+}
+
+.day-sub-date {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: #475569;
+  display: block;
+  line-height: 1;
+  background: #e2e8f0;
+  padding: 1px 4px;
+  border-radius: 4px;
+  margin-top: 1px;
+}
+
+.col-sunday .day-sub-date {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.export-hub-btn-group {
+  display: flex;
+  gap: 8px;
+}
 
 /* Group Header Row in Table */
 .group-separator-row td {
