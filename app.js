@@ -6,10 +6,89 @@
  * ==========================================================================
  */
 
-// Cấu hình danh sách nhân viên 2 nhóm
-const STAFF_GROUP_1 = ['NHẠN', 'MẠNH', 'MI', 'MỸ', 'GIANG Ý', 'NGỌC ANH'];
-const STAFF_GROUP_2 = ['THẮM', 'MY', 'PHÚC', 'ĐẠI', 'LÂM Ý'];
-const ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+// Cấu hình danh sách nhân viên mặc định ban đầu (theo ca mẫu chuẩn)
+const DEFAULT_STAFF_G1 = ['NHẠN', 'MẠNH', 'MI', 'MỸ', 'GIANG Ý', 'NGỌC ANH'];
+const DEFAULT_STAFF_G2 = ['THẮM', 'MY', 'PHÚC', 'ĐẠI', 'LÂM Ý'];
+
+// Danh sách nhân viên hoạt động hiện tại (có thể thêm, bớt, đổi nhóm động)
+let STAFF_GROUP_1 = [...DEFAULT_STAFF_G1];
+let STAFF_GROUP_2 = [...DEFAULT_STAFF_G2];
+let ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+
+const STAFF_STORAGE_KEY = 'PHANCA_CUSTOM_STAFF';
+
+/**
+ * Đọc danh sách nhân viên tùy chỉnh từ localStorage (nếu có)
+ */
+function loadCustomStaffList() {
+  try {
+    const saved = localStorage.getItem(STAFF_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed.group1) && parsed.group1.length > 0 &&
+          Array.isArray(parsed.group2) && parsed.group2.length > 0) {
+        STAFF_GROUP_1 = parsed.group1.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+        STAFF_GROUP_2 = parsed.group2.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+        ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi đọc custom staff list:', e);
+  }
+}
+
+/**
+ * Lưu danh sách nhân viên tùy chỉnh vào localStorage
+ */
+function saveCustomStaffList() {
+  try {
+    localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify({
+      group1: STAFF_GROUP_1,
+      group2: STAFF_GROUP_2
+    }));
+  } catch (e) {
+    console.error('Lỗi lưu custom staff list:', e);
+  }
+}
+
+/**
+ * Cập nhật danh sách nhân viên vào ô chọn dropdown "Phân Ca Ai"
+ */
+function updateAssignStaffDropdown() {
+  const select = document.getElementById('assignStaffSelect');
+  if (!select) return;
+  const currentVal = select.value;
+  select.innerHTML = `
+    <optgroup label="🔵 Nhóm 1 (Hành Chính 1)">
+      ${STAFF_GROUP_1.map(s => `<option value="${s}">${s}</option>`).join('')}
+    </optgroup>
+    <optgroup label="🟢 Nhóm 2 (Hành Chính 2)">
+      ${STAFF_GROUP_2.map(s => `<option value="${s}">${s}</option>`).join('')}
+    </optgroup>
+  `;
+  if (ALL_STAFF.includes(currentVal)) {
+    select.value = currentVal;
+  } else if (ALL_STAFF.length > 0) {
+    select.value = ALL_STAFF[0];
+  }
+}
+
+/**
+ * Đảm bảo dữ liệu phân ca trong AppState luôn có đủ slot cho tất cả nhân viên
+ */
+function ensureStaffScheduleIntegrity() {
+  MONTHS.forEach((m) => {
+    if (!AppState.schedule[m]) AppState.schedule[m] = {};
+    WEEKS.forEach((w) => {
+      if (!AppState.schedule[m][w]) AppState.schedule[m][w] = {};
+      ALL_STAFF.forEach((staff) => {
+        if (!AppState.schedule[m][w][staff]) {
+          AppState.schedule[m][w][staff] = { T2: '', T3: '', T4: '', T5: '', T6: '', T7: '', CN: '' };
+        }
+      });
+    });
+  });
+}
 
 const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const WEEKS = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
@@ -119,23 +198,27 @@ function generateBalanced4WeeksSchedule() {
   WEEKS.forEach((wName, wIdx) => {
     result[wName] = {};
 
-    // Nhóm 1 (6 người)
+    // Nhóm 1
     STAFF_GROUP_1.forEach((staff, sIdx) => {
-      const slotIdx = GROUP1_PERMUTATIONS[wIdx][sIdx];
-      const slot = GROUP1_SLOTS[slotIdx];
+      const slotIdx = (wIdx < GROUP1_PERMUTATIONS.length && sIdx < GROUP1_PERMUTATIONS[wIdx].length)
+        ? GROUP1_PERMUTATIONS[wIdx][sIdx]
+        : undefined;
+      const slot = (slotIdx !== undefined) ? GROUP1_SLOTS[slotIdx] : null;
       result[wName][staff] = {};
       DAYS.forEach((d) => {
-        result[wName][staff][d] = slot[d] || '';
+        result[wName][staff][d] = slot ? (slot[d] || '') : '';
       });
     });
 
-    // Nhóm 2 (5 người)
+    // Nhóm 2
     STAFF_GROUP_2.forEach((staff, sIdx) => {
-      const slotIdx = GROUP2_PERMUTATIONS[wIdx][sIdx];
-      const slot = GROUP2_SLOTS[slotIdx];
+      const slotIdx = (wIdx < GROUP2_PERMUTATIONS.length && sIdx < GROUP2_PERMUTATIONS[wIdx].length)
+        ? GROUP2_PERMUTATIONS[wIdx][sIdx]
+        : undefined;
+      const slot = (slotIdx !== undefined) ? GROUP2_SLOTS[slotIdx] : null;
       result[wName][staff] = {};
       DAYS.forEach((d) => {
-        result[wName][staff][d] = slot[d] || '';
+        result[wName][staff][d] = slot ? (slot[d] || '') : '';
       });
     });
   });
@@ -164,6 +247,9 @@ const CURRENT_CACHE_VERSION = 'v6_no_consecutive_2days';
 // KHỞI TẠO DỮ LIỆU BAN ĐẦU
 // ==========================================================================
 function initScheduleData() {
+  // Tải danh sách nhân viên tùy chỉnh từ localStorage (nếu có)
+  loadCustomStaffList();
+
   // Kiểm tra phiên bản cache (nếu cũ thì xóa để cập nhật lịch xoay tua mới)
   const cachedVersion = localStorage.getItem(CACHE_VERSION_KEY);
   if (cachedVersion !== CURRENT_CACHE_VERSION) {
@@ -176,6 +262,8 @@ function initScheduleData() {
   if (cached) {
     try {
       AppState.schedule = JSON.parse(cached);
+      ensureStaffScheduleIntegrity();
+      updateAssignStaffDropdown();
       return;
     } catch (e) {
       console.warn('Lỗi đọc cache local:', e);
@@ -463,6 +551,10 @@ function updateStats() {
   });
 
   document.getElementById('statTotalStaff').textContent = `${ALL_STAFF.length} Người`;
+  const statStaffDescEl = document.getElementById('statStaffDesc');
+  if (statStaffDescEl) {
+    statStaffDescEl.textContent = `Nhóm 1: ${STAFF_GROUP_1.length} • Nhóm 2: ${STAFF_GROUP_2.length}`;
+  }
   document.getElementById('statTNCount').textContent = `${tnTotal} Ca`;
   document.getElementById('statKHOCount').textContent = `${khoTotal} Ca`;
 
@@ -552,6 +644,7 @@ function applyCellChange(month, week, staff, day, newShift) {
 // FORM PHÂN CA "AI" (AI LÀM CA NÀO)
 // ==========================================================================
 function setupAssignForm() {
+  updateAssignStaffDropdown();
   const btnApplyShift = document.getElementById('btnApplyShift');
   const btnApplyWorkDaysOnly = document.getElementById('btnApplyWorkDaysOnly');
 
@@ -925,7 +1018,9 @@ async function saveToGoogleSheet() {
     action: 'saveSchedule',
     month: month,
     week: (AppState.currentWeek === 'all') ? null : AppState.currentWeek,
-    schedule: AppState.schedule[month]
+    schedule: AppState.schedule[month],
+    staffGroup1: STAFF_GROUP_1,
+    staffGroup2: STAFF_GROUP_2
   };
 
   let savedSuccessfully = false;
@@ -1158,6 +1253,293 @@ function closeAlert() {
 }
 
 // ==========================================================================
+// QUẢN LÝ & THÊM DANH SÁCH NHÂN VIÊN TỪNG NHÓM
+// ==========================================================================
+function setupStaffManagerModal() {
+  const modal = document.getElementById('modalStaffManager');
+  const btnOpen = document.getElementById('btnOpenStaffModal');
+  const btnQuickOpen = document.getElementById('btnQuickStaffModal');
+  const statStaffCard = document.getElementById('statStaffCard');
+  const btnClose = document.getElementById('btnCloseStaffModal');
+  const btnCancel = document.getElementById('btnCancelStaffModal');
+  const btnSave = document.getElementById('btnSaveStaffModal');
+  const btnReset = document.getElementById('btnResetDefaultStaff');
+
+  const inputG1 = document.getElementById('inputNewStaffG1');
+  const btnAddG1 = document.getElementById('btnAddStaffG1');
+  const listG1 = document.getElementById('staffListContainerG1');
+
+  const inputG2 = document.getElementById('inputNewStaffG2');
+  const btnAddG2 = document.getElementById('btnAddStaffG2');
+  const listG2 = document.getElementById('staffListContainerG2');
+
+  const countG1El = document.getElementById('modalCountG1');
+  const countG2El = document.getElementById('modalCountG2');
+  const countAllEl = document.getElementById('modalCountAll');
+  const badgeG1El = document.getElementById('badgeCountG1');
+  const badgeG2El = document.getElementById('badgeCountG2');
+
+  const btnToggleBatch = document.getElementById('btnToggleBatchImport');
+  const batchContent = document.getElementById('batchImportContent');
+  const batchChevron = document.getElementById('batchImportChevron');
+  const batchTextarea = document.getElementById('batchStaffTextarea');
+  const batchTargetGroup = document.getElementById('batchTargetGroup');
+  const btnExecuteBatch = document.getElementById('btnExecuteBatchImport');
+
+  let tempG1 = [];
+  let tempG2 = [];
+
+  function openModal() {
+    tempG1 = [...STAFF_GROUP_1];
+    tempG2 = [...STAFF_GROUP_2];
+    renderModalLists();
+    modal.classList.remove('hidden');
+    if (inputG1) inputG1.focus();
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+  }
+
+  function renderModalLists() {
+    if (countG1El) countG1El.textContent = `${tempG1.length} Nhân Viên`;
+    if (countG2El) countG2El.textContent = `${tempG2.length} Nhân Viên`;
+    if (countAllEl) countAllEl.textContent = `${tempG1.length + tempG2.length} Nhân Viên`;
+    if (badgeG1El) badgeG1El.textContent = `${tempG1.length} Người`;
+    if (badgeG2El) badgeG2El.textContent = `${tempG2.length} Người`;
+
+    // Render Nhóm 1
+    if (listG1) {
+      listG1.innerHTML = '';
+      if (tempG1.length === 0) {
+        listG1.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px; font-size: 0.85rem;">Chưa có nhân viên nào trong Nhóm 1</div>';
+      } else {
+        tempG1.forEach((name, idx) => {
+          const item = document.createElement('div');
+          item.className = 'staff-item-row';
+          const initial = name.charAt(0);
+          item.innerHTML = `
+            <div class="staff-item-left">
+              <span class="staff-item-order">${idx + 1}</span>
+              <div class="staff-avatar-circle g1">${initial}</div>
+              <span class="staff-item-name">${name}</span>
+            </div>
+            <div class="staff-item-actions">
+              <button type="button" class="btn-item-action btn-switch-group" data-group="1" data-idx="${idx}" title="Chuyển sang Nhóm 2">
+                <i class="fa-solid fa-right-left"></i> Nhóm 2
+              </button>
+              <button type="button" class="btn-item-action btn-delete-staff" data-group="1" data-idx="${idx}" title="Xóa nhân viên">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+          listG1.appendChild(item);
+        });
+      }
+    }
+
+    // Render Nhóm 2
+    if (listG2) {
+      listG2.innerHTML = '';
+      if (tempG2.length === 0) {
+        listG2.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px; font-size: 0.85rem;">Chưa có nhân viên nào trong Nhóm 2</div>';
+      } else {
+        tempG2.forEach((name, idx) => {
+          const item = document.createElement('div');
+          item.className = 'staff-item-row';
+          const initial = name.charAt(0);
+          item.innerHTML = `
+            <div class="staff-item-left">
+              <span class="staff-item-order">${idx + 1}</span>
+              <div class="staff-avatar-circle g2">${initial}</div>
+              <span class="staff-item-name">${name}</span>
+            </div>
+            <div class="staff-item-actions">
+              <button type="button" class="btn-item-action btn-switch-group" data-group="2" data-idx="${idx}" title="Chuyển sang Nhóm 1">
+                <i class="fa-solid fa-right-left"></i> Nhóm 1
+              </button>
+              <button type="button" class="btn-item-action btn-delete-staff" data-group="2" data-idx="${idx}" title="Xóa nhân viên">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          `;
+          listG2.appendChild(item);
+        });
+      }
+    }
+  }
+
+  // Thêm nhân viên vào Nhóm 1
+  function addStaffG1() {
+    if (!inputG1) return;
+    const raw = inputG1.value.trim().toUpperCase();
+    if (!raw) {
+      showToast('Vui lòng nhập tên nhân viên!', 'warning');
+      return;
+    }
+    if (tempG1.includes(raw) || tempG2.includes(raw)) {
+      showToast(`Nhân viên "${raw}" đã tồn tại trong danh sách!`, 'warning');
+      return;
+    }
+    tempG1.push(raw);
+    inputG1.value = '';
+    renderModalLists();
+    showToast(`Đã thêm "${raw}" vào Nhóm 1`, 'info');
+  }
+
+  // Thêm nhân viên vào Nhóm 2
+  function addStaffG2() {
+    if (!inputG2) return;
+    const raw = inputG2.value.trim().toUpperCase();
+    if (!raw) {
+      showToast('Vui lòng nhập tên nhân viên!', 'warning');
+      return;
+    }
+    if (tempG1.includes(raw) || tempG2.includes(raw)) {
+      showToast(`Nhân viên "${raw}" đã tồn tại trong danh sách!`, 'warning');
+      return;
+    }
+    tempG2.push(raw);
+    inputG2.value = '';
+    renderModalLists();
+    showToast(`Đã thêm "${raw}" vào Nhóm 2`, 'info');
+  }
+
+  if (btnAddG1) btnAddG1.addEventListener('click', addStaffG1);
+  if (inputG1) inputG1.addEventListener('keydown', (e) => { if (e.key === 'Enter') addStaffG1(); });
+
+  if (btnAddG2) btnAddG2.addEventListener('click', addStaffG2);
+  if (inputG2) inputG2.addEventListener('keydown', (e) => { if (e.key === 'Enter') addStaffG2(); });
+
+  // Event delegation cho chuyển nhóm & xóa
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      const switchBtn = e.target.closest('.btn-switch-group');
+      if (switchBtn) {
+        const g = parseInt(switchBtn.dataset.group, 10);
+        const idx = parseInt(switchBtn.dataset.idx, 10);
+        if (g === 1) {
+          const moved = tempG1.splice(idx, 1)[0];
+          tempG2.push(moved);
+          showToast(`Đã chuyển "${moved}" sang Nhóm 2`, 'info');
+        } else {
+          const moved = tempG2.splice(idx, 1)[0];
+          tempG1.push(moved);
+          showToast(`Đã chuyển "${moved}" sang Nhóm 1`, 'info');
+        }
+        renderModalLists();
+        return;
+      }
+
+      const delBtn = e.target.closest('.btn-delete-staff');
+      if (delBtn) {
+        const g = parseInt(delBtn.dataset.group, 10);
+        const idx = parseInt(delBtn.dataset.idx, 10);
+        const targetName = (g === 1) ? tempG1[idx] : tempG2[idx];
+        if (confirm(`Bạn có chắc muốn xóa nhân viên "${targetName}" khỏi danh sách?`)) {
+          if (g === 1) tempG1.splice(idx, 1);
+          else tempG2.splice(idx, 1);
+          renderModalLists();
+          showToast(`Đã xóa "${targetName}"`, 'info');
+        }
+        return;
+      }
+    });
+  }
+
+  // Toggle Batch Import
+  if (btnToggleBatch && batchContent) {
+    btnToggleBatch.addEventListener('click', () => {
+      const isHidden = batchContent.classList.contains('hidden');
+      if (isHidden) {
+        batchContent.classList.remove('hidden');
+        if (batchChevron) {
+          batchChevron.classList.remove('fa-chevron-down');
+          batchChevron.classList.add('fa-chevron-up');
+        }
+      } else {
+        batchContent.classList.add('hidden');
+        if (batchChevron) {
+          batchChevron.classList.remove('fa-chevron-up');
+          batchChevron.classList.add('fa-chevron-down');
+        }
+      }
+    });
+  }
+
+  // Thực thi Batch Import
+  if (btnExecuteBatch) {
+    btnExecuteBatch.addEventListener('click', () => {
+      const text = batchTextarea ? batchTextarea.value.trim() : '';
+      if (!text) {
+        showToast('Vui lòng dán danh sách tên nhân viên vào ô trước!', 'warning');
+        return;
+      }
+      const names = text.split(/[\n,;]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+      if (names.length === 0) {
+        showToast('Không tìm thấy tên nhân viên hợp lệ!', 'warning');
+        return;
+      }
+      const targetG = batchTargetGroup ? batchTargetGroup.value : '1';
+      let addedCount = 0;
+      names.forEach(n => {
+        if (!tempG1.includes(n) && !tempG2.includes(n)) {
+          if (targetG === '1') tempG1.push(n);
+          else tempG2.push(n);
+          addedCount++;
+        }
+      });
+      if (batchTextarea) batchTextarea.value = '';
+      renderModalLists();
+      showToast(`Đã nạp thêm ${addedCount} nhân viên vào Nhóm ${targetG}!`, 'success');
+    });
+  }
+
+  // Khôi phục mặc định
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      if (confirm('Khôi phục lại danh sách 11 nhân viên mặc định ban đầu theo ca mẫu?')) {
+        tempG1 = [...DEFAULT_STAFF_G1];
+        tempG2 = [...DEFAULT_STAFF_G2];
+        renderModalLists();
+        showToast('Đã khôi phục danh sách nhân viên mặc định', 'info');
+      }
+    });
+  }
+
+  // Lưu và áp dụng
+  if (btnSave) {
+    btnSave.addEventListener('click', () => {
+      if (tempG1.length === 0 || tempG2.length === 0) {
+        showToast('Mỗi nhóm phải có ít nhất 1 nhân viên!', 'error');
+        return;
+      }
+
+      STAFF_GROUP_1 = [...tempG1];
+      STAFF_GROUP_2 = [...tempG2];
+      ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+
+      saveCustomStaffList();
+      ensureStaffScheduleIntegrity();
+      updateAssignStaffDropdown();
+      renderSchedule();
+      updateStats();
+
+      AppState.unsavedChangesCount += 1;
+      saveLocalCache();
+      closeModal();
+      showToast(`✅ Đã cập nhật: Nhóm 1 (${STAFF_GROUP_1.length} người), Nhóm 2 (${STAFF_GROUP_2.length} người). Hãy bấm "Lưu Vào Google Sheet" để đồng bộ!`, 'success');
+    });
+  }
+
+  if (btnOpen) btnOpen.addEventListener('click', openModal);
+  if (btnQuickOpen) btnQuickOpen.addEventListener('click', openModal);
+  if (statStaffCard) statStaffCard.addEventListener('click', openModal);
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+}
+
+// ==========================================================================
 // KHỞI ĐỘNG ỨNG DỤNG KHI TẢI TRANG
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -1165,6 +1547,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupMonthAndWeekControls();
   setupTableInteractions();
   setupAssignForm();
+  setupStaffManagerModal();
   setupStampBrushes();
   setupAutoRotateModal();
   setupImageExport();

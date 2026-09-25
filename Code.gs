@@ -260,10 +260,10 @@ function findMonthInfo(values, targetMonth) {
         }
       }
 
-      // Quét danh sách nhân viên
+      // Quét danh sách nhân viên (hỗ trợ tới 45 nhân viên mỗi tháng)
       const staffList = [];
       let yCount = 0;
-      for (let e = hRow + 1; e < Math.min(hRow + 18, values.length); e++) {
+      for (let e = hRow + 1; e < Math.min(hRow + 45, values.length); e++) {
         let empName = String(values[e][3] || '').trim();
         if (empName && !empName.toUpperCase().startsWith('THÁNG')) {
           if (empName.toUpperCase() === 'Ý' || empName.toUpperCase() === 'Y') {
@@ -334,16 +334,24 @@ function extractAllScheduleData() {
     });
   });
 
+  let savedGroups = null;
+  try {
+    const rawGroups = PropertiesService.getScriptProperties().getProperty('STAFF_GROUPS');
+    if (rawGroups) savedGroups = JSON.parse(rawGroups);
+  } catch (e) {}
+
   return {
     months: monthsFound.map(m => m.name),
     staff: (monthsFound.length > 0 && monthsFound[0].staff.length > 0) ? monthsFound[0].staff.map(s => s.name) : DEFAULT_STAFF.map(s => s.name),
+    staffGroup1: savedGroups?.group1 || DEFAULT_STAFF.filter(s => s.group === 1).map(s => s.name),
+    staffGroup2: savedGroups?.group2 || DEFAULT_STAFF.filter(s => s.group === 2).map(s => s.name),
     schedule: scheduleResult
   };
 }
 
 /**
  * Lưu dữ liệu phân ca vào sheet "phanca"
- * @param {Object} payload { month, week, schedule: { [week]: { [staff]: { T2, T3... } } } }
+ * @param {Object} payload { month, week, schedule, staffGroup1, staffGroup2 }
  */
 function saveScheduleToSheet(payload) {
   // ĐẢM BẢO 100% SHEET ĐÍCH LÀ "phanca"
@@ -371,6 +379,40 @@ function saveScheduleToSheet(payload) {
 
   if (!monthInfo) {
     return { status: 'error', message: `Không tìm thấy khối ${targetMonth} trên sheet "${TARGET_SHEET_NAME}"` };
+  }
+
+  // Đồng bộ danh sách nhân viên 2 nhóm vào sheet nếu có gửi kèm từ Website
+  const customG1 = Array.isArray(payload.staffGroup1) ? payload.staffGroup1 : null;
+  const customG2 = Array.isArray(payload.staffGroup2) ? payload.staffGroup2 : null;
+  if (customG1 && customG2) {
+    try {
+      PropertiesService.getScriptProperties().setProperty('STAFF_GROUPS', JSON.stringify({
+        group1: customG1,
+        group2: customG2
+      }));
+    } catch (e) {}
+
+    const combinedStaff = [...customG1, ...customG2];
+    const staffRowStart = monthInfo.startEmpRow;
+    const currentStaffCount = monthInfo.staff.length;
+
+    // Nếu số nhân viên mới nhiều hơn số dòng hiện có trong tháng, chèn thêm dòng
+    if (combinedStaff.length > currentStaffCount) {
+      const extraNeeded = combinedStaff.length - currentStaffCount;
+      sheet.insertRowsAfter(monthInfo.endEmpRow, extraNeeded);
+    }
+
+    // Ghi tên nhân viên vào tất cả các tuần (cột 4, 13, 22, 31)
+    combinedStaff.forEach((sName, sIdx) => {
+      const r = staffRowStart + sIdx;
+      [4, 13, 22, 31].forEach(col => {
+        sheet.getRange(r, col).setValue(sName).setFontWeight('bold');
+      });
+    });
+
+    // Tải lại giá trị sau khi cập nhật tên
+    const reloadedValues = sheet.getRange(1, 1, Math.max(sheet.getLastRow(), 55), 38).getValues();
+    monthInfo = findMonthInfo(reloadedValues, targetMonth) || monthInfo;
   }
 
   const weekColsMap = {

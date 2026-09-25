@@ -1588,4 +1588,320 @@ body {
   .rotate-inputs {
     grid-template-columns: 1fr;
   }
+  .staff-manager-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
+
+/* ==========================================================================
+   STAFF MANAGER MODAL & CONTROLS (Thêm & Quản lý danh sách nhân viên từng nhóm)
+   ========================================================================== */
+.btn-link-action {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.btn-link-action:hover {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.staff-overview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.staff-stat-mini-card {
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-stat-mini-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.staff-stat-mini-card.g1 .staff-stat-mini-icon { background: #dbeafe; color: #1d4ed8; }
+.staff-stat-mini-card.g2 .staff-stat-mini-icon { background: #d1fae5; color: #047857; }
+.staff-stat-mini-card.all .staff-stat-mini-icon { background: #ede9fe; color: #6d28d9; }
+
+.staff-stat-mini-text span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.staff-stat-mini-text strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.staff-manager-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.staff-group-panel {
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-group-panel.g1-panel { border-top: 4px solid #3b82f6; }
+.staff-group-panel.g2-panel { border-top: 4px solid #10b981; }
+
+.staff-group-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.staff-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.staff-count-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+}
+
+.staff-count-pill.g1 { background: #dbeafe; color: #1d4ed8; }
+.staff-count-pill.g2 { background: #d1fae5; color: #047857; }
+
+.staff-add-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.staff-add-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: white;
+  transition: all 0.2s;
+}
+
+.staff-add-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.btn-add-staff-action {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-add-staff-action.g1 { background: #2563eb; }
+.btn-add-staff-action.g1:hover { background: #1d4ed8; }
+.btn-add-staff-action.g2 { background: #059669; }
+.btn-add-staff-action.g2:hover { background: #047857; }
+
+.staff-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.staff-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.staff-item-row:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.staff-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.staff-item-order {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #94a3b8;
+  width: 18px;
+  text-align: center;
+}
+
+.staff-avatar-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.staff-avatar-circle.g1 { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.staff-avatar-circle.g2 { background: linear-gradient(135deg, #10b981, #047857); }
+
+.staff-item-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+}
+
+.staff-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-item-action {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-item-action:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btn-item-action.btn-switch-group:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.btn-item-action.btn-delete-staff:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.batch-import-wrapper {
+  background: #fafafa;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.batch-import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.batch-import-header h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.batch-import-content {
+  margin-top: 14px;
+}
+
+.batch-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+  background: white;
+}
+
+.batch-textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.batch-import-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+

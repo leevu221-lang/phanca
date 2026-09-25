@@ -42,6 +42,10 @@
       </div>
 
       <div class="header-actions">
+        <button id="btnOpenStaffModal" class="btn btn-secondary" title="Thêm & Quản lý danh sách nhân viên từng nhóm">
+          <i class="fa-solid fa-user-group"></i>
+          <span>Quản lý nhân viên</span>
+        </button>
         <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Google Sheet">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span>Đồng bộ ngay</span>
@@ -73,14 +77,14 @@
 
       <!-- Quick Stats & Overview Cards -->
       <section class="stats-grid">
-        <div class="stat-card">
+        <div class="stat-card" id="statStaffCard" style="cursor: pointer;" title="Bấm để mở Quản lý nhân viên từng nhóm">
           <div class="stat-icon bg-blue-subtle">
             <i class="fa-solid fa-users text-blue"></i>
           </div>
           <div class="stat-details">
             <span class="stat-label">Tổng Nhân Viên</span>
             <h3 class="stat-value" id="statTotalStaff">11 Người</h3>
-            <span class="stat-desc">Nhóm 1: 6 • Nhóm 2: 5</span>
+            <span class="stat-desc" id="statStaffDesc">Nhóm 1: 6 • Nhóm 2: 5</span>
           </div>
         </div>
 
@@ -177,7 +181,12 @@
             <div class="assign-inputs-grid">
               <!-- Chọn Nhân Viên (Ai) -->
               <div class="form-group">
-                <label for="assignStaffSelect"><i class="fa-solid fa-user"></i> Nhân viên (Ai):</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label for="assignStaffSelect" style="margin-bottom: 0;"><i class="fa-solid fa-user"></i> Nhân viên (Ai):</label>
+                  <button type="button" id="btnQuickStaffModal" class="btn-link-action" title="Quản lý & Thêm danh sách nhân viên">
+                    <i class="fa-solid fa-user-plus"></i> Thêm nhân viên
+                  </button>
+                </div>
                 <select id="assignStaffSelect" class="custom-select">
                   <optgroup label="🔵 Nhóm 1">
                     <option value="NHẠN">NHẠN</option>
@@ -597,6 +606,143 @@
         <a id="btnDownloadImageLink" href="#" download="Bang_Phan_Ca.png" class="btn btn-primary">
           <i class="fa-solid fa-download"></i> Tải Ảnh PNG Về Máy
         </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Quản Lý & Thêm Nhân Viên Từng Nhóm -->
+  <div class="modal-backdrop hidden" id="modalStaffManager">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-users-gear text-blue" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #0f172a;">👥 Quản Lý & Thêm Nhân Viên Từng Nhóm</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Thêm mới, đổi tên, xóa hoặc chuyển đổi nhân viên giữa Nhóm 1 và Nhóm 2</span>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseStaffModal">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <!-- Stats overview -->
+        <div class="staff-overview-stats">
+          <div class="staff-stat-mini-card g1">
+            <div class="staff-stat-mini-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="staff-stat-mini-text">
+              <span>🔵 Nhóm 1 (Hành Chính 1)</span>
+              <strong id="modalCountG1">6 Nhân Viên</strong>
+            </div>
+          </div>
+          <div class="staff-stat-mini-card g2">
+            <div class="staff-stat-mini-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="staff-stat-mini-text">
+              <span>🟢 Nhóm 2 (Hành Chính 2)</span>
+              <strong id="modalCountG2">5 Nhân Viên</strong>
+            </div>
+          </div>
+          <div class="staff-stat-mini-card all">
+            <div class="staff-stat-mini-icon"><i class="fa-solid fa-id-card-clip"></i></div>
+            <div class="staff-stat-mini-text">
+              <span>👥 Tổng Cộng Cửa Hàng</span>
+              <strong id="modalCountAll">11 Nhân Viên</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 Columns Grid -->
+        <div class="staff-manager-grid">
+          <!-- Cột Nhóm 1 -->
+          <div class="staff-group-panel g1-panel">
+            <div class="staff-group-panel-header">
+              <div class="staff-group-title">
+                <i class="fa-solid fa-users text-blue"></i>
+                <span>Nhóm 1 (Hành Chính 1)</span>
+              </div>
+              <span class="staff-count-pill g1" id="badgeCountG1">6 Người</span>
+            </div>
+
+            <!-- Form thêm nhanh Nhóm 1 -->
+            <div class="staff-add-box">
+              <input type="text" id="inputNewStaffG1" class="staff-add-input" placeholder="Tên nhân viên (VD: HÙNG)..." maxlength="30">
+              <button id="btnAddStaffG1" class="btn-add-staff-action g1" type="button">
+                <i class="fa-solid fa-plus"></i> Thêm
+              </button>
+            </div>
+
+            <!-- Danh sách nhân viên Nhóm 1 -->
+            <div class="staff-list-container" id="staffListContainerG1">
+              <!-- Render via JS -->
+            </div>
+          </div>
+
+          <!-- Cột Nhóm 2 -->
+          <div class="staff-group-panel g2-panel">
+            <div class="staff-group-panel-header">
+              <div class="staff-group-title">
+                <i class="fa-solid fa-users text-emerald"></i>
+                <span>Nhóm 2 (Hành Chính 2)</span>
+              </div>
+              <span class="staff-count-pill g2" id="badgeCountG2">5 Người</span>
+            </div>
+
+            <!-- Form thêm nhanh Nhóm 2 -->
+            <div class="staff-add-box">
+              <input type="text" id="inputNewStaffG2" class="staff-add-input" placeholder="Tên nhân viên (VD: TRANG)..." maxlength="30">
+              <button id="btnAddStaffG2" class="btn-add-staff-action g2" type="button">
+                <i class="fa-solid fa-plus"></i> Thêm
+              </button>
+            </div>
+
+            <!-- Danh sách nhân viên Nhóm 2 -->
+            <div class="staff-list-container" id="staffListContainerG2">
+              <!-- Render via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Batch Import Accordion -->
+        <div class="batch-import-wrapper">
+          <div class="batch-import-header" id="btnToggleBatchImport">
+            <h4><i class="fa-solid fa-file-import text-blue"></i> Nhập danh sách nhanh từ văn bản / Excel</h4>
+            <i class="fa-solid fa-chevron-down" id="batchImportChevron"></i>
+          </div>
+          <div class="batch-import-content hidden" id="batchImportContent">
+            <p style="font-size: 0.8rem; color: #64748b; margin: 8px 0;">
+              Dán danh sách tên nhân viên vào đây (mỗi dòng một tên hoặc cách nhau bằng dấu phẩy).
+            </p>
+            <textarea id="batchStaffTextarea" class="batch-textarea" rows="3" placeholder="VD:&#10;HOÀNG ANH&#10;MINH CHÂU&#10;QUỐC BẢO"></textarea>
+            <div class="batch-import-actions">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 0.82rem; font-weight: 600; color: #334155;">Thêm vào:</label>
+                <select id="batchTargetGroup" class="custom-select" style="padding: 4px 10px; font-size: 0.82rem; width: auto;">
+                  <option value="1">🔵 Nhóm 1 (Hành Chính 1)</option>
+                  <option value="2">🟢 Nhóm 2 (Hành Chính 2)</option>
+                </select>
+              </div>
+              <button type="button" id="btnExecuteBatchImport" class="btn btn-secondary btn-sm">
+                <i class="fa-solid fa-arrow-down-long"></i> Nạp Toàn Bộ Vào Nhóm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-info text-blue"></i>
+          <span>Khi lưu, danh sách nhân viên mới sẽ tự động hiển thị trên bảng phân ca, menu phân ca và sẵn sàng đồng bộ vào sheet "phanca".</span>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button id="btnResetDefaultStaff" class="btn btn-ghost" style="color: #e11d48;" type="button" title="Khôi phục lại danh sách 11 nhân viên ban đầu">
+          <i class="fa-solid fa-rotate-left"></i> Khôi Phục Mặc Định
+        </button>
+        <div style="display: flex; gap: 10px;">
+          <button id="btnCancelStaffModal" class="btn btn-secondary" type="button">Đóng</button>
+          <button id="btnSaveStaffModal" class="btn btn-primary" type="button">
+            <i class="fa-solid fa-check"></i> Lưu & Cập Nhật Bảng Ca
+          </button>
+        </div>
       </div>
     </div>
   </div>
