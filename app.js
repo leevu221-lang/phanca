@@ -350,16 +350,18 @@ function renderSingleWeekView() {
   const weekData = (AppState.schedule[month] && AppState.schedule[month][week]) ? AppState.schedule[month][week] : {};
 
   // Render Nhóm 1
-  renderGroupRows(tbody, '🔵 Nhóm 1 (Hành Chính 1)', STAFF_GROUP_1, 1, weekData);
+  renderGroupRows(tbody, '🔵 Nhóm 1 (Hành Chính 1)', STAFF_GROUP_1, 1, weekData, week);
 
   // Render Nhóm 2
-  renderGroupRows(tbody, '🟢 Nhóm 2 (Hành Chính 2)', STAFF_GROUP_2, 2, weekData);
+  renderGroupRows(tbody, '🟢 Nhóm 2 (Hành Chính 2)', STAFF_GROUP_2, 2, weekData, week);
 }
 
 /**
  * Render các hàng nhân viên theo nhóm
  */
-function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData) {
+function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData, weekName) {
+  const currentWeek = weekName || AppState.currentWeek;
+
   // Dòng tiêu đề nhóm
   const groupRow = document.createElement('tr');
   groupRow.className = `group-separator-row group-${groupNum}`;
@@ -401,7 +403,7 @@ function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData) {
         <td class="shift-cell ${isSunday ? 'col-sunday' : ''}" 
             data-staff="${staffName}" 
             data-day="${day}" 
-            data-week="${AppState.currentWeek}">
+            data-week="${currentWeek}">
           ${cellContent}
         </td>
       `;
@@ -434,7 +436,7 @@ function renderGroupRows(tbody, groupTitle, staffList, groupNum, weekData) {
 }
 
 /**
- * Render chế độ xem cả tháng (4 tuần)
+ * Render chế độ xem cả tháng (4 tuần) - cũng chia thành 2 nhóm như xem 1 tuần
  */
 function renderAllWeeksView(container) {
   container.innerHTML = '';
@@ -460,72 +462,36 @@ function renderAllWeeksView(container) {
       `;
     });
 
-    let tableHtml = `
-      <div class="week-block-title">
-        <i class="fa-regular fa-calendar-check"></i> ${weekName} - ${month} (${weekDates['T2']} - ${weekDates['CN']})
-      </div>
-      <table class="schedule-table">
-        <thead>
-          <tr>
-            <th class="col-stt">STT</th>
-            <th class="col-name">NHÂN VIÊN</th>
-            ${daysThHtml}
-            <th class="col-summary">TN</th>
-            <th class="col-summary">KHO</th>
-            <th class="col-summary">Nghỉ</th>
-          </tr>
-        </thead>
-        <tbody>
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'week-block-title';
+    titleDiv.innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${weekName} - ${month} (${weekDates['T2']} - ${weekDates['CN']})`;
+
+    const table = document.createElement('table');
+    table.className = 'schedule-table';
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th class="col-stt">STT</th>
+          <th class="col-name">NHÂN VIÊN</th>
+          <th class="col-group">NHÓM</th>
+          ${daysThHtml}
+          <th class="col-summary">TN</th>
+          <th class="col-summary">KHO</th>
+          <th class="col-summary">Nghỉ</th>
+        </tr>
+      </thead>
     `;
 
-    // Render 11 nhân viên
-    ALL_STAFF.forEach((staffName, idx) => {
-      const staffShifts = weekData[staffName] || {};
-      let tnCount = 0, khoCount = 0, offCount = 0;
+    const tbody = document.createElement('tbody');
+    // Render Nhóm 1
+    renderGroupRows(tbody, '🔵 Nhóm 1 (Hành Chính 1)', STAFF_GROUP_1, 1, weekData, weekName);
 
-      let daysCells = '';
-      DAYS.forEach((day) => {
-        const shiftVal = String(staffShifts[day] || '').trim();
-        const upperVal = shiftVal.toUpperCase();
+    // Render Nhóm 2
+    renderGroupRows(tbody, '🟢 Nhóm 2 (Hành Chính 2)', STAFF_GROUP_2, 2, weekData, weekName);
 
-        if (upperVal === 'TN') tnCount++;
-        else if (upperVal === 'KHO') khoCount++;
-        else if (upperVal === 'X') offCount++;
-
-        let cellContent = '';
-        if (upperVal === 'TN') {
-          cellContent = '<span class="shift-badge badge-tn">TN</span>';
-        } else if (upperVal === 'KHO') {
-          cellContent = '<span class="shift-badge badge-kho">KHO</span>';
-        } else if (upperVal === 'HC') {
-          cellContent = '<span class="shift-badge badge-hc">HC</span>';
-        } else if (upperVal === 'X') {
-          cellContent = '<span class="shift-badge badge-off">x</span>';
-        } else {
-          cellContent = '<span class="shift-empty">-</span>';
-        }
-
-        daysCells += `
-          <td class="shift-cell" data-staff="${staffName}" data-day="${day}" data-week="${weekName}">
-            ${cellContent}
-          </td>
-        `;
-      });
-
-      tableHtml += `
-        <tr>
-          <td>${idx + 1}</td>
-          <td class="col-name"><strong>${staffName}</strong></td>
-          ${daysCells}
-          <td>${tnCount}</td>
-          <td>${khoCount}</td>
-          <td class="text-danger">${offCount}</td>
-        </tr>
-      `;
-    });
-
-    tableHtml += `</tbody></table>`;
-    weekBlock.innerHTML = tableHtml;
+    table.appendChild(tbody);
+    weekBlock.appendChild(titleDiv);
+    weekBlock.appendChild(table);
     container.appendChild(weekBlock);
   });
 }
@@ -1174,82 +1140,6 @@ function setupSettingsModal() {
       syncFromGoogleSheet();
     }
   });
-
-  // Xuất file sao lưu (JSON)
-  const btnExportBackup = document.getElementById('btnExportBackup');
-  if (btnExportBackup) {
-    btnExportBackup.addEventListener('click', () => {
-      const backupData = {
-        app: 'phanca',
-        exportDate: new Date().toISOString(),
-        version: CURRENT_CACHE_VERSION,
-        staffGroup1: STAFF_GROUP_1,
-        staffGroup2: STAFF_GROUP_2,
-        schedule: AppState.schedule
-      };
-
-      const now = new Date();
-      const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-      const fileName = `phanca_backup_${dateStr}.json`;
-
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      showToast(`📦 Đã xuất file sao lưu: ${fileName}`, 'success');
-    });
-  }
-
-  // Khôi phục từ file sao lưu (JSON)
-  const inputRestoreBackup = document.getElementById('inputRestoreBackup');
-  if (inputRestoreBackup) {
-    inputRestoreBackup.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const imported = JSON.parse(event.target.result);
-          if (!imported || typeof imported !== 'object' || !imported.schedule) {
-            throw new Error('File không đúng định dạng dữ liệu phân ca!');
-          }
-
-          if (confirm('Khôi phục dữ liệu từ file sao lưu này? Dữ liệu hiện tại trên màn hình sẽ được thay thế.')) {
-            if (Array.isArray(imported.staffGroup1) && Array.isArray(imported.staffGroup2)) {
-              STAFF_GROUP_1 = imported.staffGroup1.map(s => String(s).trim().toUpperCase()).filter(Boolean);
-              STAFF_GROUP_2 = imported.staffGroup2.map(s => String(s).trim().toUpperCase()).filter(Boolean);
-              ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
-              saveCustomStaffList();
-            }
-
-            AppState.schedule = imported.schedule;
-            ensureStaffScheduleIntegrity();
-            saveLocalCache();
-            updateAssignStaffDropdown();
-            renderSchedule();
-            updateStats();
-
-            AppState.unsavedChangesCount += 1;
-            closeModal();
-            showToast('🎉 Đã khôi phục dữ liệu từ bản sao lưu thành công! Hãy bấm "Lưu Vào Google Sheet" nếu muốn đồng bộ.', 'success');
-          }
-        } catch (err) {
-          console.error('Lỗi khôi phục backup:', err);
-          showToast('Không thể đọc file sao lưu: ' + err.message, 'error');
-        } finally {
-          inputRestoreBackup.value = '';
-        }
-      };
-      reader.readAsText(file);
-    });
-  }
 }
 
 // ==========================================================================
