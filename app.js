@@ -191,37 +191,116 @@ function updateTableDateHeaders() {
 }
 
 /**
- * Sinh lịch 4 tuần cân bằng tuyệt đối từ Ca Mẫu Tuần 1
+ * Sinh lịch 4 tuần xoay tua cân bằng kết hợp cơ chế Đôn Ca Domino khi nhân viên nghỉ OFF ('x')
+ * @param {string} [targetMonth] - Tháng cần xoay tua (mặc định lấy tháng hiện tại)
+ * @returns {Object} Lịch 4 tuần đã được xoay tua và đôn ca domino
  */
-function generateBalanced4WeeksSchedule() {
+function generateBalanced4WeeksSchedule(targetMonth) {
+  const month = targetMonth || AppState.currentMonth || 'THÁNG 09';
   const result = {};
+  const dominoLog = {}; // Lưu lịch sử đôn ca để hiển thị chú thích trực quan
+
   WEEKS.forEach((wName, wIdx) => {
     result[wName] = {};
+    dominoLog[wName] = {};
 
-    // Nhóm 1
-    STAFF_GROUP_1.forEach((staff, sIdx) => {
-      const slotIdx = (wIdx < GROUP1_PERMUTATIONS.length && sIdx < GROUP1_PERMUTATIONS[wIdx].length)
-        ? GROUP1_PERMUTATIONS[wIdx][sIdx]
-        : undefined;
-      const slot = (slotIdx !== undefined) ? GROUP1_SLOTS[slotIdx] : null;
+    // Lấy dữ liệu hiện tại của tuần trong tháng (nơi người dùng đã tick các ngày 'x')
+    const existingWeekData = (AppState.schedule && AppState.schedule[month] && AppState.schedule[month][wName])
+      ? AppState.schedule[month][wName]
+      : {};
+
+    // 1. Khởi tạo dữ liệu: Giữ nguyên 100% các ô đã đánh dấu nghỉ OFF ('x' hoặc 'X')
+    ALL_STAFF.forEach((staff) => {
       result[wName][staff] = {};
       DAYS.forEach((d) => {
-        result[wName][staff][d] = slot ? (slot[d] || '') : '';
+        const curVal = String(existingWeekData[staff]?.[d] || '').trim();
+        if (curVal.toUpperCase() === 'X') {
+          result[wName][staff][d] = 'x';
+        } else if (curVal.toUpperCase() === 'HC') {
+          result[wName][staff][d] = 'HC';
+        } else {
+          result[wName][staff][d] = '';
+        }
       });
     });
 
-    // Nhóm 2
-    STAFF_GROUP_2.forEach((staff, sIdx) => {
-      const slotIdx = (wIdx < GROUP2_PERMUTATIONS.length && sIdx < GROUP2_PERMUTATIONS[wIdx].length)
-        ? GROUP2_PERMUTATIONS[wIdx][sIdx]
-        : undefined;
-      const slot = (slotIdx !== undefined) ? GROUP2_SLOTS[slotIdx] : null;
-      result[wName][staff] = {};
-      DAYS.forEach((d) => {
-        result[wName][staff][d] = slot ? (slot[d] || '') : '';
+    // 2. Thuật toán gán ca & Đôn ca Domino cho từng nhóm nhân viên theo từng ngày
+    function processGroupForDay(staffList, permutations, slots, day) {
+      const N = staffList.length;
+      let plannedTNStaff = null;
+      let plannedKHOStaff = null;
+
+      // Xác định nhân sự theo ma trận ca mẫu tuần
+      staffList.forEach((staff, sIdx) => {
+        const slotIdx = (wIdx < permutations.length && sIdx < permutations[wIdx].length)
+          ? permutations[wIdx][sIdx]
+          : (sIdx % slots.length);
+        const slot = slots[slotIdx];
+        const shift = slot ? (slot[day] || '') : '';
+        if (shift === 'TN') plannedTNStaff = staff;
+        if (shift === 'KHO') plannedKHOStaff = staff;
       });
+
+      // Kiểm tra ngày nghỉ OFF của các nhân viên trong ngày này
+      const isOff = {};
+      staffList.forEach((staff) => {
+        const val = String(existingWeekData[staff]?.[day] || '').trim().toUpperCase();
+        isOff[staff] = (val === 'X');
+      });
+
+      // GÁN CA TN (Nếu người được phân công nghỉ OFF -> Đôn Domino người tiếp theo)
+      let actualTNStaff = null;
+      if (plannedTNStaff) {
+        if (!isOff[plannedTNStaff]) {
+          actualTNStaff = plannedTNStaff;
+          result[wName][actualTNStaff][day] = 'TN';
+        } else {
+          // Bắt đầu đôn Domino từ người kế tiếp sau plannedTNStaff
+          const startIdx = staffList.indexOf(plannedTNStaff);
+          for (let step = 1; step < N; step++) {
+            const cand = staffList[(startIdx + step) % N];
+            if (isOff[cand]) continue; // Người này cũng nghỉ OFF -> tiếp tục đôn người sau
+            if (cand === plannedKHOStaff && !isOff[plannedKHOStaff]) continue; // Người này đang trực KHO -> không thể gán TN
+            actualTNStaff = cand;
+            result[wName][actualTNStaff][day] = 'TN';
+            if (!dominoLog[wName][actualTNStaff]) dominoLog[wName][actualTNStaff] = {};
+            dominoLog[wName][actualTNStaff][day] = `Đôn trực thay TN cho ${plannedTNStaff} (do ${plannedTNStaff} nghỉ OFF)`;
+            break;
+          }
+        }
+      }
+
+      // GÁN CA KHO (Nếu người được phân công nghỉ OFF -> Đôn Domino người tiếp theo)
+      let actualKHOStaff = null;
+      if (plannedKHOStaff) {
+        if (!isOff[plannedKHOStaff] && plannedKHOStaff !== actualTNStaff) {
+          actualKHOStaff = plannedKHOStaff;
+          result[wName][actualKHOStaff][day] = 'KHO';
+        } else {
+          // Bắt đầu đôn Domino từ người kế tiếp sau plannedKHOStaff
+          const startIdx = staffList.indexOf(plannedKHOStaff);
+          for (let step = 1; step < N; step++) {
+            const cand = staffList[(startIdx + step) % N];
+            if (isOff[cand]) continue; // Người này nghỉ OFF -> tiếp tục đôn người sau
+            if (cand === actualTNStaff) continue; // Người này đã nhận ca TN -> không thể nhận KHO
+            actualKHOStaff = cand;
+            result[wName][actualKHOStaff][day] = 'KHO';
+            if (!dominoLog[wName][actualKHOStaff]) dominoLog[wName][actualKHOStaff] = {};
+            dominoLog[wName][actualKHOStaff][day] = `Đôn trực thay KHO cho ${plannedKHOStaff} (do ${plannedKHOStaff} nghỉ OFF)`;
+            break;
+          }
+        }
+      }
+    }
+
+    // Xử lý lần lượt từng ngày trong tuần cho cả 2 nhóm
+    DAYS.forEach((d) => {
+      processGroupForDay(STAFF_GROUP_1, GROUP1_PERMUTATIONS, GROUP1_SLOTS, d);
+      processGroupForDay(STAFF_GROUP_2, GROUP2_PERMUTATIONS, GROUP2_SLOTS, d);
     });
   });
+
+  result._dominoLog = dominoLog;
   return result;
 }
 
@@ -748,7 +827,9 @@ function setupAutoRotateModal() {
  * Hiển thị dữ liệu xem trước xoay tua ca 4 tuần và bảng cân bằng
  */
 function updateRotatePreview() {
-  const balancedSchedule = generateBalanced4WeeksSchedule();
+  const month = AppState.currentMonth || 'THÁNG 09';
+  const balancedSchedule = generateBalanced4WeeksSchedule(month);
+  const dominoLog = balancedSchedule._dominoLog || {};
   const summaryBody = document.getElementById('rotateSummaryBody');
   const detailBody = document.getElementById('rotateDetailBody');
 
@@ -763,17 +844,22 @@ function updateRotatePreview() {
 
     let totalTN = 0;
     let totalKHO = 0;
+    let totalOff = 0;
     const weekShiftsSummary = [];
 
     WEEKS.forEach(wName => {
       let wTN = 0;
       let wKHO = 0;
+      let wOff = 0;
       DAYS.forEach(d => {
-        const val = balancedSchedule[wName][staff][d];
+        const val = balancedSchedule[wName]?.[staff]?.[d];
         if (val === 'TN') { wTN++; totalTN++; }
-        if (val === 'KHO') { wKHO++; totalKHO++; }
+        else if (val === 'KHO') { wKHO++; totalKHO++; }
+        else if (val === 'x' || val === 'X') { wOff++; totalOff++; }
       });
-      weekShiftsSummary.push(`${wTN} TN, ${wKHO} KHO`);
+      let weekStr = `${wTN} TN, ${wKHO} KHO`;
+      if (wOff > 0) weekStr += `, <span style="color: #dc2626; font-weight:700;">${wOff} OFF</span>`;
+      weekShiftsSummary.push(weekStr);
     });
 
     const totalShifts = totalTN + totalKHO;
@@ -789,7 +875,7 @@ function updateRotatePreview() {
       <td><strong style="color: #6d28d9; font-size: 0.95rem;">${totalTN}</strong></td>
       <td><strong style="color: #ea580c; font-size: 0.95rem;">${totalKHO}</strong></td>
       <td><strong style="color: #0284c7; font-size: 0.95rem;">${totalShifts}</strong></td>
-      <td><span style="background: #ecfdf5; color: #059669; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 9999px;">✓ Cân bằng</span></td>
+      <td><span style="background: #ecfdf5; color: #059669; font-weight: 700; font-size: 0.72rem; padding: 3px 8px; border-radius: 9999px;">${totalOff > 0 ? `✓ Có ${totalOff} OFF` : '✓ Cân bằng'}</span></td>
     `;
     summaryBody.appendChild(tr);
   });
@@ -804,7 +890,7 @@ function updateRotatePreview() {
     detailBody.appendChild(sepRow);
 
     ALL_STAFF.forEach((staff) => {
-      const shifts = balancedSchedule[wName][staff] || {};
+      const shifts = balancedSchedule[wName]?.[staff] || {};
 
       let wTN = 0;
       let wKHO = 0;
@@ -812,12 +898,25 @@ function updateRotatePreview() {
 
       DAYS.forEach(d => {
         const val = shifts[d] || '';
+        const dominoNote = dominoLog[wName]?.[staff]?.[d] || '';
         if (val === 'TN') {
           wTN++;
-          daysHtml += `<td><span class="shift-badge badge-tn">TN</span></td>`;
+          if (dominoNote) {
+            daysHtml += `<td><span class="shift-badge badge-tn" title="${dominoNote}" style="border: 2px solid #f59e0b; box-shadow: 0 0 5px rgba(245,158,11,0.5); cursor: help;">TN ⚡</span></td>`;
+          } else {
+            daysHtml += `<td><span class="shift-badge badge-tn">TN</span></td>`;
+          }
         } else if (val === 'KHO') {
           wKHO++;
-          daysHtml += `<td><span class="shift-badge badge-kho">KHO</span></td>`;
+          if (dominoNote) {
+            daysHtml += `<td><span class="shift-badge badge-kho" title="${dominoNote}" style="border: 2px solid #f59e0b; box-shadow: 0 0 5px rgba(245,158,11,0.5); cursor: help;">KHO ⚡</span></td>`;
+          } else {
+            daysHtml += `<td><span class="shift-badge badge-kho">KHO</span></td>`;
+          }
+        } else if (val === 'x' || val === 'X') {
+          daysHtml += `<td><span class="shift-badge badge-off" title="Ngày nghỉ OFF đã đánh dấu (giữ nguyên)">x</span></td>`;
+        } else if (val === 'HC') {
+          daysHtml += `<td><span class="shift-badge badge-hc">HC</span></td>`;
         } else {
           daysHtml += `<td style="color: #cbd5e1;">-</td>`;
         }
@@ -841,20 +940,45 @@ function updateRotatePreview() {
  */
 function executeAutoRotate() {
   const month = AppState.currentMonth;
-  const balancedSchedule = generateBalanced4WeeksSchedule();
+  const balancedSchedule = generateBalanced4WeeksSchedule(month);
+  const dominoLog = balancedSchedule._dominoLog || {};
 
   if (!AppState.schedule[month]) {
     AppState.schedule[month] = {};
   }
 
+  let totalDominoCount = 0;
+  let totalOffCount = 0;
+
   WEEKS.forEach((wName) => {
     AppState.schedule[month][wName] = JSON.parse(JSON.stringify(balancedSchedule[wName]));
+    ALL_STAFF.forEach((staff) => {
+      DAYS.forEach((d) => {
+        if (dominoLog[wName]?.[staff]?.[d]) {
+          totalDominoCount++;
+        }
+        if (AppState.schedule[month][wName][staff]?.[d] === 'x') {
+          totalOffCount++;
+        }
+      });
+    });
   });
 
   AppState.unsavedChangesCount += 25;
   saveLocalCache();
   renderSchedule();
-  showToast(`⚡ Đã tự động xoay tua 4 tuần cân bằng tuyệt đối cho ${month}! Hãy bấm "Lưu Vào Google Sheet".`, 'success');
+
+  let msg = `⚡ Đã xoay tua 4 tuần cho ${month}!`;
+  if (totalOffCount > 0) {
+    msg += ` Giữ nguyên ${totalOffCount} ngày OFF ('x')`;
+    if (totalDominoCount > 0) {
+      msg += ` & tự động đôn ${totalDominoCount} ca domino`;
+    }
+    msg += ` thành công.`;
+  } else {
+    msg += ` Cân bằng ca TN & KHO thành công.`;
+  }
+  showToast(msg, 'success');
 }
 
 // ==========================================================================
