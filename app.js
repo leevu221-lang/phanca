@@ -92,7 +92,18 @@ function ensureStaffScheduleIntegrity() {
 
 const DAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 const WEEKS = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
-const MONTHS = ['THÁNG 09', 'THÁNG 10', 'THÁNG 11', 'THÁNG 12'];
+const MONTHS = [
+  'THÁNG 01', 'THÁNG 02', 'THÁNG 03', 'THÁNG 04', 'THÁNG 05', 'THÁNG 06',
+  'THÁNG 07', 'THÁNG 08', 'THÁNG 09', 'THÁNG 10', 'THÁNG 11', 'THÁNG 12'
+];
+
+/**
+ * Tự động lấy chuỗi tên tháng hiện tại theo thời gian thực hệ thống (ví dụ: 'THÁNG 10')
+ */
+function getCurrentMonthString() {
+  const m = new Date().getMonth() + 1;
+  return `THÁNG ${String(m).padStart(2, '0')}`;
+}
 
 // ==========================================================================
 // CẤU HÌNH CA MẪU TUẦN 1 VÀ MA TRẬN XOAY TUA 4 TUẦN CÂN BẰNG TUYỆT ĐỐI
@@ -308,11 +319,11 @@ function generateBalanced4WeeksSchedule(targetMonth) {
 // STATE MANAGEMENT
 // ==========================================================================
 const AppState = {
-  currentMonth: 'THÁNG 09',
-  currentWeek: 'Tuần 1', // 'Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4', hoặc 'all'
-  activeStamp: 'none',   // 'none', 'TN', 'KHO', 'HC', 'x', 'CLEAR'
-  schedule: {},          // { [month]: { [week]: { [staff]: { T2: '', T3: 'x', ... } } } }
-  history: [],           // Undo stack
+  currentMonth: getCurrentMonthString(), // Tự động chọn tháng hiện tại theo hệ thống (ví dụ: 'THÁNG 10')
+  currentWeek: 'all',                   // Mặc định chọn chế độ 'Cả Tháng'
+  activeStamp: 'none',                  // 'none', 'TN', 'KHO', 'HC', 'x', 'CLEAR'
+  schedule: {},                         // { [month]: { [week]: { [staff]: { T2: '', T3: 'x', ... } } } }
+  history: [],                          // Undo stack
   unsavedChangesCount: 0,
   scriptUrl: localStorage.getItem('PHANCA_APPS_SCRIPT_URL') || '',
   isSyncing: false
@@ -320,12 +331,32 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v6_no_consecutive_2days';
+const CURRENT_CACHE_VERSION = 'v7_auto_current_month_all_weeks';
+
+/**
+ * Kiểm tra xem một tháng đã có bất kỳ ca trực nào chưa
+ */
+function isMonthPopulated(month) {
+  if (!AppState.schedule || !AppState.schedule[month]) return false;
+  for (const w of WEEKS) {
+    if (!AppState.schedule[month][w]) continue;
+    for (const s of ALL_STAFF) {
+      for (const d of DAYS) {
+        if (AppState.schedule[month][w][s]?.[d]) return true;
+      }
+    }
+  }
+  return false;
+}
 
 // ==========================================================================
 // KHỞI TẠO DỮ LIỆU BAN ĐẦU
 // ==========================================================================
 function initScheduleData() {
+  // Luôn đặt tháng hiện tại theo thời gian thực và tuần mặc định là 'all' (Cả Tháng)
+  AppState.currentMonth = getCurrentMonthString();
+  AppState.currentWeek = 'all';
+
   // Tải danh sách nhân viên tùy chỉnh từ localStorage (nếu có)
   loadCustomStaffList();
 
@@ -343,6 +374,12 @@ function initScheduleData() {
       AppState.schedule = JSON.parse(cached);
       ensureStaffScheduleIntegrity();
       updateAssignStaffDropdown();
+
+      // Nếu tháng hiện tại chưa có dữ liệu, tự động nạp lịch xoay tua cân bằng cho tháng đó
+      if (!isMonthPopulated(AppState.currentMonth)) {
+        AppState.schedule[AppState.currentMonth] = JSON.parse(JSON.stringify(generateBalanced4WeeksSchedule(AppState.currentMonth)));
+        saveLocalCache();
+      }
       return;
     } catch (e) {
       console.warn('Lỗi đọc cache local:', e);
@@ -351,7 +388,6 @@ function initScheduleData() {
 
   // Khởi tạo khung lịch chuẩn cho các tháng
   const newSchedule = {};
-  const balancedSchedule = generateBalanced4WeeksSchedule();
 
   MONTHS.forEach((m) => {
     newSchedule[m] = {};
@@ -366,10 +402,12 @@ function initScheduleData() {
     });
   });
 
-  // Mặc định nạp lịch 4 tuần xoay tua cân bằng cho THÁNG 09
-  if (newSchedule['THÁNG 09']) {
-    newSchedule['THÁNG 09'] = JSON.parse(JSON.stringify(balancedSchedule));
-  }
+  // Mặc định nạp lịch 4 tuần xoay tua cân bằng cho tháng hiện tại và THÁNG 09, THÁNG 10
+  [AppState.currentMonth, 'THÁNG 09', 'THÁNG 10'].forEach(m => {
+    if (newSchedule[m]) {
+      newSchedule[m] = JSON.parse(JSON.stringify(generateBalanced4WeeksSchedule(m)));
+    }
+  });
 
   AppState.schedule = newSchedule;
   saveLocalCache();
@@ -580,20 +618,34 @@ function renderAllWeeksView(container) {
  */
 function updateStats() {
   const month = AppState.currentMonth;
-  const week = (AppState.currentWeek === 'all') ? 'Tuần 1' : AppState.currentWeek;
-  const weekData = (AppState.schedule[month] && AppState.schedule[month][week]) ? AppState.schedule[month][week] : {};
-
+  const isAll = (AppState.currentWeek === 'all');
   let tnTotal = 0;
   let khoTotal = 0;
 
-  ALL_STAFF.forEach((staff) => {
-    const shifts = weekData[staff] || {};
-    DAYS.forEach((day) => {
-      const v = String(shifts[day] || '').toUpperCase();
-      if (v === 'TN') tnTotal++;
-      if (v === 'KHO') khoTotal++;
+  if (isAll) {
+    WEEKS.forEach((w) => {
+      const weekData = (AppState.schedule[month] && AppState.schedule[month][w]) ? AppState.schedule[month][w] : {};
+      ALL_STAFF.forEach((staff) => {
+        const shifts = weekData[staff] || {};
+        DAYS.forEach((day) => {
+          const v = String(shifts[day] || '').toUpperCase();
+          if (v === 'TN') tnTotal++;
+          if (v === 'KHO') khoTotal++;
+        });
+      });
     });
-  });
+  } else {
+    const week = AppState.currentWeek;
+    const weekData = (AppState.schedule[month] && AppState.schedule[month][week]) ? AppState.schedule[month][week] : {};
+    ALL_STAFF.forEach((staff) => {
+      const shifts = weekData[staff] || {};
+      DAYS.forEach((day) => {
+        const v = String(shifts[day] || '').toUpperCase();
+        if (v === 'TN') tnTotal++;
+        if (v === 'KHO') khoTotal++;
+      });
+    });
+  }
 
   document.getElementById('statTotalStaff').textContent = `${ALL_STAFF.length} Người`;
   const statStaffDescEl = document.getElementById('statStaffDesc');
@@ -1287,6 +1339,9 @@ function setupMonthAndWeekControls() {
       renderSchedule();
     });
   });
+
+  // Đồng bộ trạng thái active của tab theo AppState.currentWeek (mặc định 'all' - Cả Tháng)
+  updateActiveWeekTab(AppState.currentWeek);
 
   // Hoàn tác thay đổi
   document.getElementById('btnResetChanges').addEventListener('click', () => {

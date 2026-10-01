@@ -499,7 +499,7 @@ body {
   flex: 1;
   padding: 8px 14px;
   background: transparent;
-  border: none;
+  border: 1.5px solid transparent;
   border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 0.88rem;
@@ -519,16 +519,21 @@ body {
 .week-tab.active {
   background: white;
   color: var(--primary);
+  border: 1.5px solid #0284c7;
   box-shadow: 0 2px 8px -1px rgba(2, 132, 199, 0.18);
   font-weight: 700;
 }
 
 .all-weeks-tab {
-  color: var(--accent-indigo);
+  color: #2563eb;
+  font-weight: 600;
 }
 
 .all-weeks-tab.active {
-  color: var(--accent-indigo);
+  color: #2563eb;
+  background: white;
+  border: 1.5px solid #2563eb;
+  box-shadow: 0 2px 8px -1px rgba(37, 99, 235, 0.2);
 }
 
 .export-group .btn-group {
