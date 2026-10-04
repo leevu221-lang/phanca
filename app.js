@@ -270,7 +270,7 @@ function generateBalanced4WeeksSchedule(targetMonth) {
         return list;
       }
 
-      function runBacktrack(maxLimit, allowConsecutive) {
+      function runBacktrack(maxPerType, maxTotal, allowConsecutive) {
         const countTN = {}, countKHO = {};
         staffList.forEach(s => { countTN[s] = 0; countKHO[s] = 0; });
         const assignment = {};
@@ -285,7 +285,8 @@ function generateBalanced4WeeksSchedule(targetMonth) {
 
           for (const tnStaff of tnCandidates) {
             if (isOff(tnStaff, day)) continue;
-            if (countTN[tnStaff] >= maxLimit) continue;
+            if (countTN[tnStaff] >= maxPerType) continue;
+            if (countTN[tnStaff] + countKHO[tnStaff] >= maxTotal) continue;
             if (!allowConsecutive && prevDay && assignment[prevDay]?.TN === tnStaff) continue;
 
             countTN[tnStaff]++;
@@ -293,7 +294,8 @@ function generateBalanced4WeeksSchedule(targetMonth) {
             for (const khoStaff of khoCandidates) {
               if (khoStaff === tnStaff) continue;
               if (isOff(khoStaff, day)) continue;
-              if (countKHO[khoStaff] >= maxLimit) continue;
+              if (countKHO[khoStaff] >= maxPerType) continue;
+              if (countTN[khoStaff] + countKHO[khoStaff] >= maxTotal) continue;
               if (!allowConsecutive && prevDay && assignment[prevDay]?.KHO === khoStaff) continue;
 
               countKHO[khoStaff]++;
@@ -314,12 +316,14 @@ function generateBalanced4WeeksSchedule(targetMonth) {
         return { success, assignment };
       }
 
-      // Ưu tiên 1: Tối đa 2 ca/loại và không trực 2 ngày liền kề cùng ca
-      let res = runBacktrack(2, false);
-      // Dự phòng nếu không tìm được (ví dụ quá nhiều người nghỉ OFF cùng lúc): Nới lỏng điều kiện liền kề
-      if (!res.success) res = runBacktrack(2, true);
-      // Dự phòng nếu vẫn thiếu người: Nới lỏng số ca tối đa lên 3
-      if (!res.success) res = runBacktrack(3, true);
+      // Ưu tiên 1: Tối đa 2 ca/loại, Tổng ca trực (TN + KHO) tối đa 3 ngày/tuần, không trực 2 ngày liền kề cùng ca
+      let res = runBacktrack(2, 3, false);
+      // Dự phòng 2: Cho phép liền kề nếu người nghỉ OFF gây nghẽn nhưng vẫn giữ Tổng ca <= 3
+      if (!res.success) res = runBacktrack(2, 3, true);
+      // Dự phòng 3: Nới lỏng Tổng ca lên 4 ngày chỉ khi tuần có quá nhiều người nghỉ OFF cùng lúc
+      if (!res.success) res = runBacktrack(2, 4, false);
+      if (!res.success) res = runBacktrack(2, 4, true);
+      if (!res.success) res = runBacktrack(3, 5, true);
 
       if (res.success && res.assignment) {
         DAYS.forEach((d) => {
@@ -367,7 +371,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v9_cap_2_shifts_no_consecutive_days';
+const CURRENT_CACHE_VERSION = 'v10_cap_total_shifts_max_3_days';
 
 /**
  * Kiểm tra xem một tháng đã có bất kỳ ca trực nào chưa
