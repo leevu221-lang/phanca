@@ -236,14 +236,19 @@ function generateBalanced4WeeksSchedule(targetMonth) {
       });
     });
 
-    // 2. Thuật toán gán ca & Đôn ca Domino toàn tuần đảm bảo:
-    //    - Mỗi tuần mỗi nhân viên tối đa không quá 2 ca TN và không quá 2 ca KHO
-    //    - Không trực cùng 1 loại ca 2 ngày liền kề nhau (ví dụ T2 KHO thì T3 không KHO)
-    //    - Tôn trọng 100% các ngày đăng ký nghỉ OFF ('x')
-    //    - Mỗi ngày luôn có đủ 1 TN và 1 KHO cho mỗi nhóm
+    // 2. Thuật toán gán ca, Bù ca và Đôn ca toàn tuần đảm bảo:
+    //    - Nếu ngày nghỉ OFF ('x') trùng với ngày ca TN hoặc KHO theo lịch thì BÙ qua ngày khác trong tuần cho nhân viên đó, không bỏ qua luôn.
+    //    - Mỗi nhân viên giữ nguyên đủ số ca phân bổ chuẩn của mình trong tuần (TN và KHO).
+    //    - Không trực cùng 1 loại ca 2 ngày liền kề nhau.
+    //    - Tổng số ngày trực (TN + KHO) tối đa không quá 3 ngày/tuần (không ai bị dồn 4 ngày).
+    //    - Tôn trọng 100% các ngày đăng ký nghỉ OFF ('x').
+    //    - Mỗi ngày luôn có đủ 1 TN và 1 KHO cho mỗi nhóm.
     function processGroupWeek(staffList, permutations, slots) {
       const N = staffList.length;
       const planned = {};
+      const targetTN = {}, targetKHO = {};
+      staffList.forEach(s => { targetTN[s] = 0; targetKHO[s] = 0; });
+
       DAYS.forEach((d) => {
         let tn = null, kho = null;
         staffList.forEach((staff, sIdx) => {
@@ -252,25 +257,15 @@ function generateBalanced4WeeksSchedule(targetMonth) {
             : (sIdx % slots.length);
           const slot = slots[slotIdx];
           const shift = slot ? (slot[d] || '') : '';
-          if (shift === 'TN') tn = staff;
-          if (shift === 'KHO') kho = staff;
+          if (shift === 'TN') { tn = staff; targetTN[staff]++; }
+          if (shift === 'KHO') { kho = staff; targetKHO[staff]++; }
         });
         planned[d] = { tn, kho };
       });
 
       const isOff = (staff, d) => String(existingWeekData[staff]?.[d] || '').trim().toUpperCase() === 'X';
 
-      function getCandidateList(plannedStaff) {
-        if (!plannedStaff) return staffList.slice();
-        const startIdx = staffList.indexOf(plannedStaff);
-        const list = [plannedStaff];
-        for (let step = 1; step < N; step++) {
-          list.push(staffList[(startIdx + step) % N]);
-        }
-        return list;
-      }
-
-      function runBacktrack(maxPerType, maxTotal, allowConsecutive) {
+      function solveAssignment(exactQuota, allowConsecutive) {
         const countTN = {}, countKHO = {};
         staffList.forEach(s => { countTN[s] = 0; countKHO[s] = 0; });
         const assignment = {};
@@ -280,22 +275,41 @@ function generateBalanced4WeeksSchedule(targetMonth) {
           const day = DAYS[dayIdx];
           const prevDay = dayIdx > 0 ? DAYS[dayIdx - 1] : null;
 
-          const tnCandidates = getCandidateList(planned[day].tn);
-          const khoCandidates = getCandidateList(planned[day].kho);
+          // Sắp xếp ưu tiên ứng viên nhận ca TN:
+          // 1. Người đã được lên kế hoạch ngày này (nếu không nghỉ OFF)
+          // 2. Người đang thiếu ca TN so với định mức (cần bù ca)
+          const tnCands = [...staffList].sort((a, b) => {
+            if (a === planned[day].tn && !isOff(a, day)) return -1;
+            if (b === planned[day].tn && !isOff(b, day)) return 1;
+            const diffA = targetTN[a] - countTN[a];
+            const diffB = targetTN[b] - countTN[b];
+            return diffB - diffA;
+          });
 
-          for (const tnStaff of tnCandidates) {
+          for (const tnStaff of tnCands) {
             if (isOff(tnStaff, day)) continue;
-            if (countTN[tnStaff] >= maxPerType) continue;
-            if (countTN[tnStaff] + countKHO[tnStaff] >= maxTotal) continue;
+            if (exactQuota && countTN[tnStaff] >= targetTN[tnStaff]) continue;
+            if (!exactQuota && countTN[tnStaff] >= 2) continue;
+            if (!exactQuota && (countTN[tnStaff] + countKHO[tnStaff] >= 3)) continue;
             if (!allowConsecutive && prevDay && assignment[prevDay]?.TN === tnStaff) continue;
 
             countTN[tnStaff]++;
 
-            for (const khoStaff of khoCandidates) {
+            // Sắp xếp ưu tiên ứng viên nhận ca KHO
+            const khoCands = [...staffList].sort((a, b) => {
+              if (a === planned[day].kho && !isOff(a, day)) return -1;
+              if (b === planned[day].kho && !isOff(b, day)) return 1;
+              const diffA = targetKHO[a] - countKHO[a];
+              const diffB = targetKHO[b] - countKHO[b];
+              return diffB - diffA;
+            });
+
+            for (const khoStaff of khoCands) {
               if (khoStaff === tnStaff) continue;
               if (isOff(khoStaff, day)) continue;
-              if (countKHO[khoStaff] >= maxPerType) continue;
-              if (countTN[khoStaff] + countKHO[khoStaff] >= maxTotal) continue;
+              if (exactQuota && countKHO[khoStaff] >= targetKHO[khoStaff]) continue;
+              if (!exactQuota && countKHO[khoStaff] >= 2) continue;
+              if (!exactQuota && (countTN[khoStaff] + countKHO[khoStaff] >= 3)) continue;
               if (!allowConsecutive && prevDay && assignment[prevDay]?.KHO === khoStaff) continue;
 
               countKHO[khoStaff]++;
@@ -316,14 +330,14 @@ function generateBalanced4WeeksSchedule(targetMonth) {
         return { success, assignment };
       }
 
-      // Ưu tiên 1: Tối đa 2 ca/loại, Tổng ca trực (TN + KHO) tối đa 3 ngày/tuần, không trực 2 ngày liền kề cùng ca
-      let res = runBacktrack(2, 3, false);
-      // Dự phòng 2: Cho phép liền kề nếu người nghỉ OFF gây nghẽn nhưng vẫn giữ Tổng ca <= 3
-      if (!res.success) res = runBacktrack(2, 3, true);
-      // Dự phòng 3: Nới lỏng Tổng ca lên 4 ngày chỉ khi tuần có quá nhiều người nghỉ OFF cùng lúc
-      if (!res.success) res = runBacktrack(2, 4, false);
-      if (!res.success) res = runBacktrack(2, 4, true);
-      if (!res.success) res = runBacktrack(3, 5, true);
+      // Ưu tiên 1: Đảm bảo đúng định mức ca được bù ngày khác (exactQuota) + không trực 2 ngày liền kề cùng ca
+      let res = solveAssignment(true, false);
+      // Dự phòng 2: Cho phép 2 ngày liền kề nếu số ngày nghỉ OFF gây nghẽn nhưng vẫn giữ đúng định mức ca bù
+      if (!res.success) res = solveAssignment(true, true);
+      // Dự phòng 3: Nới lỏng định mức nhưng vẫn khống chế TN<=2, KHO<=2, Tổng ca<=3, không liền kề
+      if (!res.success) res = solveAssignment(false, false);
+      // Dự phòng 4: Cho phép nới lỏng liền kề
+      if (!res.success) res = solveAssignment(false, true);
 
       if (res.success && res.assignment) {
         DAYS.forEach((d) => {
@@ -332,14 +346,18 @@ function generateBalanced4WeeksSchedule(targetMonth) {
             result[wName][actualTN][d] = 'TN';
             if (actualTN !== planned[d].tn) {
               if (!dominoLog[wName][actualTN]) dominoLog[wName][actualTN] = {};
-              dominoLog[wName][actualTN][d] = `Đôn trực thay TN cho ${planned[d].tn} (do ${planned[d].tn} nghỉ OFF)`;
+              dominoLog[wName][actualTN][d] = (planned[d].tn && isOff(planned[d].tn, d))
+                ? `Trực thay TN cho ${planned[d].tn} (do ${planned[d].tn} nghỉ OFF; ${planned[d].tn} được bù sang ngày khác)`
+                : `Bù đổi ca TN ngày này`;
             }
           }
           if (actualKHO) {
             result[wName][actualKHO][d] = 'KHO';
             if (actualKHO !== planned[d].kho) {
               if (!dominoLog[wName][actualKHO]) dominoLog[wName][actualKHO] = {};
-              dominoLog[wName][actualKHO][d] = `Đôn trực thay KHO cho ${planned[d].kho} (do ${planned[d].kho} nghỉ OFF)`;
+              dominoLog[wName][actualKHO][d] = (planned[d].kho && isOff(planned[d].kho, d))
+                ? `Trực thay KHO cho ${planned[d].kho} (do ${planned[d].kho} nghỉ OFF; ${planned[d].kho} được bù sang ngày khác)`
+                : `Bù đổi ca KHO ngày này`;
             }
           }
         });
@@ -371,7 +389,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v10_cap_total_shifts_max_3_days';
+const CURRENT_CACHE_VERSION = 'v11_compensate_off_shifts_to_other_days';
 
 /**
  * Kiểm tra xem một tháng đã có bất kỳ ca trực nào chưa
