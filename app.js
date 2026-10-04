@@ -236,80 +236,115 @@ function generateBalanced4WeeksSchedule(targetMonth) {
       });
     });
 
-    // 2. Thuật toán gán ca & Đôn ca Domino cho từng nhóm nhân viên theo từng ngày
-    function processGroupForDay(staffList, permutations, slots, day) {
+    // 2. Thuật toán gán ca & Đôn ca Domino toàn tuần đảm bảo:
+    //    - Mỗi tuần mỗi nhân viên tối đa không quá 2 ca TN và không quá 2 ca KHO
+    //    - Không trực cùng 1 loại ca 2 ngày liền kề nhau (ví dụ T2 KHO thì T3 không KHO)
+    //    - Tôn trọng 100% các ngày đăng ký nghỉ OFF ('x')
+    //    - Mỗi ngày luôn có đủ 1 TN và 1 KHO cho mỗi nhóm
+    function processGroupWeek(staffList, permutations, slots) {
       const N = staffList.length;
-      let plannedTNStaff = null;
-      let plannedKHOStaff = null;
-
-      // Xác định nhân sự theo ma trận ca mẫu tuần
-      staffList.forEach((staff, sIdx) => {
-        const slotIdx = (wIdx < permutations.length && sIdx < permutations[wIdx].length)
-          ? permutations[wIdx][sIdx]
-          : (sIdx % slots.length);
-        const slot = slots[slotIdx];
-        const shift = slot ? (slot[day] || '') : '';
-        if (shift === 'TN') plannedTNStaff = staff;
-        if (shift === 'KHO') plannedKHOStaff = staff;
+      const planned = {};
+      DAYS.forEach((d) => {
+        let tn = null, kho = null;
+        staffList.forEach((staff, sIdx) => {
+          const slotIdx = (wIdx < permutations.length && sIdx < permutations[wIdx].length)
+            ? permutations[wIdx][sIdx]
+            : (sIdx % slots.length);
+          const slot = slots[slotIdx];
+          const shift = slot ? (slot[d] || '') : '';
+          if (shift === 'TN') tn = staff;
+          if (shift === 'KHO') kho = staff;
+        });
+        planned[d] = { tn, kho };
       });
 
-      // Kiểm tra ngày nghỉ OFF của các nhân viên trong ngày này
-      const isOff = {};
-      staffList.forEach((staff) => {
-        const val = String(existingWeekData[staff]?.[day] || '').trim().toUpperCase();
-        isOff[staff] = (val === 'X');
-      });
+      const isOff = (staff, d) => String(existingWeekData[staff]?.[d] || '').trim().toUpperCase() === 'X';
 
-      // GÁN CA TN (Nếu người được phân công nghỉ OFF -> Đôn Domino người tiếp theo)
-      let actualTNStaff = null;
-      if (plannedTNStaff) {
-        if (!isOff[plannedTNStaff]) {
-          actualTNStaff = plannedTNStaff;
-          result[wName][actualTNStaff][day] = 'TN';
-        } else {
-          // Bắt đầu đôn Domino từ người kế tiếp sau plannedTNStaff
-          const startIdx = staffList.indexOf(plannedTNStaff);
-          for (let step = 1; step < N; step++) {
-            const cand = staffList[(startIdx + step) % N];
-            if (isOff[cand]) continue; // Người này cũng nghỉ OFF -> tiếp tục đôn người sau
-            if (cand === plannedKHOStaff && !isOff[plannedKHOStaff]) continue; // Người này đang trực KHO -> không thể gán TN
-            actualTNStaff = cand;
-            result[wName][actualTNStaff][day] = 'TN';
-            if (!dominoLog[wName][actualTNStaff]) dominoLog[wName][actualTNStaff] = {};
-            dominoLog[wName][actualTNStaff][day] = `Đôn trực thay TN cho ${plannedTNStaff} (do ${plannedTNStaff} nghỉ OFF)`;
-            break;
-          }
+      function getCandidateList(plannedStaff) {
+        if (!plannedStaff) return staffList.slice();
+        const startIdx = staffList.indexOf(plannedStaff);
+        const list = [plannedStaff];
+        for (let step = 1; step < N; step++) {
+          list.push(staffList[(startIdx + step) % N]);
         }
+        return list;
       }
 
-      // GÁN CA KHO (Nếu người được phân công nghỉ OFF -> Đôn Domino người tiếp theo)
-      let actualKHOStaff = null;
-      if (plannedKHOStaff) {
-        if (!isOff[plannedKHOStaff] && plannedKHOStaff !== actualTNStaff) {
-          actualKHOStaff = plannedKHOStaff;
-          result[wName][actualKHOStaff][day] = 'KHO';
-        } else {
-          // Bắt đầu đôn Domino từ người kế tiếp sau plannedKHOStaff
-          const startIdx = staffList.indexOf(plannedKHOStaff);
-          for (let step = 1; step < N; step++) {
-            const cand = staffList[(startIdx + step) % N];
-            if (isOff[cand]) continue; // Người này nghỉ OFF -> tiếp tục đôn người sau
-            if (cand === actualTNStaff) continue; // Người này đã nhận ca TN -> không thể nhận KHO
-            actualKHOStaff = cand;
-            result[wName][actualKHOStaff][day] = 'KHO';
-            if (!dominoLog[wName][actualKHOStaff]) dominoLog[wName][actualKHOStaff] = {};
-            dominoLog[wName][actualKHOStaff][day] = `Đôn trực thay KHO cho ${plannedKHOStaff} (do ${plannedKHOStaff} nghỉ OFF)`;
-            break;
+      function runBacktrack(maxLimit, allowConsecutive) {
+        const countTN = {}, countKHO = {};
+        staffList.forEach(s => { countTN[s] = 0; countKHO[s] = 0; });
+        const assignment = {};
+
+        function backtrack(dayIdx) {
+          if (dayIdx === 7) return true;
+          const day = DAYS[dayIdx];
+          const prevDay = dayIdx > 0 ? DAYS[dayIdx - 1] : null;
+
+          const tnCandidates = getCandidateList(planned[day].tn);
+          const khoCandidates = getCandidateList(planned[day].kho);
+
+          for (const tnStaff of tnCandidates) {
+            if (isOff(tnStaff, day)) continue;
+            if (countTN[tnStaff] >= maxLimit) continue;
+            if (!allowConsecutive && prevDay && assignment[prevDay]?.TN === tnStaff) continue;
+
+            countTN[tnStaff]++;
+
+            for (const khoStaff of khoCandidates) {
+              if (khoStaff === tnStaff) continue;
+              if (isOff(khoStaff, day)) continue;
+              if (countKHO[khoStaff] >= maxLimit) continue;
+              if (!allowConsecutive && prevDay && assignment[prevDay]?.KHO === khoStaff) continue;
+
+              countKHO[khoStaff]++;
+              assignment[day] = { TN: tnStaff, KHO: khoStaff };
+
+              if (backtrack(dayIdx + 1)) return true;
+
+              countKHO[khoStaff]--;
+              delete assignment[day];
+            }
+
+            countTN[tnStaff]--;
           }
+          return false;
         }
+
+        const success = backtrack(0);
+        return { success, assignment };
+      }
+
+      // Ưu tiên 1: Tối đa 2 ca/loại và không trực 2 ngày liền kề cùng ca
+      let res = runBacktrack(2, false);
+      // Dự phòng nếu không tìm được (ví dụ quá nhiều người nghỉ OFF cùng lúc): Nới lỏng điều kiện liền kề
+      if (!res.success) res = runBacktrack(2, true);
+      // Dự phòng nếu vẫn thiếu người: Nới lỏng số ca tối đa lên 3
+      if (!res.success) res = runBacktrack(3, true);
+
+      if (res.success && res.assignment) {
+        DAYS.forEach((d) => {
+          const { TN: actualTN, KHO: actualKHO } = res.assignment[d];
+          if (actualTN) {
+            result[wName][actualTN][d] = 'TN';
+            if (actualTN !== planned[d].tn) {
+              if (!dominoLog[wName][actualTN]) dominoLog[wName][actualTN] = {};
+              dominoLog[wName][actualTN][d] = `Đôn trực thay TN cho ${planned[d].tn} (do ${planned[d].tn} nghỉ OFF)`;
+            }
+          }
+          if (actualKHO) {
+            result[wName][actualKHO][d] = 'KHO';
+            if (actualKHO !== planned[d].kho) {
+              if (!dominoLog[wName][actualKHO]) dominoLog[wName][actualKHO] = {};
+              dominoLog[wName][actualKHO][d] = `Đôn trực thay KHO cho ${planned[d].kho} (do ${planned[d].kho} nghỉ OFF)`;
+            }
+          }
+        });
       }
     }
 
-    // Xử lý lần lượt từng ngày trong tuần cho cả 2 nhóm
-    DAYS.forEach((d) => {
-      processGroupForDay(STAFF_GROUP_1, GROUP1_PERMUTATIONS, GROUP1_SLOTS, d);
-      processGroupForDay(STAFF_GROUP_2, GROUP2_PERMUTATIONS, GROUP2_SLOTS, d);
-    });
+    // Xử lý toàn tuần cho cả 2 nhóm nhân viên
+    processGroupWeek(STAFF_GROUP_1, GROUP1_PERMUTATIONS, GROUP1_SLOTS);
+    processGroupWeek(STAFF_GROUP_2, GROUP2_PERMUTATIONS, GROUP2_SLOTS);
   });
 
   result._dominoLog = dominoLog;
@@ -332,7 +367,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v8_dynamic_rotation_no_consecutive_same_day';
+const CURRENT_CACHE_VERSION = 'v9_cap_2_shifts_no_consecutive_days';
 
 /**
  * Kiểm tra xem một tháng đã có bất kỳ ca trực nào chưa
