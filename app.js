@@ -136,21 +136,22 @@ const GROUP2_SLOTS = [
 
 // Ma trận hoán vị xoay tua 4 tuần tối ưu toán học:
 // - Mỗi ngày (T2, T3, T4, T5, T6, T7, CN) mỗi nhóm đều có ĐÚNG 1 KHO và 1 TN
-// - Tuyệt đối không trùng lặp 2 ngày TN hoặc 2 ngày KHO trong 2 tuần liên tiếp cho bất kỳ nhân viên nào
+// - Luân phiên 100%: Nhân viên trực ở Tuần n (ví dụ Nhạn & Mỹ trực Thứ 2 Tuần 1) sẽ được XOAY HOÀN TOÀN sang người khác ở Tuần n+1 (Tuần 2 chuyển sang Ngọc Anh & Giang Ý)!
+// - Tuyệt đối không trùng lặp người trực cùng một thứ giữa 2 tuần liên tiếp
 // - Nhóm 1: Tất cả 6 nhân viên đều có 4-5 ca TN, 4-5 ca KHO (Tổng ca: 9-10 ca/người)
 // - Nhóm 2: Tất cả 5 nhân viên đều có 5-6 ca TN, 5-6 ca KHO (Tổng ca: 11-12 ca/người)
 const GROUP1_PERMUTATIONS = [
-  [0, 1, 2, 3, 4, 5], // Tuần 1 (Ca mẫu ảnh chuẩn 1 TN & 1 KHO mỗi ngày: Nhạn 2 TN, Mạnh 2 KHO)
-  [2, 3, 0, 1, 5, 4], // Tuần 2 (Nhạn & Mạnh chỉ 1 TN 1 KHO; chuyển 2 TN cho Mi, 2 KHO cho Mỹ)
-  [4, 5, 3, 2, 0, 1], // Tuần 3 (Mi & Mỹ về 1 TN 1 KHO; chuyển 2 TN cho Giang Ý, 2 KHO cho Ngọc Anh)
-  [1, 0, 4, 5, 2, 3]  // Tuần 4 (Đảo lại cho Mạnh 2 TN, Nhạn 2 KHO để cân bằng tháng)
+  [0, 1, 2, 3, 4, 5], // Tuần 1 (T2: Nhạn & Mỹ trực TN & KHO)
+  [4, 5, 1, 2, 0, 3], // Tuần 2 (T2: Xoay sang Ngọc Anh & Giang Ý trực; 0 trùng ngày với Tuần 1)
+  [3, 0, 5, 1, 4, 2], // Tuần 3 (T2: Xoay sang Mạnh & Đại trực; 0 trùng ngày với Tuần 2)
+  [2, 4, 0, 5, 3, 1]  // Tuần 4 (T2: Xoay sang Mỹ & Nhạn; 0 trùng ngày với Tuần 3)
 ];
 
 const GROUP2_PERMUTATIONS = [
-  [0, 1, 2, 3, 4], // Tuần 1 (Ca mẫu: Thắm 2 TN, My 2 TN, Phúc 2 KHO, Đại 2 KHO, Lâm Ý 1 TN 1 KHO)
-  [2, 3, 0, 4, 1], // Tuần 2 (Thắm & My đảo sang 1 TN; Phúc & Đại đảo sang 1 KHO; Lâm Ý xoay 2 TN)
-  [1, 0, 4, 2, 3], // Tuần 3 (Tiếp tục đảo ca đảm bảo không nhân viên nào trực 2 ngày cùng vai trò 2 tuần liền)
-  [4, 2, 3, 1, 0]  // Tuần 4 (Hoàn tất chu kỳ 4 tuần cân bằng tuyệt đối toàn tháng)
+  [0, 1, 2, 3, 4], // Tuần 1 (T2: Thắm & Phúc trực)
+  [1, 4, 3, 2, 0], // Tuần 2 (T2: Xoay sang Mi & Lâm Ý trực, không trùng Thắm & Phúc)
+  [2, 1, 0, 4, 3], // Tuần 3 (T2: Xoay sang Phúc & Thắm trực)
+  [3, 2, 4, 0, 1]  // Tuần 4 (T2: Xoay sang Lâm Ý & My trực)
 ];
 
 /**
@@ -331,7 +332,7 @@ const AppState = {
 
 const CACHE_KEY = 'PHANCA_LOCAL_CACHE';
 const CACHE_VERSION_KEY = 'PHANCA_CACHE_VERSION';
-const CURRENT_CACHE_VERSION = 'v7_auto_current_month_all_weeks';
+const CURRENT_CACHE_VERSION = 'v8_dynamic_rotation_no_consecutive_same_day';
 
 /**
  * Kiểm tra xem một tháng đã có bất kỳ ca trực nào chưa
