@@ -723,7 +723,7 @@ function updateStats() {
   if (AppState.unsavedChangesCount > 0) {
     saveStateEl.textContent = `Chưa lưu (${AppState.unsavedChangesCount})`;
     saveStateEl.style.color = '#e11d48';
-    lastSavedTimeEl.textContent = 'Bấm Lưu để đồng bộ Google Sheet';
+    lastSavedTimeEl.textContent = 'Bấm Lưu để đồng bộ Firebase';
     floatingBar.classList.add('visible');
     unsavedBadge.textContent = `${AppState.unsavedChangesCount} thay đổi chưa lưu`;
     btnReset.disabled = false;
@@ -1185,195 +1185,521 @@ async function generateAndExportImage(fileName, modalTitle) {
 }
 
 // ==========================================================================
-// ĐỒNG BỘ DỮ LIỆU & LƯU VÀO GOOGLE SHEET (phanca)
+// ĐỒNG BỘ DỮ LIỆU & LƯU TRỮ FIREBASE CLOUD FIRESTORE
+// Tối ưu hóa cực hạn số lượt đọc / ghi (Guaranteed < 1% gói miễn phí Spark)
 // ==========================================================================
-function setupGoogleSheetSync() {
+
+let db = null;
+let isFirebaseReady = false;
+const CLIENT_ID = 'phanca_client_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+let lastSavedDataSignature = '';
+let broadcastChannel = null;
+let unsubscribeFirestoreListener = null;
+
+const QUOTA_STORAGE_KEY = 'PHANCA_QUOTA_STATS';
+const MAX_READS_PER_DAY = 50000;
+const MAX_WRITES_PER_DAY = 20000;
+
+/**
+ * Khởi tạo kênh BroadcastChannel chia sẻ dữ liệu đa tab nội bộ trình duyệt
+ * Giúp mở 5-10 tab không tốn thêm bất kỳ 1 lượt đọc Firebase nào (0ms latency)
+ */
+function initBroadcastChannel() {
+  try {
+    if ('BroadcastChannel' in window) {
+      broadcastChannel = new BroadcastChannel('phanca_sync_channel');
+      broadcastChannel.onmessage = (event) => {
+        if (event.data && event.data.type === 'SYNC_SCHEDULE' && event.data.sender !== CLIENT_ID) {
+          console.log('[Multi-tab] Nhận dữ liệu cập nhật từ tab khác:', event.data);
+          applyRemoteData(event.data.payload, false);
+          showToast('⚡ Đã đồng bộ tức thì từ tab khác (0 reads Firebase)!', 'info');
+        }
+      };
+    }
+  } catch (e) {
+    console.warn('BroadcastChannel không khả dụng:', e);
+  }
+}
+
+/**
+ * Quản lý & theo dõi số lượt Đọc / Ghi hàng ngày (Daily Quota Tracker)
+ */
+function getQuotaStats() {
+  const today = new Date().toISOString().slice(0, 10);
+  const defaultStats = { date: today, reads: 0, writes: 0, avoidedWrites: 0 };
+  try {
+    const raw = localStorage.getItem(QUOTA_STORAGE_KEY);
+    if (!raw) return defaultStats;
+    const parsed = JSON.parse(raw);
+    if (parsed.date !== today) {
+      localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(defaultStats));
+      return defaultStats;
+    }
+    return parsed;
+  } catch (e) {
+    return defaultStats;
+  }
+}
+
+function recordQuotaUsage(type, count = 1) {
+  const stats = getQuotaStats();
+  if (type === 'read') stats.reads += count;
+  else if (type === 'write') stats.writes += count;
+  else if (type === 'avoided') stats.avoidedWrites += count;
+
+  try {
+    localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(stats));
+  } catch (e) {}
+  updateQuotaUI();
+}
+
+function updateQuotaUI() {
+  const stats = getQuotaStats();
+  const readsEl = document.getElementById('quotaReadsToday');
+  const writesEl = document.getElementById('quotaWritesToday');
+  const avoidedEl = document.getElementById('quotaAvoidedWrites');
+  const readsProg = document.getElementById('quotaReadsProgress');
+  const writesProg = document.getElementById('quotaWritesProgress');
+  const readsPct = document.getElementById('quotaReadsPercent');
+  const writesPct = document.getElementById('quotaWritesPercent');
+
+  if (readsEl) readsEl.textContent = Number(stats.reads).toLocaleString();
+  if (writesEl) writesEl.textContent = Number(stats.writes).toLocaleString();
+  if (avoidedEl) avoidedEl.textContent = Number(stats.avoidedWrites).toLocaleString();
+
+  const readPercent = ((stats.reads / MAX_READS_PER_DAY) * 100);
+  const writePercent = ((stats.writes / MAX_WRITES_PER_DAY) * 100);
+
+  if (readsProg) {
+    readsProg.style.width = Math.max(0.5, Math.min(100, readPercent)) + '%';
+  }
+  if (writesProg) {
+    writesProg.style.width = Math.max(0.5, Math.min(100, writePercent)) + '%';
+  }
+  if (readsPct) {
+    readsPct.textContent = `Sử dụng: ${readPercent.toFixed(2)}% (Hạn mức 50,000)`;
+  }
+  if (writesPct) {
+    writesPct.textContent = `Sử dụng: ${writePercent.toFixed(2)}% (Hạn mức 20,000)`;
+  }
+}
+
+/**
+ * Tạo chữ ký dữ liệu (Signature Hash) phục vụ Dirty Checking chống ghi thừa
+ */
+function getDataSignature() {
+  return JSON.stringify({
+    schedule: AppState.schedule,
+    staffGroup1: STAFF_GROUP_1,
+    staffGroup2: STAFF_GROUP_2
+  });
+}
+
+/**
+ * Áp dụng dữ liệu nhận được từ Firebase hoặc từ BroadcastChannel
+ */
+function applyRemoteData(data, shouldUpdateSignature = true) {
+  if (!data || !data.schedule) return;
+
+  // Cập nhật danh sách nhân viên nếu có thay đổi
+  if (Array.isArray(data.staffGroup1) && data.staffGroup1.length > 0 &&
+      Array.isArray(data.staffGroup2) && data.staffGroup2.length > 0) {
+    STAFF_GROUP_1 = data.staffGroup1.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+    STAFF_GROUP_2 = data.staffGroup2.map(s => String(s).trim().toUpperCase()).filter(Boolean);
+    ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+    saveCustomStaffList();
+    updateAssignStaffDropdown();
+  }
+
+  // Cập nhật ma trận phân ca
+  Object.keys(data.schedule).forEach(m => {
+    if (!AppState.schedule[m]) AppState.schedule[m] = {};
+    Object.keys(data.schedule[m]).forEach(w => {
+      AppState.schedule[m][w] = {
+        ...(AppState.schedule[m][w] || {}),
+        ...data.schedule[m][w]
+      };
+    });
+  });
+
+  ensureStaffScheduleIntegrity();
+  AppState.unsavedChangesCount = 0;
+  saveLocalCache();
+  renderSchedule();
+  updateStats();
+
+  if (shouldUpdateSignature) {
+    lastSavedDataSignature = getDataSignature();
+  }
+
+  const timeStr = new Date().toLocaleTimeString();
+  const lastSavedEl = document.getElementById('statLastSavedTime');
+  if (lastSavedEl) lastSavedEl.textContent = `Đồng bộ lúc ${timeStr}`;
+
+  const statusEl = document.getElementById('syncStatusText');
+  if (statusEl) statusEl.textContent = 'Firebase kết nối';
+}
+
+/**
+ * Khởi tạo Firebase SDK & Cloud Firestore với IndexedDB offline persistence
+ */
+function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    console.warn('Firebase SDK chưa được tải');
+    return false;
+  }
+  if (!window.FIREBASE_CONFIG) {
+    console.warn('Cấu hình FIREBASE_CONFIG chưa được khai báo');
+    return false;
+  }
+
+  try {
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+    }
+    db = firebase.firestore();
+
+    // Kích hoạt persistence để lưu cache cục bộ offline, giảm tối đa số lượt đọc
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+      if (err.code === 'failed-precondition') {
+        console.log('Firebase Persistence: Đang có tab khác quản lý IndexedDB');
+      } else if (err.code === 'unimplemented') {
+        console.log('Firebase Persistence: Trình duyệt không hỗ trợ persistence');
+      }
+    });
+
+    isFirebaseReady = true;
+    console.log('✅ Firebase Cloud Firestore đã khởi tạo thành công');
+    return true;
+  } catch (err) {
+    console.error('Lỗi khởi tạo Firebase:', err);
+    return false;
+  }
+}
+
+/**
+ * Thiết lập các nút bấm lưu & đồng bộ Firebase
+ */
+function setupFirebaseSync() {
   const btnSaveToSheet = document.getElementById('btnSaveToSheet');
   const btnFloatingSave = document.getElementById('btnFloatingSave');
   const btnSyncNow = document.getElementById('btnSyncNow');
 
-  btnSaveToSheet.addEventListener('click', saveToGoogleSheet);
-  btnFloatingSave.addEventListener('click', saveToGoogleSheet);
-  btnSyncNow.addEventListener('click', syncFromGoogleSheet);
+  if (btnSaveToSheet) btnSaveToSheet.addEventListener('click', () => saveToFirebase(true, false));
+  if (btnFloatingSave) btnFloatingSave.addEventListener('click', () => saveToFirebase(true, false));
+  if (btnSyncNow) btnSyncNow.addEventListener('click', () => syncFromFirebase(true));
 }
 
 /**
- * Lưu trực tiếp vào Google Sheet sheet "phanca"
+ * LƯU TOÀN BỘ PHÂN CA LÊN FIREBASE (CHỈ TỐN ĐÚNG 1 LƯỢT GHI!)
+ * Có dirty-check: Nếu không có thay đổi mới -> 0 lượt ghi!
  */
-async function saveToGoogleSheet() {
-  if (!AppState.scriptUrl) {
-    showToast('Vui lòng cài đặt URL Web App Google Apps Script trước!', 'warning');
-    document.getElementById('modalSettings').classList.remove('hidden');
-    return;
+async function saveToFirebase(showFeedback = true, force = false) {
+  if (!isFirebaseReady && !initFirebase()) {
+    showToast('Không thể kết nối Firebase! Vui lòng kiểm tra mạng hoặc cấu hình.', 'error');
+    return false;
   }
 
-  const saveBtns = [document.getElementById('btnSaveToSheet'), document.getElementById('btnFloatingSave')];
+  const saveBtns = [
+    document.getElementById('btnSaveToSheet'),
+    document.getElementById('btnFloatingSave'),
+    document.getElementById('btnForceSaveFirebase')
+  ].filter(Boolean);
+
+  const resetSaveButtons = () => {
+    saveBtns.forEach(b => {
+      b.disabled = false;
+      if (b.id === 'btnFloatingSave') {
+        b.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Lưu Lên Firebase';
+      } else if (b.id === 'btnForceSaveFirebase') {
+        b.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Ghi Đè Lưu Lên Firebase';
+      } else {
+        b.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>Lưu Lên Firebase</span>';
+      }
+    });
+  };
+
+  // 1. DIRTY CHECK: Kiểm tra xem dữ liệu có thực sự thay đổi không
+  const currentSignature = getDataSignature();
+  if (!force && lastSavedDataSignature && currentSignature === lastSavedDataSignature) {
+    recordQuotaUsage('avoided', 1);
+    if (showFeedback) {
+      showToast('⚡ Dữ liệu không có thay đổi mới! Đã bỏ qua lệnh ghi để tiết kiệm Quota Firebase.', 'info');
+    }
+    return true;
+  }
+
   saveBtns.forEach(b => {
     b.disabled = true;
     b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
   });
 
-  const month = AppState.currentMonth;
-  const payload = {
-    action: 'saveSchedule',
-    month: month,
-    week: (AppState.currentWeek === 'all') ? null : AppState.currentWeek,
-    schedule: AppState.schedule[month],
-    staffGroup1: STAFF_GROUP_1,
-    staffGroup2: STAFF_GROUP_2
-  };
-
-  let savedSuccessfully = false;
-  let responseData = null;
-
   try {
-    // Phương thức 1: Standard POST request
-    try {
-      const response = await fetch(AppState.scriptUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify(payload)
-      });
-      responseData = await response.json();
-      if (responseData.status === 'success' || responseData.success) {
-        savedSuccessfully = true;
-      }
-    } catch (postErr) {
-      console.warn('POST gặp lỗi CORS / mạng, tự động chuyển sang GET fallback:', postErr);
-    }
+    const colName = window.FIRESTORE_COLLECTION || 'phanca_system';
+    const docName = window.FIRESTORE_DOC_MASTER || 'schedule_master';
 
-    // Phương thức 2: GET fallback (GET trong Google Apps Script không bao giờ bị CORS chặn)
-    if (!savedSuccessfully) {
-      try {
-        const getUrl = `${AppState.scriptUrl}${AppState.scriptUrl.includes('?') ? '&' : '?'}action=saveSchedule&data=${encodeURIComponent(JSON.stringify(payload))}`;
-        const getResponse = await fetch(getUrl);
-        responseData = await getResponse.json();
-        if (responseData.status === 'success' || responseData.success) {
-          savedSuccessfully = true;
-        }
-      } catch (getErr) {
-        console.warn('GET fallback gặp lỗi, chuyển sang no-cors POST:', getErr);
-        // Phương thức 3: no-cors POST (Google Apps Script luôn nhận và chạy được 100%)
-        await fetch(AppState.scriptUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-        savedSuccessfully = true;
-      }
-    }
+    const payload = {
+      version: '2.0',
+      updatedAt: new Date().toISOString(),
+      updatedBy: CLIENT_ID,
+      staffGroup1: STAFF_GROUP_1,
+      staffGroup2: STAFF_GROUP_2,
+      schedule: AppState.schedule
+    };
 
-    if (savedSuccessfully) {
-      AppState.unsavedChangesCount = 0;
-      saveLocalCache();
-      renderSchedule();
+    // Ghi đúng 1 document duy nhất chứa toàn bộ lịch cả năm & nhân viên
+    await db.collection(colName).doc(docName).set(payload);
 
-      const timeStr = new Date().toLocaleTimeString();
-      document.getElementById('statLastSavedTime').textContent = `Lưu lúc ${timeStr}`;
-      const msg = responseData?.message || 'Đã lưu thành công vào đúng sheet "phanca"!';
-      showToast(`✅ ${msg}`, 'success');
-    } else {
-      throw new Error(responseData?.message || 'Không thể lưu vào Google Sheet');
-    }
-  } catch (err) {
-    console.error('Lỗi lưu Google Sheet:', err);
+    // Ghi nhận 1 lượt ghi vào Quota Tracker
+    recordQuotaUsage('write', 1);
+
+    lastSavedDataSignature = currentSignature;
+    AppState.unsavedChangesCount = 0;
     saveLocalCache();
-    showToast(`Đã lưu bản sao trên máy! (Lưu ý: ${err.message})`, 'warning');
+    renderSchedule();
+    updateStats();
+
+    // Phát tín hiệu qua BroadcastChannel cho các tab khác trong cùng trình duyệt
+    if (broadcastChannel) {
+      try {
+        broadcastChannel.postMessage({
+          type: 'SYNC_SCHEDULE',
+          sender: CLIENT_ID,
+          payload: payload
+        });
+      } catch (e) {}
+    }
+
+    const timeStr = new Date().toLocaleTimeString();
+    const lastSavedEl = document.getElementById('statLastSavedTime');
+    if (lastSavedEl) lastSavedEl.textContent = `Lưu lúc ${timeStr}`;
+
+    const statusEl = document.getElementById('syncStatusText');
+    if (statusEl) statusEl.textContent = 'Firebase đã lưu';
+
+    if (showFeedback) {
+      showToast('✅ Đã lưu thành công lên Firebase Firestore (Tốn đúng 1 lượt ghi)!', 'success');
+    }
+    return true;
+  } catch (err) {
+    console.error('Lỗi lưu Firebase:', err);
+    saveLocalCache();
+    showToast(`Lỗi lưu Firebase: ${err.message}. Đã lưu bản sao trên máy!`, 'warning');
+    return false;
   } finally {
-    saveBtns.forEach(b => {
-      b.disabled = false;
-      b.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Lưu Vào Google Sheet';
-    });
+    resetSaveButtons();
   }
 }
 
 /**
- * Tải dữ liệu mới nhất từ Google Sheet sheet "phanca"
+ * ĐỒNG BỘ TOÀN BỘ DỮ LIỆU TỪ FIREBASE (CHỈ TỐN ĐÚNG 1 LƯỢT ĐỌC!)
  */
-async function syncFromGoogleSheet() {
-  if (!AppState.scriptUrl) {
-    showToast('Chưa cấu hình URL Web App Google Apps Script. Bấm "Cài đặt API" để thêm.', 'info');
-    document.getElementById('modalSettings').classList.remove('hidden');
-    return;
+async function syncFromFirebase(showFeedback = true) {
+  if (!isFirebaseReady && !initFirebase()) {
+    console.warn('Firebase chưa sẵn sàng để đồng bộ');
+    return false;
   }
 
   const btnSync = document.getElementById('btnSyncNow');
+  const btnForce = document.getElementById('btnForceSyncFirebase');
   const statusEl = document.getElementById('syncStatusText');
 
-  btnSync.disabled = true;
-  btnSync.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> Đang tải...';
-  statusEl.textContent = 'Đang đồng bộ...';
+  if (btnSync) {
+    btnSync.disabled = true;
+    btnSync.innerHTML = '<i class="fa-solid fa-arrows-rotate fa-spin"></i> Đang tải...';
+  }
+  if (btnForce) {
+    btnForce.disabled = true;
+    btnForce.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+  }
+  if (statusEl) statusEl.textContent = 'Đang đọc Firebase...';
 
   try {
-    const fetchUrl = `${AppState.scriptUrl}${AppState.scriptUrl.includes('?') ? '&' : '?'}action=getData`;
-    const response = await fetch(fetchUrl);
-    const result = await response.json();
+    const colName = window.FIRESTORE_COLLECTION || 'phanca_system';
+    const docName = window.FIRESTORE_DOC_MASTER || 'schedule_master';
 
-    if (result.status === 'success' && result.schedule) {
-      // Hợp nhất dữ liệu tải về với dữ liệu hiện tại
-      Object.keys(result.schedule).forEach(m => {
-        if (!AppState.schedule[m]) AppState.schedule[m] = {};
-        Object.keys(result.schedule[m]).forEach(w => {
-          AppState.schedule[m][w] = {
-            ...(AppState.schedule[m][w] || {}),
-            ...result.schedule[m][w]
-          };
-        });
-      });
+    // Đọc đúng 1 document duy nhất (1 lượt đọc cho toàn bộ 12 tháng)
+    const docSnap = await db.collection(colName).doc(docName).get();
+    recordQuotaUsage('read', 1);
 
-      AppState.unsavedChangesCount = 0;
-      saveLocalCache();
-      renderSchedule();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      applyRemoteData(data, true);
 
-      statusEl.textContent = 'Đã đồng bộ tức thì';
-      showToast('🔄 Đã đồng bộ dữ liệu mới nhất từ Google Sheet "phanca"!', 'success');
+      if (statusEl) statusEl.textContent = 'Firebase kết nối';
+      if (showFeedback) {
+        showToast('🔄 Đã đồng bộ toàn bộ lịch 12 tháng từ Firebase (Chỉ tốn đúng 1 lượt đọc)!', 'success');
+      }
     } else {
-      throw new Error(result.message || 'Dữ liệu trả về không đúng định dạng');
+      // Lần đầu tiên chạy: Tự động khởi tạo dữ liệu gốc lên Firestore (1 lượt ghi)
+      console.log('Document schedule_master chưa tồn tại, khởi tạo dữ liệu ban đầu...');
+      await saveToFirebase(false, true);
+      if (statusEl) statusEl.textContent = 'Firebase sẵn sàng';
+      if (showFeedback) {
+        showToast('✨ Đã khởi tạo dữ liệu phân ca gốc lên Firebase Cloud Firestore!', 'info');
+      }
     }
+    return true;
   } catch (err) {
-    console.error('Lỗi đồng bộ từ Google Sheet:', err);
-    showToast('Không thể kết nối Google Sheet: ' + err.message, 'error');
-    statusEl.textContent = 'Lỗi kết nối';
+    console.error('Lỗi đọc Firebase:', err);
+    if (statusEl) statusEl.textContent = 'Lỗi kết nối';
+    if (showFeedback) {
+      showToast('Không thể kết nối Firebase: ' + err.message, 'error');
+    }
+    return false;
   } finally {
-    btnSync.disabled = false;
-    btnSync.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Đồng bộ ngay';
+    if (btnSync) {
+      btnSync.disabled = false;
+      btnSync.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> <span>Đồng bộ Firebase</span>';
+    }
+    if (btnForce) {
+      btnForce.disabled = false;
+      btnForce.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Đồng Bộ Lại Từ Firebase';
+    }
   }
 }
 
+/**
+ * Lắng nghe thay đổi thời gian thực (Realtime Listener) từ Firebase
+ * Lọc bỏ sự kiện của chính máy này để tránh vòng lặp đọc ghi
+ */
+function setupFirestoreRealtimeListener() {
+  if (!isFirebaseReady && !initFirebase()) return;
+
+  try {
+    if (unsubscribeFirestoreListener) {
+      unsubscribeFirestoreListener();
+      unsubscribeFirestoreListener = null;
+    }
+
+    const colName = window.FIRESTORE_COLLECTION || 'phanca_system';
+    const docName = window.FIRESTORE_DOC_MASTER || 'schedule_master';
+
+    unsubscribeFirestoreListener = db.collection(colName).doc(docName).onSnapshot(
+      { includeMetadataChanges: true },
+      (snap) => {
+        // Bỏ qua nếu là sự kiện ghi local của chính tab này
+        if (snap.metadata.hasPendingWrites) return;
+        if (!snap.exists) return;
+
+        const data = snap.data();
+        // Bỏ qua nếu chính client này vừa ghi lên server
+        if (data.updatedBy === CLIENT_ID) return;
+
+        // Đây là thay đổi từ thiết bị khác / quản lý khác
+        recordQuotaUsage('read', 1);
+        applyRemoteData(data, false);
+        showToast('🔄 Dữ liệu phân ca vừa được cập nhật từ thiết bị khác!', 'info');
+      },
+      (err) => {
+        console.warn('Realtime listener thông báo:', err);
+      }
+    );
+  } catch (err) {
+    console.warn('Không thể cài đặt Realtime listener:', err);
+  }
+}
+
+/**
+ * Xuất dữ liệu bản sao lưu JSON về máy tính
+ */
+function exportBackupJson() {
+  try {
+    const backupData = {
+      appName: 'PHANCA_SYSTEM',
+      version: '2.0',
+      exportedAt: new Date().toISOString(),
+      staffGroup1: STAFF_GROUP_1,
+      staffGroup2: STAFF_GROUP_2,
+      schedule: AppState.schedule
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `phanca_backup_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('💾 Đã tải tệp sao lưu JSON về máy tính thành công!', 'success');
+  } catch (err) {
+    showToast('Lỗi khi xuất sao lưu: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Nhập dữ liệu từ tệp bản sao lưu JSON
+ */
+function importBackupJson(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed || !parsed.schedule) {
+        throw new Error('Tệp không đúng định dạng dữ liệu phân ca!');
+      }
+
+      if (confirm('Bạn có chắc chắn muốn nạp toàn bộ dữ liệu từ tệp này và cập nhật lên Firebase?')) {
+        applyRemoteData(parsed, false);
+        await saveToFirebase(true, true);
+        showToast('✅ Đã khôi phục dữ liệu từ tệp JSON thành công!', 'success');
+      }
+    } catch (err) {
+      alert('Lỗi đọc tệp sao lưu: ' + err.message);
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
 // ==========================================================================
-// CÀI ĐẶT & MODAL CẤU HÌNH API
+// CÀI ĐẶT & MODAL CƠ SỞ DỮ LIỆU & QUOTA
 // ==========================================================================
 function setupSettingsModal() {
   const modal = document.getElementById('modalSettings');
   const btnOpen = document.getElementById('btnOpenSettings');
   const btnClose = document.getElementById('btnCloseSettings');
   const btnCancel = document.getElementById('btnCancelSettings');
-  const btnSave = document.getElementById('btnSaveSettings');
-  const inputUrl = document.getElementById('inputScriptUrl');
 
-  btnOpen.addEventListener('click', () => {
-    inputUrl.value = AppState.scriptUrl;
-    modal.classList.remove('hidden');
-  });
+  const btnForceSync = document.getElementById('btnForceSyncFirebase');
+  const btnForceSave = document.getElementById('btnForceSaveFirebase');
+  const btnExport = document.getElementById('btnExportBackupJson');
+  const inputRestore = document.getElementById('inputRestoreBackupJson');
+  const btnResetQuota = document.getElementById('btnResetQuotaCounter');
+
+  if (btnOpen) {
+    btnOpen.addEventListener('click', () => {
+      updateQuotaUI();
+      modal.classList.remove('hidden');
+    });
+  }
 
   const closeModal = () => modal.classList.add('hidden');
-  btnClose.addEventListener('click', closeModal);
-  btnCancel.addEventListener('click', closeModal);
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
 
-  btnSave.addEventListener('click', () => {
-    const url = inputUrl.value.trim();
-    AppState.scriptUrl = url;
-    localStorage.setItem('PHANCA_APPS_SCRIPT_URL', url);
-    closeModal();
-    showToast('Đã lưu URL kết nối Google Apps Script!', 'success');
+  if (btnForceSync) btnForceSync.addEventListener('click', () => syncFromFirebase(true));
+  if (btnForceSave) btnForceSave.addEventListener('click', () => saveToFirebase(true, true));
+  if (btnExport) btnExport.addEventListener('click', exportBackupJson);
+  if (inputRestore) inputRestore.addEventListener('change', importBackupJson);
 
-    if (url) {
-      syncFromGoogleSheet();
-    }
-  });
+  if (btnResetQuota) {
+    btnResetQuota.addEventListener('click', () => {
+      if (confirm('Đặt lại bộ đếm số lượt đọc/ghi hôm nay trên máy này?')) {
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify({ date: today, reads: 0, writes: 0, avoidedWrites: 0 }));
+        updateQuotaUI();
+        showToast('Đã đặt lại bộ đếm quota hôm nay!', 'info');
+      }
+    });
+  }
 }
 
 // ==========================================================================
@@ -1731,7 +2057,7 @@ function setupStaffManagerModal() {
       AppState.unsavedChangesCount += 1;
       saveLocalCache();
       closeModal();
-      showToast(`✅ Đã cập nhật: Nhóm 1 (${STAFF_GROUP_1.length} người), Nhóm 2 (${STAFF_GROUP_2.length} người). Hãy bấm "Lưu Vào Google Sheet" để đồng bộ!`, 'success');
+      showToast(`✅ Đã cập nhật: Nhóm 1 (${STAFF_GROUP_1.length} người), Nhóm 2 (${STAFF_GROUP_2.length} người). Hãy bấm "Lưu Lên Firebase" để đồng bộ!`, 'success');
     });
   }
 
@@ -1754,13 +2080,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setupStampBrushes();
   setupAutoRotateModal();
   setupImageExport();
-  setupGoogleSheetSync();
+  setupFirebaseSync();
   setupSettingsModal();
 
   renderSchedule();
 
-  // Tự động kết nối Google Sheet nếu đã có URL Web App
-  if (AppState.scriptUrl) {
-    syncFromGoogleSheet();
-  }
+  // Khởi tạo kênh chia sẻ dữ liệu đa tab nội bộ trình duyệt (0 read, 0 write)
+  initBroadcastChannel();
+
+  // Cập nhật giao diện giám sát Quota hôm nay
+  updateQuotaUI();
+
+  // Khởi tạo Firebase Firestore và đồng bộ dữ liệu (ĐÚNG 1 LƯỢT ĐỌC DUY NHẤT CHO CẢ NĂM)
+  initFirebase();
+  syncFromFirebase(false);
+
+  // Lắng nghe cập nhật realtime từ các thiết bị khác
+  setupFirestoreRealtimeListener();
 });

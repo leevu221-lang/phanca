@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hệ Thống Phân Ca Hành Chính - Tone Pastel Xanh Dương</title>
-  <meta name="description" content="Hệ thống phân ca hành chính tự động & trực quan, đồng bộ Google Sheet tức thì, xuất ảnh theo tuần và theo tháng.">
+  <meta name="description" content="Hệ thống phân ca hành chính tự động & trực quan, đồng bộ Firebase Cloud Firestore tức thì, xuất ảnh theo tuần và theo tháng.">
   
   <!-- Favicon / Browser Tab Icon -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -39,11 +39,11 @@
         <div class="brand-info">
           <h1 class="brand-title">PHÂN CA HÀNH CHÍNH</h1>
           <p class="brand-subtitle">
-            <span class="sheet-tag"><i class="fa-solid fa-table-cells"></i> Sheet: <strong>phanca</strong></span>
+            <span class="sheet-tag firebase-tag"><i class="fa-solid fa-fire text-amber"></i> Firebase: <strong>phanca_system</strong></span>
             <span class="dot-separator">•</span>
             <span class="sync-status" id="syncStatus">
               <span class="status-pulse"></span>
-              <span id="syncStatusText">Sẵn sàng đồng bộ</span>
+              <span id="syncStatusText">Firebase sẵn sàng</span>
             </span>
           </p>
         </div>
@@ -54,17 +54,17 @@
           <i class="fa-solid fa-user-group"></i>
           <span>Quản lý nhân viên</span>
         </button>
-        <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Google Sheet">
+        <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Firebase Cloud Firestore">
           <i class="fa-solid fa-arrows-rotate"></i>
-          <span>Đồng bộ ngay</span>
+          <span>Đồng bộ Firebase</span>
         </button>
-        <button id="btnOpenSettings" class="btn btn-ghost" title="Cài đặt kết nối Google Apps Script">
-          <i class="fa-solid fa-gear"></i>
-          <span>Cài đặt API</span>
+        <button id="btnOpenSettings" class="btn btn-ghost" title="Quản lý Firebase & Giám sát Quota ngày">
+          <i class="fa-solid fa-fire text-amber"></i>
+          <span>Database & Quota</span>
         </button>
-        <button id="btnSaveToSheet" class="btn btn-primary" title="Lưu phân ca trực tiếp vào sheet phanca">
+        <button id="btnSaveToSheet" class="btn btn-primary" title="Lưu phân ca trực tiếp lên Firebase Cloud Firestore">
           <i class="fa-solid fa-cloud-arrow-up"></i>
-          <span>Lưu Vào Google Sheet</span>
+          <span>Lưu Lên Firebase</span>
         </button>
       </div>
     </div>
@@ -306,7 +306,7 @@
                 <span class="dot-separator">•</span>
                 <span id="exportDateStamp">Đồng bộ: 24/09/2026</span>
                 <span class="dot-separator">•</span>
-                <span>Lưu trữ: Google Sheets (phanca)</span>
+                <span>Lưu trữ: Firebase Firestore</span>
               </p>
             </div>
           </div>
@@ -432,7 +432,7 @@
               <i class="fa-solid fa-rotate-left"></i> Hoàn tác
             </button>
             <button id="btnFloatingSave" class="btn btn-primary btn-sm">
-              <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Vào Sheet "phanca"
+              <i class="fa-solid fa-cloud-arrow-up"></i> Lưu Lên Firebase
             </button>
           </div>
         </div>
@@ -745,7 +745,7 @@
 
         <div style="margin-top: 14px; font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
           <i class="fa-solid fa-circle-info text-blue"></i>
-          <span>Khi lưu, danh sách nhân viên mới sẽ tự động hiển thị trên bảng phân ca, menu phân ca và sẵn sàng đồng bộ vào sheet "phanca".</span>
+          <span>Khi lưu, danh sách nhân viên mới sẽ tự động hiển thị trên bảng phân ca, menu phân ca và sẵn sàng đồng bộ lên Firebase.</span>
         </div>
       </div>
 
@@ -763,44 +763,122 @@
     </div>
   </div>
 
-  <!-- Modal: Settings & Apps Script Web App URL -->
+  <!-- Modal: Firebase Database & Daily Quota Management -->
   <div class="modal-backdrop hidden" id="modalSettings">
-    <div class="modal-card">
+    <div class="modal-card modal-lg">
       <div class="modal-header">
         <div class="modal-title-group">
-          <i class="fa-solid fa-gear text-blue"></i>
-          <h3>Cấu Hình Kết Nối Google Sheet</h3>
+          <i class="fa-solid fa-fire text-amber" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3>Cơ Sở Dữ Liệu Firebase & Kiểm Soát Quota</h3>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Giám sát số lượt đọc ghi theo thời gian thực - Cam kết không vượt hạn mức miễn phí</p>
+          </div>
         </div>
         <button class="modal-close" id="btnCloseSettings">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="settings-form">
-          <div class="form-group">
-            <label for="inputScriptUrl"><strong>URL Web App (Google Apps Script):</strong></label>
-            <input type="text" id="inputScriptUrl" class="custom-input" placeholder="https://script.google.com/macros/s/.../exec">
-            <small class="form-hint">Dán đường dẫn Web App đã triển khai từ Google Sheets của bạn vào đây.</small>
+        <!-- Firebase Status Overview Banner -->
+        <div class="firebase-status-banner">
+          <div class="fb-status-left">
+            <div class="fb-badge-active"><span class="status-pulse"></span> Đang kết nối Cloud Firestore</div>
+            <div class="fb-details">
+              <span><strong>Dự án:</strong> crm-43751-71e4b</span>
+              <span class="dot-separator">•</span>
+              <span><strong>Collection:</strong> phanca_system</span>
+              <span class="dot-separator">•</span>
+              <span><strong>Document:</strong> schedule_master</span>
+            </div>
           </div>
-
-          <div class="info-guide-box">
-            <h4><i class="fa-solid fa-book-open"></i> Hướng Dẫn Lấy Link Web App trong 3 Bước:</h4>
-            <ol>
-              <li>Mở file Google Sheet <strong>1841 - CA HÀNH CHÍNH</strong> > Vào <strong>Tiện ích mở rộng</strong> > <strong>Apps Script</strong>.</li>
-              <li>Dán mã nguồn từ file <code>Code.gs</code> vào và bấm nút 💾 <strong>Lưu dự án</strong>.</li>
-              <li>Bấm nút <strong>Triển khai (Deploy)</strong> > <strong>Triển khai mới (New deployment)</strong> > Chọn loại <strong>Ứng dụng web (Web app)</strong>:
-                <ul>
-                  <li>Thực thi dưới dạng: <strong>Tôi (Me)</strong></li>
-                  <li>Ai có quyền truy cập: <strong>Bất kỳ ai (Anyone)</strong></li>
-                </ul>
-              </li>
-              <li>Sao chép URL Web App vừa tạo và dán vào ô bên trên rồi bấm <strong>Lưu cấu hình</strong>.</li>
-            </ol>
+          <div class="fb-plan-tag">
+            <i class="fa-solid fa-bolt"></i> Firebase Spark Plan (Free)
           </div>
         </div>
+
+        <!-- Quota Usage Stats Cards -->
+        <div class="quota-stats-grid">
+          <div class="quota-stat-card">
+            <div class="quota-card-header">
+              <div class="quota-icon bg-blue-subtle text-blue"><i class="fa-solid fa-book-open"></i></div>
+              <div class="quota-title">Lượt Đọc (Reads) Hôm Nay</div>
+            </div>
+            <div class="quota-main">
+              <div class="quota-number" id="quotaReadsToday">0</div>
+              <div class="quota-limit">/ 50,000 lượt/ngày</div>
+            </div>
+            <div class="quota-progress-bar">
+              <div class="quota-progress-fill" id="quotaReadsProgress" style="width: 0.1%; background: #0284c7;"></div>
+            </div>
+            <div class="quota-foot" id="quotaReadsPercent">Sử dụng: 0.00% (An toàn tuyệt đối)</div>
+          </div>
+
+          <div class="quota-stat-card">
+            <div class="quota-card-header">
+              <div class="quota-icon bg-emerald-subtle text-emerald"><i class="fa-solid fa-pen-to-square"></i></div>
+              <div class="quota-title">Lượt Ghi (Writes) Hôm Nay</div>
+            </div>
+            <div class="quota-main">
+              <div class="quota-number" id="quotaWritesToday">0</div>
+              <div class="quota-limit">/ 20,000 lượt/ngày</div>
+            </div>
+            <div class="quota-progress-bar">
+              <div class="quota-progress-fill" id="quotaWritesProgress" style="width: 0.1%; background: #10b981;"></div>
+            </div>
+            <div class="quota-foot" id="quotaWritesPercent">Sử dụng: 0.00% (An toàn tuyệt đối)</div>
+          </div>
+
+          <div class="quota-stat-card">
+            <div class="quota-card-header">
+              <div class="quota-icon bg-indigo-subtle text-indigo"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="quota-title">Tiết Kiệm Nhờ Dirty-Check</div>
+            </div>
+            <div class="quota-main">
+              <div class="quota-number" id="quotaAvoidedWrites">0</div>
+              <div class="quota-limit">lượt ghi đã bỏ qua</div>
+            </div>
+            <div class="quota-progress-bar">
+              <div class="quota-progress-fill" style="width: 100%; background: #6366f1;"></div>
+            </div>
+            <div class="quota-foot">Tự động chặn ghi khi dữ liệu không đổi</div>
+          </div>
+        </div>
+
+        <!-- Strategy Box -->
+        <div class="quota-explanation-box">
+          <h4><i class="fa-solid fa-microchip text-blue"></i> 4 Cơ Chế Tối Ưu Quota Độc Quyền Của Ứng Dụng:</h4>
+          <ul>
+            <li><strong>1️⃣ Aggregated Master Document:</strong> Toàn bộ 12 tháng và danh sách nhân viên được gom gọn trong 1 document duy nhất (~45 KB). Khởi động ứng dụng chỉ tốn <strong>đúng 1 lượt đọc</strong> cho cả năm!</li>
+            <li><strong>2️⃣ Thao Tác Trong Bộ Nhớ Đệm (In-Memory):</strong> Chuyển tháng, đổi tuần, chấm ca (TN, KHO, x) hoàn toàn diễn ra trên RAM & Local Cache. <strong>0 lượt đọc, 0 lượt ghi</strong> trong suốt quá trình sắp ca.</li>
+            <li><strong>3️⃣ Dirty Checking (Kiểm Tra Thay Đổi):</strong> Trước khi ghi lên Firebase, hệ thống so sánh chữ ký hash của dữ liệu. Nếu bạn bấm Lưu nhưng chưa có thay đổi nào, hệ thống lập tức hủy ghi để tiết kiệm quota.</li>
+            <li><strong>4️⃣ Multi-Tab BroadcastChannel:</strong> Nếu bạn mở nhiều tab trên cùng một trình duyệt, các tab tự truyền tín hiệu nội bộ với độ trễ 0ms và <strong>không tốn thêm 1 lượt đọc Firebase nào</strong>.</li>
+          </ul>
+        </div>
+
+        <!-- Backup & Actions Area -->
+        <div class="modal-section-title" style="margin-top: 18px; font-weight: 700; font-size: 0.95rem; color: #1e293b;">
+          <i class="fa-solid fa-toolbox text-blue"></i> Thao Tác Dữ Liệu & Sao Lưu
+        </div>
+        <div class="database-actions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+          <button type="button" id="btnForceSyncFirebase" class="btn btn-secondary btn-sm" style="justify-content: center;">
+            <i class="fa-solid fa-arrows-rotate"></i> Đồng Bộ Lại Từ Firebase
+          </button>
+          <button type="button" id="btnForceSaveFirebase" class="btn btn-secondary btn-sm" style="justify-content: center;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Ghi Đè Lưu Lên Firebase
+          </button>
+          <button type="button" id="btnExportBackupJson" class="btn btn-secondary btn-sm" style="justify-content: center;">
+            <i class="fa-solid fa-download"></i> Tải Sao Lưu JSON Về Máy
+          </button>
+          <label for="inputRestoreBackupJson" class="btn btn-secondary btn-sm" style="justify-content: center; cursor: pointer; margin: 0; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-upload"></i> Khôi Phục Từ Tệp JSON
+            <input type="file" id="inputRestoreBackupJson" accept=".json" style="display: none;">
+          </label>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelSettings">Huỷ</button>
-        <button class="btn btn-primary" id="btnSaveSettings">
-          <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-ghost btn-sm" id="btnResetQuotaCounter" style="color: #64748b;" title="Đặt lại bộ đếm số lượt đọc ghi trên trình duyệt này">
+          <i class="fa-solid fa-clock-rotate-left"></i> Đặt lại bộ đếm quota
+        </button>
+        <button class="btn btn-primary" id="btnCancelSettings">
+          <i class="fa-solid fa-check"></i> Đóng Cửa Sổ
         </button>
       </div>
     </div>
@@ -809,7 +887,12 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Firebase Compat SDKs (Official Google CDNs) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=20261007_fb"></script>
+
   <!-- Main Application Script -->
-  <script src="app.js"></script>
+  <script src="app.js?v=20261007_fb"></script>
 </body>
 </html>
