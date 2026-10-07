@@ -54,6 +54,10 @@
           <i class="fa-solid fa-user-group"></i>
           <span>Quản lý nhân viên</span>
         </button>
+        <button id="btnOpenHistoryModal" class="btn btn-secondary" title="Xem lịch sử các lần thay đổi và khôi phục dữ liệu">
+          <i class="fa-solid fa-clock-rotate-left text-indigo"></i>
+          <span>Lịch Sử Thay Đổi</span>
+        </button>
         <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Firebase Cloud Firestore">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span>Đồng bộ Firebase</span>
@@ -118,12 +122,15 @@
           </div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card" id="statHistoryCard" style="cursor: pointer;" title="Bấm để xem lịch sử các lần thay đổi và các điểm khôi phục">
           <div class="stat-icon bg-indigo-subtle">
             <i class="fa-solid fa-clock-rotate-left text-indigo"></i>
           </div>
           <div class="stat-details">
-            <span class="stat-label">Trạng Thái Lưu</span>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="stat-label">Lịch Sử & Trạng Thái</span>
+              <span id="badgeRevisionPill" class="history-count-pill" style="font-size: 0.72rem; background: #e0e7ff; color: #4338ca; padding: 1px 7px; border-radius: 999px; font-weight: 700;">0 mốc</span>
+            </div>
             <h3 class="stat-value" id="statSaveState">Đã đồng bộ</h3>
             <span class="stat-desc" id="statLastSavedTime">Chưa có thay đổi</span>
           </div>
@@ -428,6 +435,9 @@
             <span id="unsavedChangesBadge" class="badge-changes">Chưa có thay đổi</span>
           </div>
           <div class="save-bar-buttons">
+            <button id="btnFloatingHistory" class="btn btn-secondary btn-sm" title="Xem lịch sử các lần thay đổi và khôi phục">
+              <i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử
+            </button>
             <button id="btnResetChanges" class="btn btn-secondary btn-sm" disabled>
               <i class="fa-solid fa-rotate-left"></i> Hoàn tác
             </button>
@@ -879,6 +889,106 @@
         </button>
         <button class="btn btn-primary" id="btnCancelSettings">
           <i class="fa-solid fa-check"></i> Đóng Cửa Sổ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Lịch Sử Thay Đổi & Khôi Phục Dữ Liệu -->
+  <div class="modal-backdrop hidden" id="modalHistory">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-clock-rotate-left text-indigo" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3>Lịch Sử Thay Đổi & Khôi Phục Dữ Liệu (Revision History)</h3>
+            <p style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Tự động lưu lại các mốc thay đổi quan trọng giúp chống mất dữ liệu và khôi phục tức thì</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseHistory">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Safety Guarantee Notice -->
+        <div class="history-safety-banner">
+          <div class="safety-icon"><i class="fa-solid fa-shield-halved text-emerald"></i></div>
+          <div class="safety-content">
+            <h4>Bảo Vệ Chống Mất Data Tuyệt Đối</h4>
+            <p>Hệ thống tự động ghi lại bản sao lưu trước khi bạn <strong>Lưu Firebase</strong>, <strong>Xoay ca tự động</strong>, hoặc <strong>Đổi danh sách nhân viên</strong>. Nếu lỡ tay thao tác nhầm, bạn có thể bấm <strong>"Khôi phục"</strong> bất kỳ lúc nào.</p>
+          </div>
+        </div>
+
+        <!-- Manual Snapshot Creation Box -->
+        <div class="history-create-box">
+          <div class="create-box-input-group">
+            <input type="text" id="inputManualSnapshotNote" class="custom-input" placeholder="Ghi chú mốc lưu (VD: Trước khi đổi ca nhóm 1)..." maxlength="60">
+            <button id="btnCreateManualSnapshot" class="btn btn-secondary" type="button">
+              <i class="fa-solid fa-camera"></i> Tạo Điểm Lưu Nhanh
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="history-filter-bar">
+          <div class="filter-count">
+            <i class="fa-solid fa-list-ul text-blue"></i>
+            <span id="historyTotalCountText">0 bản ghi lịch sử</span>
+          </div>
+          <div class="filter-controls">
+            <input type="text" id="inputSearchHistory" class="history-search-input" placeholder="Tìm theo ngày/tháng/ghi chú...">
+            <select id="selectHistoryFilter" class="custom-select history-filter-select">
+              <option value="all">Tất cả mốc lưu</option>
+              <option value="save_firebase">Lưu lên Firebase</option>
+              <option value="auto_rotate">Xoay ca tự động</option>
+              <option value="staff_change">Thay đổi nhân viên</option>
+              <option value="manual">Sao lưu thủ công</option>
+              <option value="before_restore">Trước khi khôi phục</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Timeline Revision List -->
+        <div class="history-timeline-container" id="historyTimelineContainer">
+          <!-- Render dynamically via JavaScript -->
+        </div>
+
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost btn-sm" id="btnExportAllHistory" type="button" title="Xuất toàn bộ lịch sử ra file JSON">
+            <i class="fa-solid fa-file-export"></i> Xuất Tệp Lịch Sử
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btnClearOldHistory" style="color: #e11d48;" type="button" title="Xóa các mốc lịch sử cũ">
+            <i class="fa-solid fa-trash-can"></i> Dọn Dẹp Lịch Sử Cũ
+          </button>
+        </div>
+        <button class="btn btn-primary" id="btnCancelHistory" type="button">
+          <i class="fa-solid fa-check"></i> Đóng Cửa Sổ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Preview Revision Details -->
+  <div class="modal-backdrop hidden" id="modalHistoryPreview">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-eye text-blue" style="font-size: 1.2rem;"></i>
+          <div>
+            <h3>Chi Tiết Mốc Sao Lưu Lịch Sử</h3>
+            <p id="previewModalSubtitle" style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Xem trước dữ liệu</p>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseHistoryPreview">&times;</button>
+      </div>
+      <div class="modal-body" id="previewModalBody">
+        <!-- Render preview details dynamically -->
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn btn-secondary" id="btnCancelHistoryPreview" type="button">Quay lại</button>
+        <button class="btn btn-primary" id="btnConfirmRestoreFromPreview" type="button">
+          <i class="fa-solid fa-rotate-left"></i> Khôi Phục Bản Này
         </button>
       </div>
     </div>

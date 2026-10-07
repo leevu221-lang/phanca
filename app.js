@@ -1053,6 +1053,9 @@ function executeAutoRotate() {
   const balancedSchedule = generateBalanced4WeeksSchedule(month);
   const dominoLog = balancedSchedule._dominoLog || {};
 
+  // Tự động sao lưu lịch sử trước khi xoay ca để bảo vệ data
+  saveRevisionSnapshot('auto_rotate', `Tự động xoay ca 4 tuần (${month})`, `Áp dụng ma trận 4 tuần cân bằng cho ${month}`);
+
   if (!AppState.schedule[month]) {
     AppState.schedule[month] = {};
   }
@@ -1474,6 +1477,9 @@ async function saveToFirebase(showFeedback = true, force = false) {
     const lastSavedEl = document.getElementById('statLastSavedTime');
     if (lastSavedEl) lastSavedEl.textContent = `Lưu lúc ${timeStr}`;
 
+    // Tự động ghi lại điểm lưu lịch sử (Revision Snapshot)
+    saveRevisionSnapshot('save_firebase', 'Lưu dữ liệu lên Firebase Firestore', `Đồng bộ thành công phân ca lúc ${timeStr}`, true);
+
     const statusEl = document.getElementById('syncStatusText');
     if (statusEl) statusEl.textContent = 'Firebase đã lưu';
 
@@ -1701,6 +1707,489 @@ function setupSettingsModal() {
     });
   }
 }
+
+// ==========================================================================
+// HỆ THỐNG LỊCH SỬ THAY ĐỔI & BẢN SAO LƯU (REVISION HISTORY SYSTEM)
+// Tự động bảo vệ dữ liệu chống mất mát & Khôi phục phiên bản tức thì
+// ==========================================================================
+
+const REVISION_STORAGE_KEY = 'PHANCA_REVISION_HISTORY';
+const MAX_REVISIONS = 40;
+
+/**
+ * Đếm số lượng ca trực của 1 loại ca trong 1 tháng
+ */
+function countTotalShifts(month, shiftType) {
+  if (!AppState.schedule || !AppState.schedule[month]) return 0;
+  let count = 0;
+  WEEKS.forEach(w => {
+    if (!AppState.schedule[month][w]) return;
+    ALL_STAFF.forEach(s => {
+      DAYS.forEach(d => {
+        if (AppState.schedule[month][w][s]?.[d] === shiftType) {
+          count++;
+        }
+      });
+    });
+  });
+  return count;
+}
+
+/**
+ * Lấy danh sách lịch sử các phiên bản từ localStorage
+ */
+function getRevisionHistory() {
+  try {
+    const raw = localStorage.getItem(REVISION_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Lỗi đọc revision history:', e);
+    return [];
+  }
+}
+
+/**
+ * Tạo một điểm lưu lịch sử (Revision Snapshot)
+ */
+function saveRevisionSnapshot(type, title, customNote = '', syncToCloud = false) {
+  try {
+    const history = getRevisionHistory();
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + 
+                          ' • ' + now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const month = AppState.currentMonth || getCurrentMonthString();
+    const snapshot = {
+      id: 'rev_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      timestamp: now.toISOString(),
+      formattedTime: formattedTime,
+      type: type, // 'save_firebase', 'auto_rotate', 'staff_change', 'manual', 'before_restore'
+      title: title,
+      note: customNote || '',
+      month: month,
+      stats: {
+        totalStaff: ALL_STAFF.length,
+        g1Count: STAFF_GROUP_1.length,
+        g2Count: STAFF_GROUP_2.length,
+        tnCount: countTotalShifts(month, 'TN'),
+        khoCount: countTotalShifts(month, 'KHO')
+      },
+      staffGroup1: [...STAFF_GROUP_1],
+      staffGroup2: [...STAFF_GROUP_2],
+      schedule: JSON.parse(JSON.stringify(AppState.schedule))
+    };
+
+    // Chèn lên đầu danh sách
+    history.unshift(snapshot);
+
+    // Giới hạn tối đa MAX_REVISIONS phiên bản
+    const trimmed = history.slice(0, MAX_REVISIONS);
+    localStorage.setItem(REVISION_STORAGE_KEY, JSON.stringify(trimmed));
+
+    // Cập nhật số mốc lưu trên thẻ thống kê
+    updateRevisionBadge();
+
+    // Nếu modal lịch sử đang mở thì render lại
+    const modalHistory = document.getElementById('modalHistory');
+    if (modalHistory && !modalHistory.classList.contains('hidden')) {
+      renderHistoryTimeline();
+    }
+
+    // Nếu cần đồng bộ lên Firestore phanca_backups (khi lưu Firebase hoặc tạo mốc quan trọng)
+    if (syncToCloud && isFirebaseReady && db) {
+      try {
+        const backupCol = window.FIRESTORE_BACKUP_COLLECTION || 'phanca_backups';
+        db.collection(backupCol).doc(snapshot.id).set({
+          ...snapshot,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(e => console.warn('Lỗi lưu backup Firestore (không ảnh hưởng local):', e));
+      } catch (err) {
+        console.warn('Lỗi ghi backup cloud:', err);
+      }
+    }
+
+    return snapshot;
+  } catch (err) {
+    console.error('Lỗi khi lưu revision snapshot:', err);
+    return null;
+  }
+}
+
+/**
+ * Cập nhật số lượng mốc lưu hiển thị trên giao diện
+ */
+function updateRevisionBadge() {
+  const history = getRevisionHistory();
+  const badgePill = document.getElementById('badgeRevisionPill');
+  const totalCountText = document.getElementById('historyTotalCountText');
+
+  if (badgePill) {
+    badgePill.textContent = `${history.length} mốc lưu`;
+  }
+  if (totalCountText) {
+    totalCountText.textContent = `${history.length} bản ghi lịch sử (Tối đa ${MAX_REVISIONS})`;
+  }
+}
+
+/**
+ * Khôi phục dữ liệu từ một mốc lịch sử
+ */
+function restoreRevision(revisionId) {
+  const history = getRevisionHistory();
+  const target = history.find(r => r.id === revisionId);
+  if (!target) {
+    showToast('Không tìm thấy bản sao lưu này!', 'error');
+    return;
+  }
+
+  const confirmMsg = `Bạn có chắc chắn muốn khôi phục toàn bộ phân ca về mốc:\n\n📅 ${target.formattedTime}\n📌 Sự kiện: "${target.title}"\n\n🛡️ Hệ thống sẽ tự động tạo một bản sao lưu trạng thái hiện tại trước khi khôi phục để bảo vệ an toàn 100%.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  // 1. Tự động sao lưu trạng thái hiện tại trước khi khôi phục
+  saveRevisionSnapshot('before_restore', 'Tự động sao lưu trước khi khôi phục', `Lưu dự phòng trước khi khôi phục về mốc "${target.title}" (${target.formattedTime})`);
+
+  // 2. Nạp dữ liệu từ snapshot
+  if (Array.isArray(target.staffGroup1) && Array.isArray(target.staffGroup2)) {
+    STAFF_GROUP_1 = [...target.staffGroup1];
+    STAFF_GROUP_2 = [...target.staffGroup2];
+    ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
+    saveCustomStaffList();
+    updateAssignStaffDropdown();
+  }
+
+  AppState.schedule = JSON.parse(JSON.stringify(target.schedule));
+  ensureStaffScheduleIntegrity();
+  AppState.unsavedChangesCount += 1;
+  saveLocalCache();
+  renderSchedule();
+  updateStats();
+
+  // Đóng modal lịch sử & preview nếu đang mở
+  document.getElementById('modalHistory')?.classList.add('hidden');
+  document.getElementById('modalHistoryPreview')?.classList.add('hidden');
+
+  showToast(`✅ Đã khôi phục thành công về mốc ${target.formattedTime}! Nhớ bấm "Lưu Lên Firebase" nếu muốn ghi đè lên đám mây.`, 'success');
+}
+
+/**
+ * Xóa một mốc lịch sử
+ */
+function deleteRevision(revisionId) {
+  const history = getRevisionHistory();
+  const target = history.find(r => r.id === revisionId);
+  if (!target) return;
+
+  if (confirm(`Xóa mốc lịch sử "${target.title}" (${target.formattedTime})?`)) {
+    const updated = history.filter(r => r.id !== revisionId);
+    localStorage.setItem(REVISION_STORAGE_KEY, JSON.stringify(updated));
+    updateRevisionBadge();
+    renderHistoryTimeline();
+    showToast('Đã xóa mốc lịch sử', 'info');
+  }
+}
+
+/**
+ * Xem trước chi tiết mốc lịch sử trong modal preview
+ */
+function previewRevision(revisionId) {
+  const history = getRevisionHistory();
+  const target = history.find(r => r.id === revisionId);
+  if (!target) return;
+
+  const modal = document.getElementById('modalHistoryPreview');
+  const subtitle = document.getElementById('previewModalSubtitle');
+  const body = document.getElementById('previewModalBody');
+  const btnConfirm = document.getElementById('btnConfirmRestoreFromPreview');
+
+  if (subtitle) subtitle.textContent = `${target.formattedTime} • ${target.title}`;
+
+  if (body) {
+    body.innerHTML = `
+      <div class="preview-grid-meta">
+        <div class="preview-meta-box">
+          <div class="preview-meta-label">Thời Gian Ghi Nhận</div>
+          <div class="preview-meta-value">${target.formattedTime}</div>
+        </div>
+        <div class="preview-meta-box">
+          <div class="preview-meta-label">Tháng Phân Ca</div>
+          <div class="preview-meta-value text-blue">${target.month || AppState.currentMonth}</div>
+        </div>
+        <div class="preview-meta-box">
+          <div class="preview-meta-label">Tổng Nhân Viên</div>
+          <div class="preview-meta-value">${target.stats?.totalStaff || (target.staffGroup1?.length + target.staffGroup2?.length)} Người</div>
+        </div>
+        <div class="preview-meta-box">
+          <div class="preview-meta-label">Thống Kê Ca Trực</div>
+          <div class="preview-meta-value">${target.stats?.tnCount || 0} ca TN • ${target.stats?.khoCount || 0} ca KHO</div>
+        </div>
+      </div>
+
+      ${target.note ? `<div style="background: #fffbeb; border: 1px solid #fef3c7; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: 0.85rem; color: #92400e;"><strong>Ghi chú:</strong> ${target.note}</div>` : ''}
+
+      <div style="margin-bottom: 14px;">
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: #1e293b; margin-bottom: 6px;">Danh Sách Nhân Sự Tại Mốc Này:</h4>
+        <div style="font-size: 0.82rem; color: #475569; display: flex; flex-direction: column; gap: 4px;">
+          <div><strong class="text-blue">Nhóm 1 (${target.staffGroup1?.length || 0}):</strong> ${(target.staffGroup1 || []).join(', ')}</div>
+          <div><strong class="text-emerald">Nhóm 2 (${target.staffGroup2?.length || 0}):</strong> ${(target.staffGroup2 || []).join(', ')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (btnConfirm) {
+    btnConfirm.onclick = () => restoreRevision(revisionId);
+  }
+
+  modal.classList.remove('hidden');
+}
+
+/**
+ * Tải file JSON riêng của 1 bản ghi lịch sử
+ */
+function exportSingleRevisionJson(revisionId) {
+  const history = getRevisionHistory();
+  const target = history.find(r => r.id === revisionId);
+  if (!target) return;
+
+  const jsonStr = JSON.stringify(target, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `phanca_snapshot_${target.id}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('💾 Đã tải tệp sao lưu của mốc này về máy!', 'success');
+}
+
+/**
+ * Xuất toàn bộ danh sách lịch sử ra 1 file JSON
+ */
+function exportAllHistoryJson() {
+  const history = getRevisionHistory();
+  if (history.length === 0) {
+    showToast('Chưa có bản ghi lịch sử nào để xuất!', 'info');
+    return;
+  }
+
+  const jsonStr = JSON.stringify(history, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `phanca_full_history_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('💾 Đã xuất toàn bộ lịch sử thay đổi thành tệp JSON!', 'success');
+}
+
+/**
+ * Dọn dẹp bớt các mốc lịch sử cũ (chỉ giữ lại 5 mốc mới nhất)
+ */
+function clearOldHistory() {
+  const history = getRevisionHistory();
+  if (history.length <= 5) {
+    showToast('Hiện tại số lượng mốc lưu chưa nhiều (<= 5), không cần dọn dẹp!', 'info');
+    return;
+  }
+
+  if (confirm(`Bạn có muốn dọn dẹp các mốc cũ và chỉ giữ lại 5 phiên bản mới nhất (xóa ${history.length - 5} mốc cũ)?`)) {
+    const kept = history.slice(0, 5);
+    localStorage.setItem(REVISION_STORAGE_KEY, JSON.stringify(kept));
+    updateRevisionBadge();
+    renderHistoryTimeline();
+    showToast('Đã dọn dẹp lịch sử, giữ lại 5 phiên bản gần nhất!', 'success');
+  }
+}
+
+/**
+ * Vẽ danh sách các mốc lịch sử lên timeline
+ */
+function renderHistoryTimeline(filterType = 'all', searchQuery = '') {
+  const container = document.getElementById('historyTimelineContainer');
+  if (!container) return;
+
+  const history = getRevisionHistory();
+  const selectFilter = document.getElementById('selectHistoryFilter');
+  const searchInput = document.getElementById('inputSearchHistory');
+
+  const currentFilter = filterType || (selectFilter ? selectFilter.value : 'all');
+  const currentSearch = (searchQuery !== undefined ? searchQuery : (searchInput ? searchInput.value : '')).trim().toLowerCase();
+
+  let filtered = history.filter(item => {
+    if (currentFilter !== 'all' && item.type !== currentFilter) {
+      return false;
+    }
+    if (currentSearch) {
+      const matchTitle = item.title?.toLowerCase().includes(currentSearch);
+      const matchNote = item.note?.toLowerCase().includes(currentSearch);
+      const matchTime = item.formattedTime?.toLowerCase().includes(currentSearch);
+      const matchMonth = item.month?.toLowerCase().includes(currentSearch);
+      if (!matchTitle && !matchNote && !matchTime && !matchMonth) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="history-empty">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <p style="font-weight: 600; font-size: 0.95rem; color: #475569;">Chưa có mốc lịch sử nào phù hợp</p>
+        <p style="font-size: 0.8rem; margin-top: 4px;">Các mốc lưu sẽ tự động xuất hiện mỗi khi bạn Lưu Firebase, Xoay ca hoặc bấm nút "Tạo Điểm Lưu Nhanh" bên trên.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const badgeLabels = {
+    'save_firebase': { label: 'Lưu Lên Firebase', class: 'badge-save_firebase', icon: 'fa-fire' },
+    'auto_rotate': { label: 'Xoay Ca Tự Động', class: 'badge-auto_rotate', icon: 'fa-rotate' },
+    'staff_change': { label: 'Thay Đổi Nhân Sự', class: 'badge-staff_change', icon: 'fa-user-group' },
+    'manual': { label: 'Sao Lưu Thủ Công', class: 'badge-manual', icon: 'fa-camera' },
+    'before_restore': { label: 'Trước Khôi Phục', class: 'badge-before_restore', icon: 'fa-shield-halved' }
+  };
+
+  container.innerHTML = filtered.map(item => {
+    const badgeInfo = badgeLabels[item.type] || { label: 'Sao Lưu', class: 'badge-manual', icon: 'fa-bookmark' };
+    const stats = item.stats || {};
+
+    return `
+      <div class="history-item-card type-${item.type}">
+        <div class="history-item-top">
+          <div class="history-time">
+            <i class="fa-regular fa-clock"></i>
+            <span>${item.formattedTime}</span>
+          </div>
+          <div class="history-type-badge ${badgeInfo.class}">
+            <i class="fa-solid ${badgeInfo.icon}"></i>
+            <span>${badgeInfo.label}</span>
+          </div>
+        </div>
+
+        <div class="history-item-body">
+          <div class="history-item-title">${item.title}</div>
+          ${item.note ? `<div class="history-item-note"><i class="fa-regular fa-comment-dots"></i> ${item.note}</div>` : ''}
+          <div class="history-item-stats">
+            <span class="history-stat-tag"><i class="fa-regular fa-calendar"></i> ${item.month || 'Tháng'}</span>
+            <span class="history-stat-tag"><i class="fa-solid fa-users"></i> ${stats.totalStaff || 11} NV (G1: ${stats.g1Count || 6}, G2: ${stats.g2Count || 5})</span>
+            <span class="history-stat-tag"><i class="fa-solid fa-cash-register"></i> ${stats.tnCount || 0} ca TN</span>
+            <span class="history-stat-tag"><i class="fa-solid fa-boxes-stacked"></i> ${stats.khoCount || 0} ca KHO</span>
+          </div>
+        </div>
+
+        <div class="history-item-actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportSingleRevisionJson('${item.id}')" title="Tải file JSON mốc này về máy">
+            <i class="fa-solid fa-download"></i> Tải JSON
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="previewRevision('${item.id}')" title="Xem chi tiết các thông số của mốc này">
+            <i class="fa-solid fa-eye"></i> Xem Chi Tiết
+          </button>
+          <button class="btn-restore-action" onclick="restoreRevision('${item.id}')" title="Khôi phục toàn bộ phân ca về mốc thời gian này">
+            <i class="fa-solid fa-rotate-left"></i> Khôi Phục Bản Này
+          </button>
+          <button class="btn btn-ghost btn-sm" style="color: #94a3b8; padding: 4px 6px;" onclick="deleteRevision('${item.id}')" title="Xóa mốc lưu này">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Cài đặt các sự kiện cho Modal Lịch Sử Thay Đổi
+ */
+function setupHistoryModal() {
+  const modal = document.getElementById('modalHistory');
+  const btnOpen = document.getElementById('btnOpenHistoryModal');
+  const btnFloating = document.getElementById('btnFloatingHistory');
+  const statCard = document.getElementById('statHistoryCard');
+  const btnClose = document.getElementById('btnCloseHistory');
+  const btnCancel = document.getElementById('btnCancelHistory');
+
+  const btnCreateManual = document.getElementById('btnCreateManualSnapshot');
+  const inputManualNote = document.getElementById('inputManualSnapshotNote');
+
+  const selectFilter = document.getElementById('selectHistoryFilter');
+  const searchInput = document.getElementById('inputSearchHistory');
+
+  const btnExportAll = document.getElementById('btnExportAllHistory');
+  const btnClearOld = document.getElementById('btnClearOldHistory');
+
+  // Preview modal controls
+  const previewModal = document.getElementById('modalHistoryPreview');
+  const btnClosePreview = document.getElementById('btnCloseHistoryPreview');
+  const btnCancelPreview = document.getElementById('btnCancelHistoryPreview');
+
+  const openModal = () => {
+    updateRevisionBadge();
+    renderHistoryTimeline();
+    modal.classList.remove('hidden');
+  };
+
+  const closeModal = () => modal.classList.add('hidden');
+  const closePreviewModal = () => previewModal.classList.add('hidden');
+
+  if (btnOpen) btnOpen.addEventListener('click', openModal);
+  if (btnFloating) btnFloating.addEventListener('click', openModal);
+  if (statCard) statCard.addEventListener('click', openModal);
+  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+  if (btnClosePreview) btnClosePreview.addEventListener('click', closePreviewModal);
+  if (btnCancelPreview) btnCancelPreview.addEventListener('click', closePreviewModal);
+
+  // Tạo điểm lưu nhanh thủ công
+  if (btnCreateManual && inputManualNote) {
+    btnCreateManual.addEventListener('click', () => {
+      const note = inputManualNote.value.trim();
+      saveRevisionSnapshot('manual', 'Sao lưu thủ công', note || 'Bản sao lưu người dùng tự tạo', true);
+      inputManualNote.value = '';
+      renderHistoryTimeline();
+      showToast('📸 Đã tạo điểm lưu lịch sử thành công!', 'success');
+    });
+
+    inputManualNote.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        btnCreateManual.click();
+      }
+    });
+  }
+
+  // Bộ lọc loại mốc lưu
+  if (selectFilter) {
+    selectFilter.addEventListener('change', () => {
+      renderHistoryTimeline(selectFilter.value, searchInput?.value);
+    });
+  }
+
+  // Tìm kiếm mốc lưu
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      renderHistoryTimeline(selectFilter?.value, searchInput.value);
+    });
+  }
+
+  // Nút xuất toàn bộ và dọn dẹp
+  if (btnExportAll) btnExportAll.addEventListener('click', exportAllHistoryJson);
+  if (btnClearOld) btnClearOld.addEventListener('click', clearOldHistory);
+}
+
+// Đăng ký toàn cục để các nút bấm HTML gọi được
+window.exportSingleRevisionJson = exportSingleRevisionJson;
+window.previewRevision = previewRevision;
+window.restoreRevision = restoreRevision;
+window.deleteRevision = deleteRevision;
 
 // ==========================================================================
 // ĐIỀU KHIỂN THÁNG & TUẦN (TABS & SELECT)
@@ -2044,6 +2533,9 @@ function setupStaffManagerModal() {
         return;
       }
 
+      // Tự động sao lưu lịch sử trước khi thay đổi danh sách nhân viên
+      saveRevisionSnapshot('staff_change', `Thay đổi danh sách nhân sự (${tempG1.length + tempG2.length} người)`, `Nhóm 1: ${tempG1.length} NV • Nhóm 2: ${tempG2.length} NV`);
+
       STAFF_GROUP_1 = [...tempG1];
       STAFF_GROUP_2 = [...tempG2];
       ALL_STAFF = [...STAFF_GROUP_1, ...STAFF_GROUP_2];
@@ -2082,14 +2574,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setupImageExport();
   setupFirebaseSync();
   setupSettingsModal();
+  setupHistoryModal();
 
   renderSchedule();
 
   // Khởi tạo kênh chia sẻ dữ liệu đa tab nội bộ trình duyệt (0 read, 0 write)
   initBroadcastChannel();
 
-  // Cập nhật giao diện giám sát Quota hôm nay
+  // Cập nhật giao diện giám sát Quota & mốc Lịch sử hôm nay
   updateQuotaUI();
+  updateRevisionBadge();
+
+  // Tạo mốc sao lưu ban đầu nếu chưa từng có
+  if (getRevisionHistory().length === 0) {
+    saveRevisionSnapshot('manual', 'Khởi tạo hệ thống ban đầu', 'Mốc phân ca ban đầu bảo vệ dữ liệu', false);
+  }
 
   // Khởi tạo Firebase Firestore và đồng bộ dữ liệu (ĐÚNG 1 LƯỢT ĐỌC DUY NHẤT CHO CẢ NĂM)
   initFirebase();
