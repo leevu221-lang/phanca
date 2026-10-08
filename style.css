@@ -148,18 +148,12 @@ body {
   margin-top: 2px;
 }
 
-.sheet-tag {
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.78rem;
-  border: 1px solid var(--primary-border);
-}
-
-.dot-separator {
-  color: var(--text-light);
+.sheet-tag,
+.dot-separator,
+#btnSyncNow,
+#btnOpenSettings,
+#btnSaveToSheet {
+  display: none !important;
 }
 
 .sync-status {

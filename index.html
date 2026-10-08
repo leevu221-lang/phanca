@@ -39,8 +39,8 @@
         <div class="brand-info">
           <h1 class="brand-title">PHÂN CA HÀNH CHÍNH</h1>
           <p class="brand-subtitle">
-            <span class="sheet-tag firebase-tag"><i class="fa-solid fa-fire text-amber"></i> Firebase: <strong>phanca_system</strong></span>
-            <span class="dot-separator">•</span>
+            <span class="sheet-tag firebase-tag hidden" style="display: none !important;"><i class="fa-solid fa-fire text-amber"></i> Firebase: <strong>phanca_system</strong></span>
+            <span class="dot-separator hidden" style="display: none !important;">•</span>
             <span class="sync-status" id="syncStatus">
               <span class="status-pulse"></span>
               <span id="syncStatusText">Firebase sẵn sàng</span>
@@ -58,15 +58,15 @@
           <i class="fa-solid fa-clock-rotate-left text-indigo"></i>
           <span>Lịch Sử Thay Đổi</span>
         </button>
-        <button id="btnSyncNow" class="btn btn-secondary" title="Tải dữ liệu mới nhất từ Firebase Cloud Firestore">
+        <button id="btnSyncNow" class="btn btn-secondary hidden" title="Tải dữ liệu mới nhất từ Firebase Cloud Firestore" style="display: none !important;">
           <i class="fa-solid fa-arrows-rotate"></i>
           <span>Đồng bộ Firebase</span>
         </button>
-        <button id="btnOpenSettings" class="btn btn-ghost" title="Quản lý Firebase & Giám sát Quota ngày">
+        <button id="btnOpenSettings" class="btn btn-ghost hidden" title="Quản lý Firebase & Giám sát Quota ngày" style="display: none !important;">
           <i class="fa-solid fa-fire text-amber"></i>
           <span>Database & Quota</span>
         </button>
-        <button id="btnSaveToSheet" class="btn btn-primary" title="Lưu phân ca trực tiếp lên Firebase Cloud Firestore">
+        <button id="btnSaveToSheet" class="btn btn-primary hidden" title="Lưu phân ca trực tiếp lên Firebase Cloud Firestore" style="display: none !important;">
           <i class="fa-solid fa-cloud-arrow-up"></i>
           <span>Lưu Lên Firebase</span>
         </button>
