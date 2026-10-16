@@ -190,9 +190,9 @@
             <span class="hub-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân Ca "Ai"</span>
             <h2>Gán Ca Cho Nhân Viên & Công Cụ Nhanh</h2>
           <div class="hub-toggle-mode">
-            <button id="btnAutoRotateModal" class="btn btn-outline-primary" title="Mở hộp thoại xoay tua 4 tuần cân bằng KHO & TN">
+            <button id="btnAutoRotateModal" class="btn btn-outline-primary" title="Mở hộp thoại xoay tua cân bằng KHO & TN (hỗ trợ chạy theo tuần hoặc cả 4 tuần)">
               <i class="fa-solid fa-rotate"></i>
-              <span>⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</span>
+              <span>⚡ Xoay Tua KHO & TN (Theo Tuần / 4 Tuần)</span>
             </button>
           </div>
         </div>
@@ -458,8 +458,8 @@
         <div class="modal-title-group">
           <i class="fa-solid fa-rotate text-blue" style="font-size: 1.3rem;"></i>
           <div>
-            <h3 style="margin: 0; font-size: 1.15rem; color: #0f172a;">⚡ Xoay Tua KHO & TN Tự Động (4 Tuần)</h3>
-            <span style="font-size: 0.78rem; color: #64748b;">Dựa trên Ca Mẫu Tuần 1 • Đảm bảo số ngày TN & KHO trong tháng bằng nhau</span>
+            <h3 style="margin: 0; font-size: 1.15rem; color: #0f172a;">⚡ Xoay Tua KHO & TN Tự Động (Theo Tuần & 4 Tuần)</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Dựa trên Ca Mẫu Tuần 1 • Hỗ trợ xoay tua từng tuần riêng biệt hoặc cả 4 tuần</span>
           </div>
         </div>
         <button class="modal-close" id="btnCloseAutoRotate">&times;</button>
@@ -473,7 +473,7 @@
           </div>
           <div class="rotate-alert-text">
             <strong>Thuật toán xoay tua ca & Đôn ca Domino khi Nghỉ OFF ('x'):</strong>
-            <p>Hệ thống tự động dịch chuyển xoay vòng 4 tuần cân bằng ca <strong>TN & KHO</strong>. Đặc biệt: <strong>Mọi ngày nghỉ OFF đã đánh dấu dấu "x" trên bảng đều được GIỮ NGUYÊN 100%</strong>. Nếu nhân viên đến lượt trực ca TN/KHO mà nghỉ OFF, hệ thống sẽ tự động <strong>đôn ca domino</strong> sang nhân sự kế tiếp trong nhóm để đảm bảo siêu thị luôn đủ ca trực và công bằng tuyệt đối!</p>
+            <p>Hệ thống tự động dịch chuyển xoay vòng cân bằng ca <strong>TN & KHO</strong>. Đặc biệt: <strong>Mọi ngày nghỉ OFF đã đánh dấu dấu "x" trên bảng đều được GIỮ NGUYÊN 100%</strong>. Nếu nhân viên đến lượt trực ca TN/KHO mà nghỉ OFF, hệ thống sẽ tự động <strong>đôn ca domino</strong> sang nhân sự kế tiếp trong nhóm để đảm bảo siêu thị luôn đủ ca trực và công bằng tuyệt đối!</p>
           </div>
         </div>
 
@@ -531,6 +531,31 @@
             <div class="kpi-note">
               <i class="fa-solid fa-circle-check text-emerald"></i> <strong>Cả 5 nhân viên</strong> (Thắm, My, Phúc, Đại, Lâm Ý) đều trực <strong>5 - 6 ca TN</strong> và <strong>5 - 6 ca KHO</strong> trong tháng.
             </div>
+          </div>
+        </div>
+
+        <!-- Thanh Chọn Phạm Vi Xoay Tua (Theo Tuần Hoặc Cả 4 Tuần) -->
+        <div class="rotate-scope-bar">
+          <div class="rotate-scope-label">
+            <i class="fa-solid fa-sliders text-blue"></i>
+            <span>Phạm vi chạy xoay tua:</span>
+          </div>
+          <div class="rotate-scope-pills" id="rotateScopePills">
+            <button type="button" class="scope-pill-btn active" data-scope="all" title="Chạy xoay tua cho toàn bộ 4 tuần trong tháng">
+              <i class="fa-solid fa-table-columns"></i> Cả 4 Tuần (Tháng)
+            </button>
+            <button type="button" class="scope-pill-btn" data-scope="Tuần 1" title="Chỉ áp dụng xoay tua riêng cho Tuần 1">
+              <i class="fa-solid fa-calendar-day"></i> Tuần 1
+            </button>
+            <button type="button" class="scope-pill-btn" data-scope="Tuần 2" title="Chỉ áp dụng xoay tua riêng cho Tuần 2">
+              <i class="fa-solid fa-calendar-day"></i> Tuần 2
+            </button>
+            <button type="button" class="scope-pill-btn" data-scope="Tuần 3" title="Chỉ áp dụng xoay tua riêng cho Tuần 3">
+              <i class="fa-solid fa-calendar-day"></i> Tuần 3
+            </button>
+            <button type="button" class="scope-pill-btn" data-scope="Tuần 4" title="Chỉ áp dụng xoay tua riêng cho Tuần 4">
+              <i class="fa-solid fa-calendar-day"></i> Tuần 4
+            </button>
           </div>
         </div>
 
@@ -597,14 +622,16 @@
         </div>
       </div>
 
-      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-top: 1px solid var(--border-light);">
-        <div style="font-size: 0.85rem; color: #64748b;">
-          <i class="fa-solid fa-circle-info text-blue"></i> Áp dụng cho: <strong id="rotateTargetMonthText" style="color: #0369a1;">THÁNG 09</strong>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 10px;">
+        <div style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
+          <span><i class="fa-solid fa-circle-info text-blue"></i> Tháng: <strong id="rotateTargetMonthText" style="color: #0369a1;">THÁNG 09</strong></span>
+          <span style="color: #cbd5e1;">•</span>
+          <span>Phạm vi: <strong id="rotateTargetScopeText" style="color: #059669;">Cả 4 Tuần</strong></span>
         </div>
         <div class="btn-group" style="display: flex; gap: 10px;">
           <button class="btn btn-secondary" id="btnCancelAutoRotate">Đóng</button>
           <button class="btn btn-primary" id="btnExecuteAutoRotate">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Áp Dụng Xoay Tua 4 Tuần Vào Lịch
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="btnExecuteRotateText">Áp Dụng Xoay Tua 4 Tuần Vào Lịch</span>
           </button>
         </div>
       </div>

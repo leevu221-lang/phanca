@@ -881,24 +881,85 @@ function setupStampBrushes() {
 // ==========================================================================
 // TỰ ĐỘNG XOAY TUA CA 4 TUẦN (KHO & TN) CÂN BẰNG TUYỆT ĐỐI
 // ==========================================================================
+let currentRotateScope = 'all';
+
 function setupAutoRotateModal() {
   const modal = document.getElementById('modalAutoRotate');
   const btnOpen = document.getElementById('btnAutoRotateModal');
   const btnClose = document.getElementById('btnCloseAutoRotate');
   const btnCancel = document.getElementById('btnCancelAutoRotate');
   const btnExecute = document.getElementById('btnExecuteAutoRotate');
+  const btnExecuteText = document.getElementById('btnExecuteRotateText');
   const btnTabSummary = document.getElementById('btnTabRotateSummary');
   const btnTabDetail = document.getElementById('btnTabRotateDetail');
   const tabSummaryContent = document.getElementById('rotateTabSummaryContent');
   const tabDetailContent = document.getElementById('rotateTabDetailContent');
   const targetMonthText = document.getElementById('rotateTargetMonthText');
+  const targetScopeText = document.getElementById('rotateTargetScopeText');
+  const scopePills = document.querySelectorAll('.scope-pill-btn');
+  const detailBody = document.getElementById('rotateDetailBody');
 
   if (!modal || !btnOpen) return;
+
+  function updateScopeUI(scope) {
+    currentRotateScope = scope;
+    scopePills.forEach(pill => {
+      if (pill.dataset.scope === scope) {
+        pill.classList.add('active');
+      } else {
+        pill.classList.remove('active');
+      }
+    });
+
+    if (targetScopeText) {
+      targetScopeText.textContent = (scope === 'all') ? 'Cả 4 Tuần' : scope;
+    }
+
+    if (btnExecuteText) {
+      btnExecuteText.textContent = (scope === 'all')
+        ? 'Áp Dụng Xoay Tua 4 Tuần Vào Lịch'
+        : `Áp Dụng Xoay Tua ${scope} Vào Lịch`;
+    }
+  }
+
+  // Lắng nghe sự kiện click trên các pill chọn tuần
+  scopePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      updateScopeUI(pill.dataset.scope);
+      // Nếu đang ở Tab Chi Tiết, tự động cuộn đến tuần tương ứng
+      if (pill.dataset.scope !== 'all') {
+        const weekHeader = document.querySelector(`.rotate-week-header-${pill.dataset.scope.replace(/\s+/g, '')}`);
+        if (weekHeader && tabDetailContent && !tabDetailContent.classList.contains('hidden')) {
+          weekHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+  });
+
+  // Lắng nghe sự kiện click trên nút "Áp Dụng Riêng Tuần X" trong bảng chi tiết
+  if (detailBody) {
+    detailBody.addEventListener('click', (e) => {
+      const applyBtn = e.target.closest('.btn-apply-single-week');
+      if (applyBtn) {
+        const week = applyBtn.dataset.week;
+        if (week) {
+          executeAutoRotate(week);
+          closeModal();
+        }
+      }
+    });
+  }
 
   btnOpen.addEventListener('click', () => {
     if (targetMonthText) {
       targetMonthText.textContent = AppState.currentMonth;
     }
+    // Mặc định chọn theo tuần đang xem ở ngoài giao diện chính nếu hợp lệ
+    const initialScope = (AppState.currentWeek && AppState.currentWeek !== 'all' && WEEKS.includes(AppState.currentWeek))
+      ? AppState.currentWeek
+      : 'all';
+    updateScopeUI(initialScope);
+
     updateRotatePreview();
     modal.classList.remove('hidden');
   });
@@ -927,7 +988,7 @@ function setupAutoRotateModal() {
   // Bấm Áp Dụng Xoay Tua
   if (btnExecute) {
     btnExecute.addEventListener('click', () => {
-      executeAutoRotate();
+      executeAutoRotate(currentRotateScope);
       closeModal();
     });
   }
@@ -995,8 +1056,20 @@ function updateRotatePreview() {
   WEEKS.forEach((wName) => {
     const weekDates = getWeekDates(AppState.currentMonth, wName);
     const sepRow = document.createElement('tr');
+    sepRow.className = `rotate-week-header-${wName.replace(/\s+/g, '')}`;
     sepRow.style.background = '#f0f7ff';
-    sepRow.innerHTML = `<td colspan="11" style="text-align: left; font-weight: 800; color: #0369a1; padding: 6px 12px;"><i class="fa-solid fa-calendar-check"></i> ${wName.toUpperCase()} (${weekDates['T2']} - ${weekDates['CN']})</td>`;
+    sepRow.innerHTML = `
+      <td colspan="11" style="padding: 8px 12px; background: #e0f2fe; border-top: 2px solid #38bdf8;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 800; color: #0369a1; font-size: 0.88rem;">
+            <i class="fa-solid fa-calendar-check text-blue"></i> ${wName.toUpperCase()} (${weekDates['T2']} - ${weekDates['CN']})
+          </span>
+          <button type="button" class="btn-apply-single-week" data-week="${wName}" title="Chỉ áp dụng phân ca xoay tua cho riêng ${wName}">
+            <i class="fa-solid fa-play" style="font-size: 0.65rem;"></i> Áp Dụng Riêng ${wName}
+          </button>
+        </div>
+      </td>
+    `;
     detailBody.appendChild(sepRow);
 
     ALL_STAFF.forEach((staff) => {
@@ -1046,15 +1119,26 @@ function updateRotatePreview() {
 }
 
 /**
- * Thực thi áp dụng xoay tua ca 4 tuần cân bằng vào lịch hiện tại
+ * Thực thi áp dụng xoay tua ca vào lịch hiện tại (hỗ trợ cả tháng hoặc từng tuần riêng biệt)
+ * @param {string} [targetWeek='all'] - 'all' hoặc 'Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'
  */
-function executeAutoRotate() {
+function executeAutoRotate(targetWeek = 'all') {
   const month = AppState.currentMonth;
   const balancedSchedule = generateBalanced4WeeksSchedule(month);
   const dominoLog = balancedSchedule._dominoLog || {};
 
+  const isSingleWeek = (targetWeek !== 'all' && WEEKS.includes(targetWeek));
+  const weeksToProcess = isSingleWeek ? [targetWeek] : WEEKS;
+
   // Tự động sao lưu lịch sử trước khi xoay ca để bảo vệ data
-  saveRevisionSnapshot('auto_rotate', `Tự động xoay ca 4 tuần (${month})`, `Áp dụng ma trận 4 tuần cân bằng cho ${month}`);
+  const snapshotTitle = isSingleWeek
+    ? `Tự động xoay ca ${targetWeek} (${month})`
+    : `Tự động xoay ca cả 4 tuần (${month})`;
+  const snapshotDesc = isSingleWeek
+    ? `Áp dụng ma trận xoay tua riêng cho ${targetWeek} (${month}), giữ nguyên các tuần khác`
+    : `Áp dụng ma trận 4 tuần cân bằng cho ${month}`;
+
+  saveRevisionSnapshot('auto_rotate', snapshotTitle, snapshotDesc);
 
   if (!AppState.schedule[month]) {
     AppState.schedule[month] = {};
@@ -1063,7 +1147,7 @@ function executeAutoRotate() {
   let totalDominoCount = 0;
   let totalOffCount = 0;
 
-  WEEKS.forEach((wName) => {
+  weeksToProcess.forEach((wName) => {
     AppState.schedule[month][wName] = JSON.parse(JSON.stringify(balancedSchedule[wName]));
     ALL_STAFF.forEach((staff) => {
       DAYS.forEach((d) => {
@@ -1077,11 +1161,14 @@ function executeAutoRotate() {
     });
   });
 
-  AppState.unsavedChangesCount += 25;
+  AppState.unsavedChangesCount += isSingleWeek ? 10 : 25;
   saveLocalCache();
   renderSchedule();
 
-  let msg = `⚡ Đã xoay tua 4 tuần cho ${month}!`;
+  let msg = isSingleWeek
+    ? `⚡ Đã xoay tua thành công cho ${targetWeek} (${month})!`
+    : `⚡ Đã xoay tua cả 4 tuần cho ${month}!`;
+
   if (totalOffCount > 0) {
     msg += ` Giữ nguyên ${totalOffCount} ngày OFF ('x')`;
     if (totalDominoCount > 0) {
@@ -1091,6 +1178,11 @@ function executeAutoRotate() {
   } else {
     msg += ` Cân bằng ca TN & KHO thành công.`;
   }
+
+  if (isSingleWeek) {
+    msg += ` Các tuần khác được giữ nguyên 100%.`;
+  }
+
   showToast(msg, 'success');
 }
 
