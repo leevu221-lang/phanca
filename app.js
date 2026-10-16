@@ -713,25 +713,32 @@ function updateStats() {
   document.getElementById('statTNCount').textContent = `${tnTotal} Ca`;
   document.getElementById('statKHOCount').textContent = `${khoTotal} Ca`;
 
-  // Trạng thái lưu
+  // Trạng thái lưu (Tự động lưu ngầm - Auto Save)
   const saveStateEl = document.getElementById('statSaveState');
   const lastSavedTimeEl = document.getElementById('statLastSavedTime');
   const floatingBar = document.getElementById('floatingSaveBar');
-  const unsavedBadge = document.getElementById('unsavedChangesBadge');
   const btnReset = document.getElementById('btnResetChanges');
 
-  if (AppState.unsavedChangesCount > 0) {
-    saveStateEl.textContent = `Chưa lưu (${AppState.unsavedChangesCount})`;
-    saveStateEl.style.color = '#e11d48';
-    lastSavedTimeEl.textContent = 'Bấm Lưu để đồng bộ Firebase';
-    floatingBar.classList.add('visible');
-    unsavedBadge.textContent = `${AppState.unsavedChangesCount} thay đổi chưa lưu`;
-    btnReset.disabled = false;
-  } else {
-    saveStateEl.textContent = 'Đã đồng bộ';
-    saveStateEl.style.color = '#059669';
+  if (floatingBar) {
     floatingBar.classList.remove('visible');
-    btnReset.disabled = true;
+    floatingBar.style.display = 'none';
+  }
+
+  if (AppState.unsavedChangesCount > 0) {
+    if (saveStateEl) {
+      saveStateEl.textContent = 'Đang tự lưu...';
+      saveStateEl.style.color = '#0284c7';
+    }
+    if (lastSavedTimeEl) {
+      lastSavedTimeEl.textContent = 'Đang đồng bộ ngầm Firebase';
+    }
+    if (btnReset) btnReset.disabled = false;
+  } else {
+    if (saveStateEl) {
+      saveStateEl.textContent = 'Đã tự lưu Firebase';
+      saveStateEl.style.color = '#059669';
+    }
+    if (btnReset) btnReset.disabled = true;
   }
 }
 
@@ -788,6 +795,8 @@ function applyCellChange(month, week, staff, day, newShift) {
 
   saveLocalCache();
   renderSchedule();
+  updateStats();
+  triggerAutoSaveToFirebase(1000); // Tự động lưu ngầm không thông báo
 
   // Hiệu ứng âm thanh nhẹ hoặc rung haptic nếu có
   if (window.navigator && window.navigator.vibrate) {
@@ -843,6 +852,8 @@ function setupAssignForm() {
       AppState.unsavedChangesCount += appliedCount;
       saveLocalCache();
       renderSchedule();
+      updateStats();
+      triggerAutoSaveToFirebase(500); // Tự động lưu ngầm không thông báo
       showToast(`Đã gán ca "${shift || 'Trống'}" cho ${staff} (${appliedCount} ngày)!`, 'success');
     } else {
       showToast(`Không có ngày nào cần thay đổi cho ${staff}.`, 'info');
@@ -1164,6 +1175,8 @@ function executeAutoRotate(targetWeek = 'all') {
   AppState.unsavedChangesCount += isSingleWeek ? 10 : 25;
   saveLocalCache();
   renderSchedule();
+  updateStats();
+  triggerAutoSaveToFirebase(300); // Tự động lưu ngầm không thông báo
 
   let msg = isSingleWeek
     ? `⚡ Đã xoay tua thành công cho ${targetWeek} (${month})!`
@@ -1485,13 +1498,51 @@ function setupFirebaseSync() {
   if (btnSyncNow) btnSyncNow.addEventListener('click', () => syncFromFirebase(true));
 }
 
+let autoSaveTimer = null;
+
+/**
+ * TỰ ĐỘNG LƯU LÊN FIREBASE HOÀN TOÀN NGẦM (SILENT AUTO-SAVE)
+ * - Tự động kích hoạt khi có thay đổi trên bảng phân ca, xoay tua, nhân viên.
+ * - Có debounce gom nhiều thao tác nhanh thành 1 lần ghi duy nhất.
+ * - KHÔNG bật thông báo popup Toast gây phiền toái.
+ */
+function triggerAutoSaveToFirebase(delay = 1000) {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+  }
+
+  const syncStatusText = document.getElementById('syncStatusText');
+  if (syncStatusText) syncStatusText.textContent = 'Đang tự lưu...';
+
+  const saveStateEl = document.getElementById('statSaveState');
+  if (saveStateEl) {
+    saveStateEl.textContent = 'Đang tự lưu...';
+    saveStateEl.style.color = '#0284c7';
+  }
+
+  autoSaveTimer = setTimeout(async () => {
+    try {
+      await saveToFirebase(false, false);
+      if (syncStatusText) syncStatusText.textContent = 'Firebase đã tự lưu';
+      if (saveStateEl) {
+        saveStateEl.textContent = 'Đã tự lưu Firebase';
+        saveStateEl.style.color = '#059669';
+      }
+    } catch (err) {
+      console.warn('Lỗi auto lưu Firebase:', err);
+    }
+  }, delay);
+}
+
 /**
  * LƯU TOÀN BỘ PHÂN CA LÊN FIREBASE (CHỈ TỐN ĐÚNG 1 LƯỢT GHI!)
  * Có dirty-check: Nếu không có thay đổi mới -> 0 lượt ghi!
  */
 async function saveToFirebase(showFeedback = true, force = false) {
   if (!isFirebaseReady && !initFirebase()) {
-    showToast('Không thể kết nối Firebase! Vui lòng kiểm tra mạng hoặc cấu hình.', 'error');
+    if (showFeedback) {
+      showToast('Không thể kết nối Firebase! Vui lòng kiểm tra mạng hoặc cấu hình.', 'error');
+    }
     return false;
   }
 
@@ -1567,13 +1618,19 @@ async function saveToFirebase(showFeedback = true, force = false) {
 
     const timeStr = new Date().toLocaleTimeString();
     const lastSavedEl = document.getElementById('statLastSavedTime');
-    if (lastSavedEl) lastSavedEl.textContent = `Lưu lúc ${timeStr}`;
+    if (lastSavedEl) lastSavedEl.textContent = `Tự lưu lúc ${timeStr}`;
 
     // Tự động ghi lại điểm lưu lịch sử (Revision Snapshot)
     saveRevisionSnapshot('save_firebase', 'Lưu dữ liệu lên Firebase Firestore', `Đồng bộ thành công phân ca lúc ${timeStr}`, true);
 
     const statusEl = document.getElementById('syncStatusText');
-    if (statusEl) statusEl.textContent = 'Firebase đã lưu';
+    if (statusEl) statusEl.textContent = 'Firebase đã tự lưu';
+
+    const saveStateEl = document.getElementById('statSaveState');
+    if (saveStateEl) {
+      saveStateEl.textContent = 'Đã tự lưu Firebase';
+      saveStateEl.style.color = '#059669';
+    }
 
     if (showFeedback) {
       showToast('✅ Đã lưu thành công lên Firebase Firestore (Tốn đúng 1 lượt ghi)!', 'success');
@@ -1582,7 +1639,9 @@ async function saveToFirebase(showFeedback = true, force = false) {
   } catch (err) {
     console.error('Lỗi lưu Firebase:', err);
     saveLocalCache();
-    showToast(`Lỗi lưu Firebase: ${err.message}. Đã lưu bản sao trên máy!`, 'warning');
+    if (showFeedback) {
+      showToast(`Lỗi lưu Firebase: ${err.message}. Đã lưu bản sao trên máy!`, 'warning');
+    }
     return false;
   } finally {
     resetSaveButtons();
@@ -1954,16 +2013,17 @@ function restoreRevision(revisionId) {
 
   AppState.schedule = JSON.parse(JSON.stringify(target.schedule));
   ensureStaffScheduleIntegrity();
-  AppState.unsavedChangesCount += 1;
+  AppState.unsavedChangesCount = 0;
   saveLocalCache();
   renderSchedule();
   updateStats();
+  triggerAutoSaveToFirebase(200);
 
   // Đóng modal lịch sử & preview nếu đang mở
   document.getElementById('modalHistory')?.classList.add('hidden');
   document.getElementById('modalHistoryPreview')?.classList.add('hidden');
 
-  showToast(`✅ Đã khôi phục thành công về mốc ${target.formattedTime}! Nhớ bấm "Lưu Lên Firebase" nếu muốn ghi đè lên đám mây.`, 'success');
+  showToast(`✅ Đã khôi phục thành công về mốc ${target.formattedTime}! Đã tự động lưu Firebase.`, 'success');
 }
 
 /**
@@ -2638,10 +2698,11 @@ function setupStaffManagerModal() {
       renderSchedule();
       updateStats();
 
-      AppState.unsavedChangesCount += 1;
+      AppState.unsavedChangesCount = 0;
       saveLocalCache();
+      triggerAutoSaveToFirebase(200);
       closeModal();
-      showToast(`✅ Đã cập nhật: Nhóm 1 (${STAFF_GROUP_1.length} người), Nhóm 2 (${STAFF_GROUP_2.length} người). Hãy bấm "Lưu Lên Firebase" để đồng bộ!`, 'success');
+      showToast(`✅ Đã cập nhật: Nhóm 1 (${STAFF_GROUP_1.length} người), Nhóm 2 (${STAFF_GROUP_2.length} người)!`, 'success');
     });
   }
 

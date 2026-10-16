@@ -1157,25 +1157,14 @@ body {
   gap: 30px;
 }
 
-/* Floating Save Bar */
-.floating-save-bar {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%) translateY(120px);
-  z-index: 99;
-  background: rgba(15, 23, 42, 0.9);
-  color: white;
-  padding: 10px 20px;
-  border-radius: var(--radius-xl);
-  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
+/* Floating Save Bar - Đã ẩn hoàn toàn vì hệ thống tự động lưu ngầm */
+.floating-save-bar,
 .floating-save-bar.visible {
-  transform: translateX(-50%) translateY(0);
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transform: translateX(-50%) translateY(200px) !important;
 }
 
 .save-bar-content {
