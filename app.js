@@ -245,23 +245,57 @@ function generateBalanced4WeeksSchedule(targetMonth) {
     //    - Mỗi ngày luôn có đủ 1 TN và 1 KHO cho mỗi nhóm.
     function processGroupWeek(staffList, permutations, slots) {
       const N = staffList.length;
+      if (N === 0) return;
+
       const planned = {};
       const targetTN = {}, targetKHO = {};
-      staffList.forEach(s => { targetTN[s] = 0; targetKHO[s] = 0; });
+      const baseTN = Math.floor(7 / N);
+      const remTN = 7 % N;
+      const baseKHO = Math.floor(7 / N);
+      const remKHO = 7 % N;
 
-      DAYS.forEach((d) => {
-        let tn = null, kho = null;
-        staffList.forEach((staff, sIdx) => {
-          const slotIdx = (wIdx < permutations.length && sIdx < permutations[wIdx].length)
-            ? permutations[wIdx][sIdx]
-            : (sIdx % slots.length);
-          const slot = slots[slotIdx];
-          const shift = slot ? (slot[d] || '') : '';
-          if (shift === 'TN') { tn = staff; targetTN[staff]++; }
-          if (shift === 'KHO') { kho = staff; targetKHO[staff]++; }
+      staffList.forEach(s => { targetTN[s] = baseTN; targetKHO[s] = baseKHO; });
+
+      // Phân bổ đều các ca dư luân phiên qua từng tuần (wIdx = 0, 1, 2, 3)
+      for (let r = 0; r < remTN; r++) {
+        const staff = staffList[(wIdx * remTN + r) % N];
+        targetTN[staff]++;
+      }
+      const khoOffset = Math.floor(N / 2);
+      for (let r = 0; r < remKHO; r++) {
+        const staff = staffList[(wIdx * remKHO + khoOffset + r) % N];
+        targetKHO[staff]++;
+      }
+
+      // Xây dựng kế hoạch ngày (planned):
+      if (slots && permutations && N === slots.length && wIdx < permutations.length) {
+        // Trường hợp kích thước nhóm khớp chính xác với ma trận slot truyền thống
+        DAYS.forEach((d) => {
+          let tn = null, kho = null;
+          staffList.forEach((staff, sIdx) => {
+            const slotIdx = permutations[wIdx][sIdx];
+            const slot = slots[slotIdx];
+            const shift = slot ? (slot[d] || '') : '';
+            if (shift === 'TN') tn = staff;
+            if (shift === 'KHO') kho = staff;
+          });
+          planned[d] = { tn, kho };
         });
-        planned[d] = { tn, kho };
-      });
+        // Đồng bộ định mức target theo slot chuẩn
+        staffList.forEach(s => { targetTN[s] = 0; targetKHO[s] = 0; });
+        DAYS.forEach(d => {
+          if (planned[d].tn) targetTN[planned[d].tn]++;
+          if (planned[d].kho) targetKHO[planned[d].kho]++;
+        });
+      } else {
+        // Trường hợp tùy chỉnh nhân sự (N khác số slot mẫu ban đầu, ví dụ 7 nhân viên):
+        // Sinh kế hoạch xoay tua động, mỗi ngày đúng 1 TN và 1 KHO riêng biệt, đổi người luân phiên theo tuần
+        DAYS.forEach((d, dayIdx) => {
+          const tnStaff = staffList[(wIdx * 2 + dayIdx) % N];
+          const khoStaff = staffList[(wIdx * 2 + dayIdx + Math.max(1, Math.floor(N / 2))) % N];
+          planned[d] = { tn: tnStaff, kho: khoStaff };
+        });
+      }
 
       const isOff = (staff, d) => String(existingWeekData[staff]?.[d] || '').trim().toUpperCase() === 'X';
 
@@ -271,45 +305,70 @@ function generateBalanced4WeeksSchedule(targetMonth) {
         const assignment = {};
 
         function backtrack(dayIdx) {
-          if (dayIdx === 7) return true;
+          if (dayIdx === 7) {
+            // Ràng buộc bảo vệ: Tuyệt đối không để nhân viên tích cực nào bị 0 ca trong tuần
+            if (N <= 7) {
+              for (const s of staffList) {
+                const daysOff = DAYS.filter(d => isOff(s, d)).length;
+                if (daysOff < 5 && (countTN[s] + countKHO[s] === 0)) {
+                  return false;
+                }
+              }
+            }
+            return true;
+          }
+
           const day = DAYS[dayIdx];
           const prevDay = dayIdx > 0 ? DAYS[dayIdx - 1] : null;
 
           // Sắp xếp ưu tiên ứng viên nhận ca TN:
           // 1. Người đã được lên kế hoạch ngày này (nếu không nghỉ OFF)
           // 2. Người đang thiếu ca TN so với định mức (cần bù ca)
+          // 3. Người đang có tổng số ca ít hơn
           const tnCands = [...staffList].sort((a, b) => {
-            if (a === planned[day].tn && !isOff(a, day)) return -1;
-            if (b === planned[day].tn && !isOff(b, day)) return 1;
+            const aPlan = (planned[day].tn === a && !isOff(a, day)) ? 1 : 0;
+            const bPlan = (planned[day].tn === b && !isOff(b, day)) ? 1 : 0;
+            if (aPlan !== bPlan) return bPlan - aPlan;
+
             const diffA = targetTN[a] - countTN[a];
             const diffB = targetTN[b] - countTN[b];
-            return diffB - diffA;
+            if (diffA !== diffB) return diffB - diffA;
+
+            const totalA = countTN[a] + countKHO[a];
+            const totalB = countTN[b] + countKHO[b];
+            return totalA - totalB;
           });
 
           for (const tnStaff of tnCands) {
             if (isOff(tnStaff, day)) continue;
             if (exactQuota && countTN[tnStaff] >= targetTN[tnStaff]) continue;
-            if (!exactQuota && countTN[tnStaff] >= 2) continue;
-            if (!exactQuota && (countTN[tnStaff] + countKHO[tnStaff] >= 3)) continue;
+            if (!exactQuota && countTN[tnStaff] >= Math.max(2, baseTN + 1)) continue;
+            if (!exactQuota && (countTN[tnStaff] + countKHO[tnStaff] >= Math.max(3, baseTN + baseKHO + 1))) continue;
             if (!allowConsecutive && prevDay && assignment[prevDay]?.TN === tnStaff) continue;
 
             countTN[tnStaff]++;
 
             // Sắp xếp ưu tiên ứng viên nhận ca KHO
             const khoCands = [...staffList].sort((a, b) => {
-              if (a === planned[day].kho && !isOff(a, day)) return -1;
-              if (b === planned[day].kho && !isOff(b, day)) return 1;
+              const aPlan = (planned[day].kho === a && !isOff(a, day)) ? 1 : 0;
+              const bPlan = (planned[day].kho === b && !isOff(b, day)) ? 1 : 0;
+              if (aPlan !== bPlan) return bPlan - aPlan;
+
               const diffA = targetKHO[a] - countKHO[a];
               const diffB = targetKHO[b] - countKHO[b];
-              return diffB - diffA;
+              if (diffA !== diffB) return diffB - diffA;
+
+              const totalA = countTN[a] + countKHO[a];
+              const totalB = countTN[b] + countKHO[b];
+              return totalA - totalB;
             });
 
             for (const khoStaff of khoCands) {
               if (khoStaff === tnStaff) continue;
               if (isOff(khoStaff, day)) continue;
               if (exactQuota && countKHO[khoStaff] >= targetKHO[khoStaff]) continue;
-              if (!exactQuota && countKHO[khoStaff] >= 2) continue;
-              if (!exactQuota && (countTN[khoStaff] + countKHO[khoStaff] >= 3)) continue;
+              if (!exactQuota && countKHO[khoStaff] >= Math.max(2, baseKHO + 1)) continue;
+              if (!exactQuota && (countTN[khoStaff] + countKHO[khoStaff] >= Math.max(3, baseTN + baseKHO + 1))) continue;
               if (!allowConsecutive && prevDay && assignment[prevDay]?.KHO === khoStaff) continue;
 
               countKHO[khoStaff]++;
