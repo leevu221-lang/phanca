@@ -1,12 +1,14 @@
 /**
  * ==========================================================================
  * MODULE: QUẢN LÝ & CHIA LỊCH TỜ RƠI (flyer.js)
- * Tương thích 100% - Không thay đổi logic phân ca hiện tại
+ * Tương thích 100% - Không thay đổi hay ảnh hưởng đến logic phân ca hành chính
+ * Dữ liệu Tờ Rơi được lưu NGAY LẬP TỨC vào Firebase Firestore (doc: flyer_master)
+ *
  * Chức năng:
- *  1. Thêm / Xoá / Sửa Nhân viên & PG
- *  2. Chia lịch tờ rơi theo Nhóm, theo Ngày, theo Buổi
- *  3. Bảng lịch trực quan (Matrix View) + Bảng tổng hợp công
- *  4. Phân công nhanh hàng loạt & Thuật toán chia tự động
+ *  1. Bảng phân lịch tờ rơi 5 cột: STT, Nhân viên, Thời gian & ngày, Địa điểm, Ghi chú
+ *  2. Thêm / Xoá / Sửa Nhân viên & PG
+ *  3. Chia lịch tờ rơi theo Nhóm, theo Ngày, theo Buổi
+ *  4. Đồng bộ Realtime tức thì với Firebase Firestore (hoàn toàn độc lập với schedule_master)
  *  5. Xuất ảnh PNG sắc nét (html2canvas) & Sao chép định dạng Zalo
  * ==========================================================================
  */
@@ -15,7 +17,12 @@
 const FLYER_STORAGE_STAFF = 'PHANCA_TOROI_STAFF_V1';
 const FLYER_STORAGE_GROUPS = 'PHANCA_TOROI_GROUPS_V1';
 const FLYER_STORAGE_SCHEDULE = 'PHANCA_TOROI_SCHEDULE_V1';
+const FLYER_STORAGE_ASSIGNMENTS = 'PHANCA_TOROI_ASSIGNMENTS_V1';
 const FLYER_STORAGE_ACTIVE_TAB = 'PHANCA_CURRENT_APP_TAB';
+
+// Cấu hình Firebase Document độc lập (Tuyệt đối không chạm vào schedule_master)
+const FLYER_FIRESTORE_COLLECTION = 'phanca_system';
+const FLYER_FIRESTORE_DOC = 'flyer_master';
 
 // Cấu hình danh mục Buổi mặc định
 const FLYER_SHIFTS = [
@@ -64,24 +71,201 @@ const DEFAULT_FLYER_STAFF = [
 const FlyerState = {
   currentWeek: 'Tuần 1',
   currentMonth: 'THÁNG 10',
-  currentView: 'list', // 'list' (mặc định dễ nhìn), 'matrix' hoặc 'summary'
+  currentView: 'list', // 'list' (Bảng phân lịch 5 cột), 'matrix' hoặc 'summary'
   filterGroup: 'all', // 'all', 'g1', 'g2', 'g3'...
   filterShift: 'all', // 'all', 'sang', 'chieu', 'toi'
+  tableSearchQuery: '',
+  tableDayFilter: 'all',
+  tableShiftFilter: 'all',
+  tableRoleFilter: 'all',
   staffList: [],
   groupList: [],
   scheduleData: {}, // { [weekKey]: { [dayIdx]: { [shiftId]: { [groupId]: [ staffId, ... ] } } } }
+  assignmentsList: [], // Danh sách các dòng ca trực chi tiết cho Bảng Phân Lịch 5 cột
   editingStaffId: null,
-  activeCellPicker: null // { dayIdx, shiftId, groupId }
+  activeCellPicker: null
 };
 
+// Biến Firestore nội bộ cho Tờ Rơi
+let flyerDb = null;
+let isFlyerFirebaseReady = false;
+let flyerSaveDebounce = null;
+
 // ==========================================================================
-// 1. KHỞI TẠO VÀ LƯU TRỮ DỮ LIỆU
+// 1. KHỞI TẠO FIREBASE FIRESTORE ĐỘC LẬP & TỰ ĐỘNG LƯU NGAY LẬP TỨC
+// ==========================================================================
+
+function initFlyerFirebase() {
+  try {
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps || !firebase.apps.length) {
+        if (window.FIREBASE_CONFIG) {
+          firebase.initializeApp(window.FIREBASE_CONFIG);
+        }
+      }
+      flyerDb = firebase.firestore();
+      isFlyerFirebaseReady = true;
+      console.log('✅ Firebase Cloud Firestore cho Tờ Rơi đã khởi tạo');
+
+      // Tự động đồng bộ bản ghi Tờ Rơi từ Firestore
+      syncFlyerFromFirebase();
+
+      // Thiết lập listener realtime lắng nghe thay đổi từ các máy khác
+      setupFlyerRealtimeListener();
+    }
+  } catch (err) {
+    console.warn('Lỗi kết nối Firebase Tờ Rơi:', err);
+    updateFlyerSyncStatus('error');
+  }
+}
+
+function updateFlyerSyncStatus(status = 'synced') {
+  const badge = document.getElementById('flyerSyncStatusBadge');
+  const text = document.getElementById('flyerSyncStatusText');
+  if (!badge || !text) return;
+
+  badge.className = 'flyer-sync-pill';
+  if (status === 'saving') {
+    badge.classList.add('saving');
+    text.textContent = 'Firebase: Đang lưu...';
+  } else if (status === 'error') {
+    badge.classList.add('error');
+    text.textContent = 'Firebase: Chưa đồng bộ';
+  } else {
+    text.textContent = 'Firebase: Đã lưu tức thì';
+  }
+}
+
+/**
+ * LƯU TỨC THÌ DỮ LIỆU TỜ RƠI LÊN FIREBASE CLOUD FIRESTORE
+ * Lưu vào doc "flyer_master", TUYỆT ĐỐI KHÔNG CHẠM VÀO schedule_master
+ */
+async function saveFlyerToFirebase(silent = false) {
+  if (!flyerDb || !isFlyerFirebaseReady) return;
+
+  updateFlyerSyncStatus('saving');
+  if (flyerSaveDebounce) clearTimeout(flyerSaveDebounce);
+
+  flyerSaveDebounce = setTimeout(async () => {
+    try {
+      const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
+      const payload = {
+        staffList: FlyerState.staffList,
+        groupList: FlyerState.groupList,
+        scheduleData: FlyerState.scheduleData,
+        assignmentsList: FlyerState.assignmentsList,
+        lastUpdated: new Date().toISOString()
+      };
+
+      await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).set(payload, { merge: true });
+      updateFlyerSyncStatus('synced');
+      if (!silent && typeof showToast === 'function') {
+        showToast('☁️ Đã lưu tức thì vào Firebase Cloud!', 'success');
+      }
+    } catch (e) {
+      console.error('Lỗi lưu Firebase Tờ Rơi:', e);
+      updateFlyerSyncStatus('error');
+    }
+  }, 250);
+}
+
+/**
+ * Tải dữ liệu Tờ Rơi từ Firebase Firestore
+ */
+async function syncFlyerFromFirebase() {
+  if (!flyerDb || !isFlyerFirebaseReady) return;
+  try {
+    const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
+    const docSnap = await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (Array.isArray(data.staffList) && data.staffList.length > 0) {
+        FlyerState.staffList = data.staffList;
+        saveFlyerStaff(true);
+      }
+      if (Array.isArray(data.groupList) && data.groupList.length > 0) {
+        FlyerState.groupList = data.groupList;
+        saveFlyerGroups(true);
+      }
+      if (data.scheduleData) {
+        FlyerState.scheduleData = data.scheduleData;
+        saveFlyerSchedule(true);
+      }
+      if (Array.isArray(data.assignmentsList)) {
+        FlyerState.assignmentsList = data.assignmentsList;
+        saveFlyerAssignments(true);
+      }
+
+      renderFlyerStats();
+      renderFlyerTable();
+      updateFlyerSyncStatus('synced');
+    } else {
+      // Khởi tạo bản ghi ban đầu trên Firebase
+      saveFlyerToFirebase(true);
+    }
+  } catch (err) {
+    console.warn('Lỗi đọc Firebase Tờ Rơi:', err);
+    updateFlyerSyncStatus('error');
+  }
+}
+
+/**
+ * Lắng nghe cập nhật realtime cho Tờ Rơi
+ */
+function setupFlyerRealtimeListener() {
+  if (!flyerDb || !isFlyerFirebaseReady) return;
+  try {
+    const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
+    flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).onSnapshot((doc) => {
+      if (doc.metadata && doc.metadata.hasPendingWrites) return; // Bỏ qua cập nhật từ chính máy này
+      if (doc.exists) {
+        const data = doc.data();
+        let changed = false;
+
+        if (Array.isArray(data.staffList)) {
+          FlyerState.staffList = data.staffList;
+          saveFlyerStaff(true);
+          changed = true;
+        }
+        if (Array.isArray(data.groupList)) {
+          FlyerState.groupList = data.groupList;
+          saveFlyerGroups(true);
+          changed = true;
+        }
+        if (data.scheduleData) {
+          FlyerState.scheduleData = data.scheduleData;
+          saveFlyerSchedule(true);
+          changed = true;
+        }
+        if (Array.isArray(data.assignmentsList)) {
+          FlyerState.assignmentsList = data.assignmentsList;
+          saveFlyerAssignments(true);
+          changed = true;
+        }
+
+        if (changed) {
+          renderFlyerStats();
+          renderFlyerTable();
+          updateFlyerSyncStatus('synced');
+        }
+      }
+    }, err => {
+      console.warn('Lỗi realtime listener Tờ Rơi:', err);
+    });
+  } catch (err) {
+    console.warn('Lỗi setup listener realtime Tờ Rơi:', err);
+  }
+}
+
+// ==========================================================================
+// 2. KHỞI TẠO VÀ LƯU TRỮ DỮ LIỆU CỤC BỘ
 // ==========================================================================
 
 function initFlyerModule() {
   loadFlyerStaff();
   loadFlyerGroups();
   loadFlyerSchedule();
+  loadFlyerAssignments();
 
   // Đồng bộ tháng hiện tại từ selectMonth nếu có
   const selectMonth = document.getElementById('selectMonth');
@@ -94,10 +278,14 @@ function initFlyerModule() {
   setupFlyerQuickAssign();
   setupFlyerStaffModal();
   setupFlyerCellPicker();
+  setupFlyerTableFilters();
 
   renderFlyerStats();
   renderFlyerTable();
   updateFlyerMonthLabel();
+
+  // Khởi tạo kết nối Firebase riêng biệt
+  initFlyerFirebase();
 }
 
 function getFlyerWeekKey() {
@@ -110,7 +298,6 @@ function loadFlyerStaff() {
     if (raw) {
       FlyerState.staffList = JSON.parse(raw);
     } else {
-      // Nếu chưa có, lấy từ ALL_STAFF của app.js nếu có sẵn
       if (typeof ALL_STAFF !== 'undefined' && Array.isArray(ALL_STAFF) && ALL_STAFF.length > 0) {
         FlyerState.staffList = ALL_STAFF.map((name, idx) => ({
           id: 'nv_' + (idx + 1),
@@ -120,25 +307,25 @@ function loadFlyerStaff() {
           phone: '',
           note: ''
         }));
-        // Thêm 2 PG mẫu
         FlyerState.staffList.push(
           { id: 'pg_1', name: 'PG BÍCH TRÂM', role: 'PG', group: 'Nhóm 1', phone: '0901234567', note: 'Chuyên ca sáng/chiều' },
-          { id: 'pg_2', name: 'PG MAI LINH', role: 'PG', group: 'Nhóm 2', phone: '0912345678', note: 'Chuyên ca chiều/tối' }
+          { id: 'pg_2', name: 'PG MAI LINH', role: 'PG', group: 'Nhóm 2', phone: '0912345678', note: 'Chuyên ca chiều/tối' },
+          { id: 'pg_3', name: 'PG NHƯ Ý', role: 'PG', group: 'Nhóm 3', phone: '0987654321', note: 'Chuyên cuối tuần' }
         );
       } else {
         FlyerState.staffList = [...DEFAULT_FLYER_STAFF];
       }
-      saveFlyerStaff();
+      saveFlyerStaff(true);
     }
   } catch (e) {
-    console.error('Lỗi nạp FlyerStaff:', e);
     FlyerState.staffList = [...DEFAULT_FLYER_STAFF];
   }
 }
 
-function saveFlyerStaff() {
+function saveFlyerStaff(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_STAFF, JSON.stringify(FlyerState.staffList));
+    if (!skipFirebase) saveFlyerToFirebase();
   } catch (e) {
     console.error('Lỗi lưu FlyerStaff:', e);
   }
@@ -151,16 +338,17 @@ function loadFlyerGroups() {
       FlyerState.groupList = JSON.parse(raw);
     } else {
       FlyerState.groupList = [...DEFAULT_FLYER_GROUPS];
-      saveFlyerGroups();
+      saveFlyerGroups(true);
     }
   } catch (e) {
     FlyerState.groupList = [...DEFAULT_FLYER_GROUPS];
   }
 }
 
-function saveFlyerGroups() {
+function saveFlyerGroups(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_GROUPS, JSON.stringify(FlyerState.groupList));
+    if (!skipFirebase) saveFlyerToFirebase();
   } catch (e) {
     console.error('Lỗi lưu FlyerGroups:', e);
   }
@@ -173,65 +361,220 @@ function loadFlyerSchedule() {
       FlyerState.scheduleData = JSON.parse(raw);
     } else {
       FlyerState.scheduleData = {};
-      initDemoFlyerSchedule();
     }
   } catch (e) {
     FlyerState.scheduleData = {};
   }
 }
 
-function saveFlyerSchedule() {
+function saveFlyerSchedule(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_SCHEDULE, JSON.stringify(FlyerState.scheduleData));
+    if (!skipFirebase) saveFlyerToFirebase();
   } catch (e) {
     console.error('Lỗi lưu FlyerSchedule:', e);
   }
 }
 
-/**
- * Khởi tạo dữ liệu mẫu cho tuần đầu để người dùng thấy ngay bảng lịch đẹp mắt
- */
-function initDemoFlyerSchedule() {
-  const weekKey = getFlyerWeekKey();
-  if (!FlyerState.scheduleData[weekKey]) {
-    FlyerState.scheduleData[weekKey] = {};
+function loadFlyerAssignments() {
+  try {
+    const raw = localStorage.getItem(FLYER_STORAGE_ASSIGNMENTS);
+    if (raw) {
+      FlyerState.assignmentsList = JSON.parse(raw);
+    } else {
+      FlyerState.assignmentsList = [];
+      initDemoAssignments();
+    }
+  } catch (e) {
+    FlyerState.assignmentsList = [];
+    initDemoAssignments();
   }
-  const sched = FlyerState.scheduleData[weekKey];
+}
 
-  // Gán mẫu ca Sáng Thứ 2: Nhóm 1 (NHẠN, PG BÍCH TRÂM), Nhóm 2 (THẮM)
-  // Gán mẫu ca Chiều Thứ 2: Nhóm 1 (MẠNH), Nhóm 2 (MY, PG MAI LINH)
-  const assignDemo = (dayIdx, shiftId, groupId, staffNames) => {
-    if (!sched[dayIdx]) sched[dayIdx] = {};
-    if (!sched[dayIdx][shiftId]) sched[dayIdx][shiftId] = {};
-    if (!sched[dayIdx][shiftId][groupId]) sched[dayIdx][shiftId][groupId] = [];
+function saveFlyerAssignments(skipFirebase = false) {
+  try {
+    localStorage.setItem(FLYER_STORAGE_ASSIGNMENTS, JSON.stringify(FlyerState.assignmentsList));
+    if (!skipFirebase) saveFlyerToFirebase();
+  } catch (e) {
+    console.error('Lỗi lưu FlyerAssignments:', e);
+  }
+}
 
-    staffNames.forEach(name => {
-      const found = FlyerState.staffList.find(s => s.name === name);
-      if (found) {
-        sched[dayIdx][shiftId][groupId].push(found.id);
-      }
-    });
-  };
+/**
+ * Khởi tạo dữ liệu mẫu đẹp mắt cho Bảng Phân Lịch Tờ Rơi 5 Cột
+ */
+function initDemoAssignments() {
+  const weekKey = getFlyerWeekKey();
+  FlyerState.assignmentsList = [
+    {
+      id: 'as_1',
+      staffId: 'nv_1',
+      staffName: 'NHẠN',
+      role: 'NV',
+      phone: '',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'sang',
+      shiftName: 'Buổi Sáng',
+      shiftTime: '07:30 - 09:30',
+      groupId: 'g1',
+      groupName: 'Nhóm 1',
+      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
+      note: '500 tờ • Phát cổng chợ',
+      weekKey
+    },
+    {
+      id: 'as_2',
+      staffId: 'pg_1',
+      staffName: 'PG BÍCH TRÂM',
+      role: 'PG',
+      phone: '0901234567',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'sang',
+      shiftName: 'Buổi Sáng',
+      shiftTime: '07:30 - 09:30',
+      groupId: 'g1',
+      groupName: 'Nhóm 1',
+      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
+      note: '500 tờ • Đối diện bách hóa',
+      weekKey
+    },
+    {
+      id: 'as_3',
+      staffId: 'nv_7',
+      staffName: 'THẮM',
+      role: 'NV',
+      phone: '',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'sang',
+      shiftName: 'Buổi Sáng',
+      shiftTime: '07:30 - 09:30',
+      groupId: 'g2',
+      groupName: 'Nhóm 2',
+      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
+      note: '500 tờ',
+      weekKey
+    },
+    {
+      id: 'as_4',
+      staffId: 'nv_2',
+      staffName: 'MẠNH',
+      role: 'NV',
+      phone: '',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '16:30 - 18:30',
+      groupId: 'g1',
+      groupName: 'Nhóm 1',
+      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
+      note: '500 tờ • Giờ tan tầm',
+      weekKey
+    },
+    {
+      id: 'as_5',
+      staffId: 'nv_8',
+      staffName: 'MY',
+      role: 'NV',
+      phone: '',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '16:30 - 18:30',
+      groupId: 'g2',
+      groupName: 'Nhóm 2',
+      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
+      note: '500 tờ • Cổng trường cấp 3',
+      weekKey
+    },
+    {
+      id: 'as_6',
+      staffId: 'pg_2',
+      staffName: 'PG MAI LINH',
+      role: 'PG',
+      phone: '0912345678',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '16:30 - 18:30',
+      groupId: 'g2',
+      groupName: 'Nhóm 2',
+      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
+      note: '500 tờ • Cổng trường cấp 2',
+      weekKey
+    },
+    {
+      id: 'as_7',
+      staffId: 'nv_3',
+      staffName: 'MI',
+      role: 'NV',
+      phone: '',
+      dayIdx: 1,
+      dayName: 'Thứ Ba',
+      dayShort: 'T3',
+      shiftId: 'sang',
+      shiftName: 'Buổi Sáng',
+      shiftTime: '07:30 - 09:30',
+      groupId: 'g1',
+      groupName: 'Nhóm 1',
+      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
+      note: '500 tờ',
+      weekKey
+    },
+    {
+      id: 'as_8',
+      staffId: 'nv_9',
+      staffName: 'PHÚC',
+      role: 'NV',
+      phone: '',
+      dayIdx: 1,
+      dayName: 'Thứ Ba',
+      dayShort: 'T3',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '16:30 - 18:30',
+      groupId: 'g2',
+      groupName: 'Nhóm 2',
+      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
+      note: '500 tờ',
+      weekKey
+    },
+    {
+      id: 'as_9',
+      staffId: 'pg_3',
+      staffName: 'PG NHƯ Ý',
+      role: 'PG',
+      phone: '0987654321',
+      dayIdx: 5,
+      dayName: 'Thứ Bảy',
+      dayShort: 'T7',
+      shiftId: 'toi',
+      shiftName: 'Buổi Tối',
+      shiftTime: '19:00 - 21:00',
+      groupId: 'g3',
+      groupName: 'Nhóm 3',
+      location: 'Nhóm 3 - Tuyến Ngã Tư & Trung Tâm',
+      note: '500 tờ • Phố đi bộ',
+      weekKey
+    }
+  ];
 
-  assignDemo(0, 'sang', 'g1', ['NHẠN', 'PG BÍCH TRÂM']);
-  assignDemo(0, 'sang', 'g2', ['THẮM']);
-  assignDemo(0, 'chieu', 'g1', ['MẠNH']);
-  assignDemo(0, 'chieu', 'g2', ['MY', 'PG MAI LINH']);
-
-  assignDemo(1, 'sang', 'g1', ['MI']);
-  assignDemo(1, 'chieu', 'g2', ['PHÚC', 'PG BÍCH TRÂM']);
-  assignDemo(2, 'sang', 'g1', ['MỸ', 'PG MAI LINH']);
-  assignDemo(4, 'chieu', 'g1', ['GIANG Ý', 'NGỌC ANH']);
-  assignDemo(5, 'sang', 'g1', ['NHẠN', 'PG BÍCH TRÂM']);
-  assignDemo(5, 'toi', 'g2', ['ĐẠI', 'LÂM Ý', 'PG MAI LINH']);
-  assignDemo(6, 'sang', 'g1', ['MẠNH', 'PG BÍCH TRÂM']);
-  assignDemo(6, 'chieu', 'g2', ['THẮM', 'PG MAI LINH']);
-
-  saveFlyerSchedule();
+  saveFlyerAssignments(true);
 }
 
 // ==========================================================================
-// 2. CHUYỂN ĐỔI TAB (PHÂN CA HÀNH CHÍNH & TỜ RƠI)
+// 3. CHUYỂN ĐỔI TAB & ĐỒNG BỘ GIAO DIỆN
 // ==========================================================================
 
 function setupFlyerNavTabs() {
@@ -247,7 +590,6 @@ function setupFlyerNavTabs() {
       if (sectionSchedule) sectionSchedule.style.display = 'none';
       if (sectionFlyer) sectionFlyer.style.display = 'block';
 
-      // Cập nhật lại giao diện và kích thước bảng
       renderFlyerStats();
       renderFlyerTable();
       updateFlyerMonthLabel();
@@ -268,14 +610,12 @@ function setupFlyerNavTabs() {
     tabFlyer.addEventListener('click', () => switchTab('flyer'));
   }
 
-  // Khôi phục tab đã chọn từ localStorage hoặc URL hash
   const savedTab = localStorage.getItem(FLYER_STORAGE_ACTIVE_TAB);
   const isHashToroi = (typeof window !== 'undefined' && window.location && window.location.hash === '#toroi');
   if (isHashToroi || savedTab === 'flyer') {
     switchTab('flyer');
   }
 
-  // Lắng nghe sự thay đổi của tháng từ dropdown hệ thống chính để đồng bộ
   const selectMonth = document.getElementById('selectMonth');
   if (selectMonth) {
     selectMonth.addEventListener('change', (e) => {
@@ -292,14 +632,15 @@ function updateFlyerMonthLabel() {
   if (el) el.textContent = FlyerState.currentMonth;
   const bannerMonth = document.getElementById('flyerBannerMonth');
   if (bannerMonth) bannerMonth.textContent = `${FlyerState.currentMonth} - ${FlyerState.currentWeek}`;
+  const tableTitle = document.getElementById('flyerScheduleTableTitle');
+  if (tableTitle) tableTitle.textContent = `BẢNG PHÂN LỊCH TỜ RƠI • ${FlyerState.currentMonth} - ${FlyerState.currentWeek.toUpperCase()}`;
 }
 
 // ==========================================================================
-// 3. ĐIỀU KHIỂN & BỘ LỌC (WEEK, FILTER, VIEW SWITCHER)
+// 4. BỘ LỌC & ĐIỀU KHIỂN
 // ==========================================================================
 
 function setupFlyerControls() {
-  // Chuyển tuần (Tuần 1, Tuần 2, Tuần 3, Tuần 4)
   const weekPills = document.querySelectorAll('.flyer-week-pill');
   weekPills.forEach(pill => {
     pill.addEventListener('click', (e) => {
@@ -312,11 +653,10 @@ function setupFlyerControls() {
     });
   });
 
-  // Nút mũi tên tuần trước / tuần sau
   const btnPrevWeek = document.getElementById('btnFlyerPrevWeek');
   const btnNextWeek = document.getElementById('btnFlyerNextWeek');
-
   const weeks = ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'];
+
   if (btnPrevWeek) {
     btnPrevWeek.addEventListener('click', () => {
       let idx = weeks.indexOf(FlyerState.currentWeek);
@@ -346,7 +686,7 @@ function setupFlyerControls() {
     });
   }
 
-  // Lọc theo Nhóm
+  // Bộ lọc Nhóm phía trên
   const groupFilters = document.querySelectorAll('.flyer-filter-group-btn');
   groupFilters.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -357,7 +697,7 @@ function setupFlyerControls() {
     });
   });
 
-  // Lọc theo Buổi
+  // Bộ lọc Buổi phía trên
   const shiftFilters = document.querySelectorAll('.flyer-filter-shift-btn');
   shiftFilters.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -368,7 +708,7 @@ function setupFlyerControls() {
     });
   });
 
-  // Chuyển chế độ xem (Dạng Danh Sách / Bảng Lưới / Tổng Hợp Công)
+  // Chuyển chế độ xem (Bảng Danh Sách 5 Cột / Bảng Lưới / Tổng Hợp Công)
   const btnViewList = document.getElementById('btnFlyerViewList');
   const btnViewMatrix = document.getElementById('btnFlyerViewMatrix');
   const btnViewSummary = document.getElementById('btnFlyerViewSummary');
@@ -405,268 +745,411 @@ function setupFlyerControls() {
     });
   }
 
-  // Các nút hành động chính
+  // Nút hành động chính
   const btnOpenStaff = document.getElementById('btnFlyerOpenStaffModal');
-  if (btnOpenStaff) {
-    btnOpenStaff.addEventListener('click', openFlyerStaffModal);
-  }
+  if (btnOpenStaff) btnOpenStaff.addEventListener('click', openFlyerStaffModal);
 
   const btnAutoSchedule = document.getElementById('btnFlyerAutoSchedule');
-  if (btnAutoSchedule) {
-    btnAutoSchedule.addEventListener('click', openFlyerAutoScheduleModal);
-  }
+  if (btnAutoSchedule) btnAutoSchedule.addEventListener('click', openFlyerAutoScheduleModal);
 
   const btnExportImage = document.getElementById('btnFlyerExportImage');
-  if (btnExportImage) {
-    btnExportImage.addEventListener('click', exportFlyerScheduleImage);
-  }
+  if (btnExportImage) btnExportImage.addEventListener('click', exportFlyerScheduleImage);
 
   const btnCopyZalo = document.getElementById('btnFlyerCopyZalo');
-  if (btnCopyZalo) {
-    btnCopyZalo.addEventListener('click', openFlyerZaloModal);
-  }
+  if (btnCopyZalo) btnCopyZalo.addEventListener('click', openFlyerZaloModal);
 
   const btnClearWeek = document.getElementById('btnFlyerClearWeek');
-  if (btnClearWeek) {
-    btnClearWeek.addEventListener('click', confirmClearFlyerWeek);
+  if (btnClearWeek) btnClearWeek.addEventListener('click', confirmClearFlyerWeek);
+}
+
+function setupFlyerTableFilters() {
+  const searchInput = document.getElementById('flyerTableSearchInput');
+  const dayFilter = document.getElementById('flyerTableDayFilter');
+  const shiftFilter = document.getElementById('flyerTableShiftFilter');
+  const roleFilter = document.getElementById('flyerTableRoleFilter');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      FlyerState.tableSearchQuery = e.target.value.trim().toLowerCase();
+      renderFlyerScheduleTable();
+    });
+  }
+  if (dayFilter) {
+    dayFilter.addEventListener('change', (e) => {
+      FlyerState.tableDayFilter = e.target.value;
+      renderFlyerScheduleTable();
+    });
+  }
+  if (shiftFilter) {
+    shiftFilter.addEventListener('change', (e) => {
+      FlyerState.tableShiftFilter = e.target.value;
+      renderFlyerScheduleTable();
+    });
+  }
+  if (roleFilter) {
+    roleFilter.addEventListener('change', (e) => {
+      FlyerState.tableRoleFilter = e.target.value;
+      renderFlyerScheduleTable();
+    });
   }
 }
 
 // ==========================================================================
-// 4. HIỂN THỊ THỐNG KÊ (QUICK STATS)
+// 5. HIỂN THỊ THỐNG KÊ (QUICK STATS)
 // ==========================================================================
 
 function renderFlyerStats() {
   const statStaff = document.getElementById('statFlyerStaff');
   const statStaffDesc = document.getElementById('statFlyerStaffDesc');
   const statShifts = document.getElementById('statFlyerShifts');
+  const statShiftsDesc = document.getElementById('statFlyerShiftsDesc');
   const statGroups = document.getElementById('statFlyerGroups');
   const statTotalFlyers = document.getElementById('statFlyerTotalCount');
 
-  // Đếm NV & PG
   const nvCount = FlyerState.staffList.filter(s => s.role === 'NV').length;
   const pgCount = FlyerState.staffList.filter(s => s.role === 'PG').length;
   if (statStaff) statStaff.textContent = `${FlyerState.staffList.length} Người`;
   if (statStaffDesc) statStaffDesc.textContent = `NV: ${nvCount} • PG: ${pgCount}`;
 
-  // Đếm số ca tuần này
+  // Đếm ca trong tuần đang chọn
   const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
-  let totalAssignedShifts = 0;
+  const weekAssignments = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
+
   let morningCount = 0;
   let afternoonCount = 0;
   let eveningCount = 0;
 
-  for (let d = 0; d < 7; d++) {
-    const dayData = sched[d] || {};
-    FLYER_SHIFTS.forEach(shift => {
-      const shiftData = dayData[shift.id] || {};
-      Object.keys(shiftData).forEach(gId => {
-        const staffIds = shiftData[gId] || [];
-        totalAssignedShifts += staffIds.length;
-        if (shift.id === 'sang') morningCount += staffIds.length;
-        if (shift.id === 'chieu') afternoonCount += staffIds.length;
-        if (shift.id === 'toi') eveningCount += staffIds.length;
-      });
-    });
-  }
+  weekAssignments.forEach(as => {
+    if (as.shiftId === 'sang') morningCount++;
+    if (as.shiftId === 'chieu') afternoonCount++;
+    if (as.shiftId === 'toi') eveningCount++;
+  });
 
-  if (statShifts) statShifts.textContent = `${totalAssignedShifts} Lượt`;
-  const statShiftsDesc = document.getElementById('statFlyerShiftsDesc');
+  if (statShifts) statShifts.textContent = `${weekAssignments.length} Lượt`;
   if (statShiftsDesc) statShiftsDesc.textContent = `Sáng: ${morningCount} • Chiều: ${afternoonCount} • Tối: ${eveningCount}`;
 
   if (statGroups) statGroups.textContent = `${FlyerState.groupList.length} Nhóm`;
 
-  // Giả định trung bình 1 ca phát 500 tờ rơi
-  const estimatedFlyers = totalAssignedShifts * 500;
+  const estimatedFlyers = weekAssignments.length * 500;
   if (statTotalFlyers) statTotalFlyers.textContent = `${estimatedFlyers.toLocaleString('vi-VN')} Tờ`;
 }
 
 // ==========================================================================
-// 5. HIỂN THỊ DẠNG DANH SÁCH (LIST VIEW / MẶC ĐỊNH DỄ NHÌN) & BẢNG MA TRẬN
+// 6. BẢNG PHÂN LỊCH TỜ RƠI 5 CỘT (STT, NHÂN VIÊN, THỜI GIAN & NGÀY, ĐỊA ĐIỂM, GHI CHÚ)
 // ==========================================================================
 
 function renderFlyerTable() {
+  // Luôn cập nhật Bảng Phân Lịch 5 cột chuẩn
+  renderFlyerScheduleTable();
+
   if (FlyerState.currentView === 'summary') {
     renderFlyerSummaryTable();
-    return;
-  }
-  if (FlyerState.currentView === 'matrix') {
+  } else if (FlyerState.currentView === 'matrix') {
     renderFlyerMatrixTable();
-    return;
   }
-  // Mặc định: Dạng Danh Sách (List View)
-  renderFlyerListView();
 }
 
 /**
- * Hiển thị lịch phát tờ rơi dạng danh sách ngày - buổi - nhóm (RẤT DỄ NHÌN)
+ * Hiển thị chính xác Bảng Phân Lịch Tờ Rơi 5 Cột theo yêu cầu
+ * Cột 1: STT
+ * Cột 2: Nhân viên (Họ tên, Vai trò [NV]/[PG], SĐT)
+ * Cột 3: Thời gian & Ngày (Buổi Sáng/Chiều/Tối + Giờ + Thứ)
+ * Cột 4: Địa điểm (Tên nhóm & Tuyến đường phát)
+ * Cột 5: Ghi chú (Mục tiêu tờ rơi, dặn dò...)
+ * Cột 6: Thao tác (Sửa, Xóa)
  */
-function renderFlyerListView() {
-  const container = document.getElementById('flyerListContainer');
-  if (!container) return;
+function renderFlyerScheduleTable() {
+  const tbody = document.getElementById('flyerScheduleTableBody');
+  if (!tbody) return;
 
   const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
+  let list = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
 
-  const now = new Date();
-  const todayDayOfWeek = (now.getDay() + 6) % 7; // T2=0 ... CN=6
+  // Áp dụng bộ lọc
+  const q = FlyerState.tableSearchQuery;
+  const dayF = FlyerState.tableDayFilter;
+  const shiftF = FlyerState.tableShiftFilter;
+  const roleF = FlyerState.tableRoleFilter;
 
-  const shiftsToRender = FlyerState.filterShift === 'all'
-    ? FLYER_SHIFTS
-    : FLYER_SHIFTS.filter(s => s.id === FlyerState.filterShift);
+  list = list.filter(item => {
+    const matchSearch = !q ||
+      item.staffName.toLowerCase().includes(q) ||
+      (item.location && item.location.toLowerCase().includes(q)) ||
+      (item.note && item.note.toLowerCase().includes(q));
 
-  const groupsToRender = FlyerState.filterGroup === 'all'
-    ? FlyerState.groupList
-    : FlyerState.groupList.filter(g => g.id === FlyerState.filterGroup);
+    const matchDay = (dayF === 'all') || (String(item.dayIdx) === String(dayF));
+    const matchShift = (shiftF === 'all') || (item.shiftId === shiftF);
+    const matchRole = (roleF === 'all') || (item.role === roleF);
 
-  let html = '';
+    return matchSearch && matchDay && matchShift && matchRole;
+  });
 
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    const day = FLYER_DAYS[dayIdx];
-    const isToday = (dayIdx === todayDayOfWeek);
+  // Sắp xếp: Theo thứ tự ngày (T2 -> CN), rồi theo buổi (Sáng -> Chiều -> Tối)
+  const shiftOrder = { 'sang': 1, 'chieu': 2, 'toi': 3 };
+  list.sort((a, b) => {
+    if (a.dayIdx !== b.dayIdx) return a.dayIdx - b.dayIdx;
+    return (shiftOrder[a.shiftId] || 0) - (shiftOrder[b.shiftId] || 0);
+  });
 
-    // Tính tổng số lượt ca trong ngày
-    let dayTotalShifts = 0;
-    shiftsToRender.forEach(shift => {
-      const shiftData = (sched[dayIdx] && sched[dayIdx][shift.id]) || {};
-      groupsToRender.forEach(group => {
-        const staffIds = shiftData[group.id] || [];
-        dayTotalShifts += staffIds.length;
-      });
-    });
-
-    html += `
-      <div class="flyer-list-day-card ${isToday ? 'is-today' : ''}">
-        <div class="flyer-list-day-header ${isToday ? 'today-header' : ''}">
-          <div class="flyer-list-day-title">
-            <div class="flyer-day-badge-icon">
-              <i class="fa-solid fa-calendar-day"></i>
-            </div>
-            <div class="flyer-day-title-text">
-              <span>${day.name.toUpperCase()}</span>
-              <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">(${day.short})</span>
-              ${isToday ? '<span class="flyer-badge-today">Hôm Nay</span>' : ''}
-            </div>
-          </div>
-          <div class="flyer-list-day-meta">
-            <span class="badge ${dayTotalShifts > 0 ? 'bg-blue-subtle text-blue' : ''}" style="padding: 4px 10px; border-radius: 8px; font-weight: 700;">
-              <i class="fa-solid fa-users"></i> ${dayTotalShifts} ca phát • ${groupsToRender.length} nhóm
-            </span>
-          </div>
-        </div>
-
-        <div class="flyer-list-day-body">
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
+          <div style="font-size: 2rem; margin-bottom: 8px;">📂</div>
+          <strong style="color: #64748b; font-size: 0.95rem;">Chưa có ca phân lịch nào phù hợp bộ lọc.</strong>
+          <p style="font-size: 0.8rem; margin-top: 4px;">Hãy bấm nút <strong>[+ Thêm Ca Lập Lịch]</strong> ở trên để thêm ca trực mới.</p>
+        </td>
+      </tr>
     `;
-
-    // Render từng buổi trong ngày
-    shiftsToRender.forEach(shift => {
-      const shiftData = (sched[dayIdx] && sched[dayIdx][shift.id]) || {};
-
-      html += `
-        <div class="flyer-list-shift-row">
-          <div class="flyer-list-shift-label">
-            <div class="flyer-list-shift-title" style="color: ${shift.color}">
-              <i class="fa-solid ${shift.icon}"></i> ${shift.name}
-            </div>
-            <div class="flyer-list-shift-time">${shift.time}</div>
-          </div>
-
-          <div class="flyer-list-groups-grid">
-      `;
-
-      groupsToRender.forEach((group) => {
-        const staffIds = shiftData[group.id] || [];
-
-        html += `
-          <div class="flyer-list-group-card">
-            <div class="flyer-list-group-header">
-              <div>
-                <span class="flyer-list-group-title" style="color: ${group.color};">
-                  <i class="fa-solid fa-users-viewfinder"></i> ${group.name}
-                </span>
-                <span class="flyer-list-group-location">(${group.location})</span>
-              </div>
-              <button type="button" class="flyer-btn-add-mini" title="Thêm người vào ${group.name} - ${shift.name}" onclick="openFlyerCellPicker(${dayIdx}, '${shift.id}', '${group.id}')">
-                <i class="fa-solid fa-plus"></i>
-              </button>
-            </div>
-
-            <div class="flyer-list-staff-chips">
-        `;
-
-        if (staffIds.length === 0) {
-          html += `<div class="flyer-list-empty-msg"><i class="fa-regular fa-circle-dot"></i> Chưa có người phát</div>`;
-        } else {
-          staffIds.forEach(staffId => {
-            const staff = FlyerState.staffList.find(s => s.id === staffId);
-            if (!staff) return;
-
-            const isPG = staff.role === 'PG';
-            const pillClass = isPG ? 'pill-pg' : 'pill-nv';
-            const roleBadge = isPG ? '<span class="flyer-badge-pg">PG</span>' : '<span class="flyer-badge-nv">NV</span>';
-
-            html += `
-              <div class="flyer-assigned-pill ${pillClass}">
-                <div class="flyer-pill-left">
-                  ${roleBadge}
-                  <strong title="${staff.name}">${staff.name}</strong>
-                  ${staff.phone ? `<span style="font-size: 0.72rem; opacity: 0.85;">(${staff.phone})</span>` : ''}
-                </div>
-                <button type="button" class="flyer-pill-remove" title="Xóa ${staff.name} khỏi ca này" onclick="removeStaffFromFlyerSlot(${dayIdx}, '${shift.id}', '${group.id}', '${staff.id}', event)">
-                  <i class="fa-solid fa-xmark"></i>
-                </button>
-              </div>
-            `;
-          });
-        }
-
-        html += `
-            </div>
-          </div>
-        `;
-      });
-
-      html += `
-          </div>
-        </div>
-      `;
-    });
-
-    html += `
-        </div>
-      </div>
-    `;
+    return;
   }
 
-  container.innerHTML = html;
+  let html = '';
+  list.forEach((item, idx) => {
+    const isPG = item.role === 'PG';
+    const avatarClass = isPG ? 'avatar-pg' : 'avatar-nv';
+    const roleBadge = isPG
+      ? `<span class="flyer-badge-pg"><i class="fa-solid fa-sparkles"></i> PG</span>`
+      : `<span class="flyer-badge-nv"><i class="fa-solid fa-user-tie"></i> NV</span>`;
+
+    const shiftInfo = FLYER_SHIFTS.find(s => s.id === item.shiftId) || { color: '#0284c7', icon: 'fa-sun' };
+    const initial = item.staffName ? item.staffName.charAt(0).toUpperCase() : 'N';
+
+    html += `
+      <tr>
+        <!-- 1. STT -->
+        <td style="text-align: center;">
+          <span class="flyer-stt-badge">${idx + 1}</span>
+        </td>
+
+        <!-- 2. Nhân Viên -->
+        <td>
+          <div class="flyer-staff-cell">
+            <div class="flyer-staff-avatar ${avatarClass}">${initial}</div>
+            <div class="flyer-staff-info-box">
+              <span class="flyer-staff-name-title">
+                ${roleBadge} <strong>${item.staffName}</strong>
+              </span>
+              ${item.phone ? `<span class="flyer-staff-subinfo"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i> ${item.phone}</span>` : ''}
+            </div>
+          </div>
+        </td>
+
+        <!-- 3. Thời Gian & Ngày -->
+        <td>
+          <div class="flyer-datetime-cell">
+            <span class="flyer-datetime-main" style="color: ${shiftInfo.color};">
+              <i class="fa-solid ${shiftInfo.icon}"></i> ${item.shiftName} (${item.shiftTime})
+            </span>
+            <span class="flyer-datetime-sub">
+              <i class="fa-regular fa-calendar"></i> <strong>${item.dayName}</strong> (${item.dayShort})
+            </span>
+          </div>
+        </td>
+
+        <!-- 4. Địa Điểm -->
+        <td>
+          <div class="flyer-location-cell">
+            <span class="flyer-location-group-tag" style="color: #0369a1;">
+              <i class="fa-solid fa-location-dot text-rose"></i> ${item.location || item.groupName}
+            </span>
+          </div>
+        </td>
+
+        <!-- 5. Ghi Chú -->
+        <td>
+          <div class="flyer-note-cell">
+            ${item.note ? `<span class="flyer-note-tag"><i class="fa-regular fa-note-sticky text-amber"></i> ${item.note}</span>` : '<span style="color: #cbd5e1;">-</span>'}
+          </div>
+        </td>
+
+        <!-- 6. Thao Tác -->
+        <td style="text-align: center;">
+          <div style="display: flex; gap: 6px; justify-content: center;">
+            <button type="button" class="btn btn-secondary btn-sm" title="Chỉnh sửa ca này" onclick="openFlyerAssignmentModal('${item.id}')">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" style="color: #e11d48;" title="Xóa ca này" onclick="deleteFlyerAssignment('${item.id}')">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
 }
 
-/**
- * Hiển thị lịch dạng bảng lưới ma trận tuần
- */
+// ==========================================================================
+// 7. THAO TÁC THÊM / SỬA / XÓA CA TRỰC (TỰ ĐỘNG LƯU FIREBASE NGAY LẬP TỨC)
+// ==========================================================================
+
+function openFlyerAssignmentModal(editId = null) {
+  const modal = document.getElementById('modalFlyerAssignmentForm');
+  const title = document.getElementById('assignmentModalTitle');
+  const idInput = document.getElementById('assignmentEditId');
+  const staffSelect = document.getElementById('assignModalStaffSelect');
+  const daySelect = document.getElementById('assignModalDaySelect');
+  const shiftSelect = document.getElementById('assignModalShiftSelect');
+  const locationInput = document.getElementById('assignModalLocationInput');
+  const noteInput = document.getElementById('assignModalNoteInput');
+
+  if (!modal) return;
+
+  // Cập nhật danh sách nhân viên vào dropdown
+  if (staffSelect) {
+    staffSelect.innerHTML = FlyerState.staffList.map(s => {
+      const roleText = s.role === 'PG' ? 'PG' : 'Nhân viên';
+      return `<option value="${s.id}">${s.name} (${roleText} • ${s.group || ''})</option>`;
+    }).join('');
+  }
+
+  if (editId) {
+    const item = FlyerState.assignmentsList.find(as => as.id === editId);
+    if (item) {
+      if (title) title.textContent = `✏️ Chỉnh Sửa Ca Phân Lịch: ${item.staffName}`;
+      if (idInput) idInput.value = item.id;
+      if (staffSelect) staffSelect.value = item.staffId;
+      if (daySelect) daySelect.value = String(item.dayIdx);
+      if (shiftSelect) shiftSelect.value = item.shiftId;
+      if (locationInput) locationInput.value = item.location || '';
+      if (noteInput) noteInput.value = item.note || '';
+    }
+  } else {
+    if (title) title.textContent = '➕ Thêm Ca Phân Lịch Tờ Rơi Mới';
+    if (idInput) idInput.value = '';
+    if (daySelect) daySelect.value = '0';
+    if (shiftSelect) shiftSelect.value = 'sang';
+    if (locationInput) locationInput.value = 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư';
+    if (noteInput) noteInput.value = '500 tờ';
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeFlyerAssignmentModal() {
+  const modal = document.getElementById('modalFlyerAssignmentForm');
+  if (modal) modal.classList.add('hidden');
+}
+
+function saveFlyerAssignmentFromModal() {
+  const idInput = document.getElementById('assignmentEditId');
+  const staffSelect = document.getElementById('assignModalStaffSelect');
+  const daySelect = document.getElementById('assignModalDaySelect');
+  const shiftSelect = document.getElementById('assignModalShiftSelect');
+  const locationInput = document.getElementById('assignModalLocationInput');
+  const noteInput = document.getElementById('assignModalNoteInput');
+
+  const staffId = staffSelect ? staffSelect.value : '';
+  const dayIdx = daySelect ? parseInt(daySelect.value, 10) : 0;
+  const shiftId = shiftSelect ? shiftSelect.value : 'sang';
+  const location = locationInput ? locationInput.value.trim() : '';
+  const note = noteInput ? noteInput.value.trim() : '';
+  const editId = idInput ? idInput.value : '';
+
+  const staff = FlyerState.staffList.find(s => s.id === staffId);
+  if (!staff) {
+    if (typeof showToast === 'function') showToast('Vui lòng chọn nhân viên / PG!', 'warning');
+    return;
+  }
+
+  const dayInfo = FLYER_DAYS[dayIdx] || { name: 'Thứ Hai', short: 'T2' };
+  const shiftInfo = FLYER_SHIFTS.find(s => s.id === shiftId) || { name: 'Buổi Sáng', time: '07:30 - 09:30' };
+  const weekKey = getFlyerWeekKey();
+
+  if (editId) {
+    // Cập nhật ca đã có
+    const item = FlyerState.assignmentsList.find(as => as.id === editId);
+    if (item) {
+      item.staffId = staff.id;
+      item.staffName = staff.name;
+      item.role = staff.role;
+      item.phone = staff.phone || '';
+      item.dayIdx = dayIdx;
+      item.dayName = dayInfo.name;
+      item.dayShort = dayInfo.short;
+      item.shiftId = shiftId;
+      item.shiftName = shiftInfo.name;
+      item.shiftTime = shiftInfo.time;
+      item.location = location || (staff.group + ' - ' + (location || 'Tuyến phát'));
+      item.note = note;
+      item.weekKey = weekKey;
+    }
+    if (typeof showToast === 'function') showToast(`✅ Đã cập nhật ca cho ${staff.name}!`, 'success');
+  } else {
+    // Thêm ca mới
+    const newAssignment = {
+      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      staffId: staff.id,
+      staffName: staff.name,
+      role: staff.role,
+      phone: staff.phone || '',
+      dayIdx,
+      dayName: dayInfo.name,
+      dayShort: dayInfo.short,
+      shiftId,
+      shiftName: shiftInfo.name,
+      shiftTime: shiftInfo.time,
+      groupId: 'g1',
+      groupName: staff.group || 'Nhóm 1',
+      location: location || (staff.group + ' - Tuyến phát'),
+      note,
+      weekKey
+    };
+    FlyerState.assignmentsList.push(newAssignment);
+    if (typeof showToast === 'function') showToast(`✅ Đã thêm ca phát tờ rơi cho ${staff.name}!`, 'success');
+  }
+
+  // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
+  saveFlyerAssignments(false);
+
+  closeFlyerAssignmentModal();
+  renderFlyerStats();
+  renderFlyerTable();
+}
+
+function deleteFlyerAssignment(assignmentId) {
+  const item = FlyerState.assignmentsList.find(as => as.id === assignmentId);
+  if (!item) return;
+
+  const confirmMsg = `Bạn có chắc muốn xóa ca trực của "${item.staffName}" vào ${item.dayName} (${item.shiftName})?`;
+  if (typeof confirm === 'function' && !confirm(confirmMsg)) return;
+
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.id !== assignmentId);
+
+  // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
+  saveFlyerAssignments(false);
+
+  renderFlyerStats();
+  renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast(`Đã xóa ca phát tờ rơi của ${item.staffName}!`, 'info');
+  }
+}
+
+// ==========================================================================
+// 8. BẢNG MA TRẬN & BẢNG TỔNG HỢP CÔNG
+// ==========================================================================
+
 function renderFlyerMatrixTable() {
   const tbody = document.getElementById('flyerMatrixTableBody');
   if (!tbody) return;
 
   const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
+  const weekAssignments = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
 
-  // Xác định ngày hôm nay trong tuần để highlight
   const now = new Date();
-  const todayDayOfWeek = (now.getDay() + 6) % 7; // Chuyển CN=0 thành T2=0 ... CN=6
+  const todayDayOfWeek = (now.getDay() + 6) % 7;
 
   let html = '';
-
-  // Lọc các ca
   const shiftsToRender = FlyerState.filterShift === 'all'
     ? FLYER_SHIFTS
     : FLYER_SHIFTS.filter(s => s.id === FlyerState.filterShift);
 
   shiftsToRender.forEach(shift => {
     html += `<tr>`;
-
-    // Cột tiêu đề Buổi
     html += `
       <td class="shift-header-cell">
         <div class="flyer-shift-meta">
@@ -678,19 +1161,17 @@ function renderFlyerMatrixTable() {
       </td>
     `;
 
-    // 7 Cột Ngày (T2 -> CN)
     for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
       const isToday = (dayIdx === todayDayOfWeek);
       html += `<td class="${isToday ? 'today-cell' : ''}">`;
       html += `<div class="flyer-cell-content">`;
 
-      // Lọc các nhóm cần hiển thị
       const groupsToRender = FlyerState.filterGroup === 'all'
         ? FlyerState.groupList
         : FlyerState.groupList.filter(g => g.id === FlyerState.filterGroup);
 
       groupsToRender.forEach((group, gIdx) => {
-        const assignedIds = (sched[dayIdx] && sched[dayIdx][shift.id] && sched[dayIdx][shift.id][group.id]) || [];
+        const slotItems = weekAssignments.filter(as => as.dayIdx === dayIdx && as.shiftId === shift.id && (as.groupId === group.id || as.location.includes(group.name)));
 
         html += `
           <div class="flyer-group-slot">
@@ -698,21 +1179,18 @@ function renderFlyerMatrixTable() {
               <span class="flyer-group-tag group-${(gIdx % 4) + 1}" style="color: ${group.color};">
                 <i class="fa-solid fa-users-viewfinder"></i> ${group.name}
               </span>
-              <button type="button" class="flyer-btn-add-mini" title="Thêm nhân viên/PG vào ${group.name} - ${shift.name}" onclick="openFlyerCellPicker(${dayIdx}, '${shift.id}', '${group.id}')">
+              <button type="button" class="flyer-btn-add-mini" title="Thêm nhanh" onclick="openFlyerAssignmentModal()">
                 <i class="fa-solid fa-plus"></i>
               </button>
             </div>
             <div class="flyer-assigned-list">
         `;
 
-        if (assignedIds.length === 0) {
+        if (slotItems.length === 0) {
           html += `<div class="flyer-empty-slot"><i class="fa-regular fa-circle-dot"></i> Trống ca</div>`;
         } else {
-          assignedIds.forEach(staffId => {
-            const staff = FlyerState.staffList.find(s => s.id === staffId);
-            if (!staff) return;
-
-            const isPG = staff.role === 'PG';
+          slotItems.forEach(item => {
+            const isPG = item.role === 'PG';
             const pillClass = isPG ? 'pill-pg' : 'pill-nv';
             const roleBadge = isPG ? '<span class="flyer-badge-pg">PG</span>' : '<span class="flyer-badge-nv">NV</span>';
 
@@ -720,9 +1198,9 @@ function renderFlyerMatrixTable() {
               <div class="flyer-assigned-pill ${pillClass}">
                 <div class="flyer-pill-left">
                   ${roleBadge}
-                  <span title="${staff.name} (${staff.group || ''})">${staff.name}</span>
+                  <span title="${item.staffName}">${item.staffName}</span>
                 </div>
-                <button type="button" class="flyer-pill-remove" title="Xóa ${staff.name} khỏi ca này" onclick="removeStaffFromFlyerSlot(${dayIdx}, '${shift.id}', '${group.id}', '${staff.id}', event)">
+                <button type="button" class="flyer-pill-remove" title="Xóa ca này" onclick="deleteFlyerAssignment('${item.id}')">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -730,10 +1208,7 @@ function renderFlyerMatrixTable() {
           });
         }
 
-        html += `
-            </div>
-          </div>
-        `;
+        html += `</div></div>`;
       });
 
       html += `</div></td>`;
@@ -745,18 +1220,13 @@ function renderFlyerMatrixTable() {
   tbody.innerHTML = html;
 }
 
-// ==========================================================================
-// 6. BẢNG TỔNG HỢP CÔNG & SẢN LƯỢNG (SUMMARY VIEW)
-// ==========================================================================
-
 function renderFlyerSummaryTable() {
   const container = document.getElementById('flyerSummaryTableContainer');
   if (!container) return;
 
   const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
+  const weekAssignments = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
 
-  // Thống kê từng người
   const statsMap = {};
   FlyerState.staffList.forEach(s => {
     statsMap[s.id] = {
@@ -768,24 +1238,16 @@ function renderFlyerSummaryTable() {
     };
   });
 
-  for (let d = 0; d < 7; d++) {
-    const dayData = sched[d] || {};
-    FLYER_SHIFTS.forEach(shift => {
-      const shiftData = dayData[shift.id] || {};
-      Object.keys(shiftData).forEach(gId => {
-        const ids = shiftData[gId] || [];
-        ids.forEach(staffId => {
-          if (statsMap[staffId]) {
-            statsMap[staffId][shift.id]++;
-            statsMap[staffId].total++;
-          }
-        });
-      });
-    });
-  }
+  weekAssignments.forEach(as => {
+    if (statsMap[as.staffId]) {
+      if (as.shiftId === 'sang') statsMap[as.staffId].sang++;
+      if (as.shiftId === 'chieu') statsMap[as.staffId].chieu++;
+      if (as.shiftId === 'toi') statsMap[as.staffId].toi++;
+      statsMap[as.staffId].total++;
+    }
+  });
 
   const staffArray = Object.values(statsMap);
-  // Sắp xếp: Ai nhiều ca nhất lên đầu
   staffArray.sort((a, b) => b.total - a.total);
 
   let html = `
@@ -835,112 +1297,12 @@ function renderFlyerSummaryTable() {
 }
 
 // ==========================================================================
-// 7. THAO TÁC TRỰC TIẾP TRÊN Ô LỊCH (CELL PICKER & REMOVE)
-// ==========================================================================
-
-function openFlyerCellPicker(dayIdx, shiftId, groupId) {
-  FlyerState.activeCellPicker = { dayIdx, shiftId, groupId };
-
-  const modal = document.getElementById('modalFlyerCellPicker');
-  const title = document.getElementById('cellPickerTitle');
-  const listContainer = document.getElementById('cellPickerStaffList');
-  if (!modal || !listContainer) return;
-
-  const dayInfo = FLYER_DAYS[dayIdx];
-  const shiftInfo = FLYER_SHIFTS.find(s => s.id === shiftId);
-  const groupInfo = FlyerState.groupList.find(g => g.id === groupId);
-
-  if (title) {
-    title.innerHTML = `Gán Người Cho <strong>${groupInfo ? groupInfo.name : ''}</strong> • ${dayInfo ? dayInfo.name : ''} (${shiftInfo ? shiftInfo.name : ''})`;
-  }
-
-  const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
-  const currentAssigned = (sched[dayIdx] && sched[dayIdx][shiftId] && sched[dayIdx][shiftId][groupId]) || [];
-
-  let html = '';
-  FlyerState.staffList.forEach(staff => {
-    const isChecked = currentAssigned.includes(staff.id);
-    const isPG = staff.role === 'PG';
-    const roleBadge = isPG ? `<span class="flyer-badge-pg">PG</span>` : `<span class="flyer-badge-nv">NV</span>`;
-
-    html += `
-      <label class="flyer-staff-option">
-        <input type="checkbox" value="${staff.id}" ${isChecked ? 'checked' : ''} onchange="toggleStaffInFlyerSlot(${dayIdx}, '${shiftId}', '${groupId}', '${staff.id}', this.checked)">
-        ${roleBadge}
-        <span style="font-weight: 700; flex: 1;">${staff.name}</span>
-        <span style="font-size: 0.74rem; color: #64748b;">${staff.group || ''}</span>
-      </label>
-    `;
-  });
-
-  listContainer.innerHTML = html;
-  modal.classList.remove('hidden');
-}
-
-function closeFlyerCellPicker() {
-  const modal = document.getElementById('modalFlyerCellPicker');
-  if (modal) modal.classList.add('hidden');
-  FlyerState.activeCellPicker = null;
-}
-
-function toggleStaffInFlyerSlot(dayIdx, shiftId, groupId, staffId, isAdd) {
-  const weekKey = getFlyerWeekKey();
-  if (!FlyerState.scheduleData[weekKey]) FlyerState.scheduleData[weekKey] = {};
-  const sched = FlyerState.scheduleData[weekKey];
-  if (!sched[dayIdx]) sched[dayIdx] = {};
-  if (!sched[dayIdx][shiftId]) sched[dayIdx][shiftId] = {};
-  if (!sched[dayIdx][shiftId][groupId]) sched[dayIdx][shiftId][groupId] = [];
-
-  const list = sched[dayIdx][shiftId][groupId];
-  if (isAdd) {
-    if (!list.includes(staffId)) list.push(staffId);
-  } else {
-    const idx = list.indexOf(staffId);
-    if (idx !== -1) list.splice(idx, 1);
-  }
-
-  saveFlyerSchedule();
-  renderFlyerStats();
-  renderFlyerTable();
-}
-
-function removeStaffFromFlyerSlot(dayIdx, shiftId, groupId, staffId, event) {
-  if (event) event.stopPropagation();
-
-  const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey];
-  if (!sched || !sched[dayIdx] || !sched[dayIdx][shiftId] || !sched[dayIdx][shiftId][groupId]) return;
-
-  const list = sched[dayIdx][shiftId][groupId];
-  const idx = list.indexOf(staffId);
-  if (idx !== -1) {
-    list.splice(idx, 1);
-    saveFlyerSchedule();
-    renderFlyerStats();
-    renderFlyerTable();
-    if (typeof showToast === 'function') {
-      showToast('Đã xóa nhân sự khỏi ca trực', 'info');
-    }
-  }
-}
-
-function setupFlyerCellPicker() {
-  const btnClose = document.getElementById('btnCloseCellPicker');
-  const btnDone = document.getElementById('btnDoneCellPicker');
-  if (btnClose) btnClose.addEventListener('click', closeFlyerCellPicker);
-  if (btnDone) btnDone.addEventListener('click', closeFlyerCellPicker);
-}
-
-// ==========================================================================
-// 8. CÔNG CỤ PHÂN CÔNG NHANH HÀNG LOẠT (QUICK BATCH ASSIGN)
+// 9. CÔNG CỤ PHÂN CÔNG NHANH & TỰ ĐỘNG CHIA LỊCH
 // ==========================================================================
 
 function setupFlyerQuickAssign() {
-  // Cập nhật danh sách chọn nhóm trong form phân ca nhanh
   updateFlyerGroupDropdowns();
 
-  // Nút chọn ngày nhanh
   const dayChips = document.querySelectorAll('.flyer-day-chip');
   dayChips.forEach(chip => {
     chip.addEventListener('click', () => {
@@ -959,23 +1321,17 @@ function setupFlyerQuickAssign() {
   }
   if (btnSelectWeekdays) {
     btnSelectWeekdays.addEventListener('click', () => {
-      dayChips.forEach((c, idx) => {
-        c.classList.toggle('selected', idx < 5);
-      });
+      dayChips.forEach((c, idx) => c.classList.toggle('selected', idx < 5));
     });
   }
   if (btnSelectWeekend) {
     btnSelectWeekend.addEventListener('click', () => {
-      dayChips.forEach((c, idx) => {
-        c.classList.toggle('selected', idx >= 5);
-      });
+      dayChips.forEach((c, idx) => c.classList.toggle('selected', idx >= 5));
     });
   }
 
-  // Render danh sách chọn nhân viên đa năng trong Form
   renderQuickAssignStaffCheckboxes();
 
-  // Nút Áp Dụng Lịch Nhanh
   const btnApply = document.getElementById('btnApplyQuickFlyerAssign');
   if (btnApply) {
     btnApply.addEventListener('click', handleApplyQuickAssign);
@@ -1022,7 +1378,8 @@ function handleApplyQuickAssign() {
   const groupId = groupSelect ? groupSelect.value : 'g1';
   const shiftVal = shiftSelect ? shiftSelect.value : 'all';
 
-  // Lấy các ngày đã chọn
+  const groupInfo = FlyerState.groupList.find(g => g.id === groupId) || { name: 'Nhóm 1', location: 'Tuyến Chợ' };
+
   const selectedDays = [];
   document.querySelectorAll('.flyer-day-chip.selected').forEach(c => {
     selectedDays.push(parseInt(c.dataset.day, 10));
@@ -1033,7 +1390,6 @@ function handleApplyQuickAssign() {
     return;
   }
 
-  // Lấy danh sách nhân viên đã chọn
   const selectedStaffIds = [];
   document.querySelectorAll('input[name="quickStaff"]:checked').forEach(cb => {
     selectedStaffIds.push(cb.value);
@@ -1044,43 +1400,172 @@ function handleApplyQuickAssign() {
     return;
   }
 
-  // Các buổi áp dụng
   const targetShifts = shiftVal === 'all'
-    ? FLYER_SHIFTS.map(s => s.id)
-    : [shiftVal];
+    ? FLYER_SHIFTS
+    : FLYER_SHIFTS.filter(s => s.id === shiftVal);
 
   const weekKey = getFlyerWeekKey();
-  if (!FlyerState.scheduleData[weekKey]) FlyerState.scheduleData[weekKey] = {};
-  const sched = FlyerState.scheduleData[weekKey];
+  let addedCount = 0;
 
-  let appliedCount = 0;
   selectedDays.forEach(dayIdx => {
-    if (!sched[dayIdx]) sched[dayIdx] = {};
-    targetShifts.forEach(shiftId => {
-      if (!sched[dayIdx][shiftId]) sched[dayIdx][shiftId] = {};
-      if (!sched[dayIdx][shiftId][groupId]) sched[dayIdx][shiftId][groupId] = [];
-
-      const slot = sched[dayIdx][shiftId][groupId];
+    const dayInfo = FLYER_DAYS[dayIdx];
+    targetShifts.forEach(shift => {
       selectedStaffIds.forEach(staffId => {
-        if (!slot.includes(staffId)) {
-          slot.push(staffId);
-          appliedCount++;
+        const staff = FlyerState.staffList.find(s => s.id === staffId);
+        if (!staff) return;
+
+        // Tránh trùng ca cùng người cùng buổi cùng ngày
+        const exists = FlyerState.assignmentsList.some(as =>
+          as.weekKey === weekKey && as.dayIdx === dayIdx && as.shiftId === shift.id && as.staffId === staff.id
+        );
+
+        if (!exists) {
+          FlyerState.assignmentsList.push({
+            id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            staffId: staff.id,
+            staffName: staff.name,
+            role: staff.role,
+            phone: staff.phone || '',
+            dayIdx,
+            dayName: dayInfo.name,
+            dayShort: dayInfo.short,
+            shiftId: shift.id,
+            shiftName: shift.name,
+            shiftTime: shift.time,
+            groupId: groupInfo.id,
+            groupName: groupInfo.name,
+            location: `${groupInfo.name} - ${groupInfo.location}`,
+            note: '500 tờ',
+            weekKey
+          });
+          addedCount++;
         }
       });
     });
   });
 
-  saveFlyerSchedule();
+  saveFlyerAssignments(false);
   renderFlyerStats();
   renderFlyerTable();
 
   if (typeof showToast === 'function') {
-    showToast(`✅ Đã phân công thành công ${appliedCount} lượt ca phát tờ rơi!`, 'success');
+    showToast(`✅ Đã phân công ${addedCount} ca phát tờ rơi & lưu tức thì Firebase!`, 'success');
+  }
+}
+
+function openFlyerAutoScheduleModal() {
+  const modal = document.getElementById('modalFlyerAutoSchedule');
+  if (modal) modal.classList.remove('hidden');
+
+  const btnConfirm = document.getElementById('btnConfirmAutoFlyerSchedule');
+  const btnClose = document.getElementById('btnCloseAutoFlyerSchedule');
+
+  if (btnClose) {
+    btnClose.onclick = () => modal.classList.add('hidden');
+  }
+
+  if (btnConfirm) {
+    btnConfirm.onclick = () => {
+      runAutoBalanceFlyerSchedule();
+      modal.classList.add('hidden');
+    };
+  }
+}
+
+function runAutoBalanceFlyerSchedule() {
+  const peoplePerShiftSelect = document.getElementById('autoFlyerPeoplePerShift');
+  const targetGroupSelect = document.getElementById('autoFlyerTargetGroup');
+  const targetShiftSelect = document.getElementById('autoFlyerTargetShift');
+
+  const countPerSlot = peoplePerShiftSelect ? parseInt(peoplePerShiftSelect.value, 10) : 2;
+  const targetGroup = targetGroupSelect ? targetGroupSelect.value : 'all';
+  const targetShift = targetShiftSelect ? targetShiftSelect.value : 'all';
+
+  const pool = [...FlyerState.staffList];
+  if (pool.length === 0) {
+    if (typeof showToast === 'function') showToast('Chưa có nhân viên / PG nào để chia lịch!', 'warning');
+    return;
+  }
+
+  const shiftsToSchedule = targetShift === 'all'
+    ? FLYER_SHIFTS
+    : FLYER_SHIFTS.filter(s => s.id === targetShift);
+
+  const groupsToSchedule = targetGroup === 'all'
+    ? FlyerState.groupList
+    : FlyerState.groupList.filter(g => g.id === targetGroup);
+
+  const weekKey = getFlyerWeekKey();
+
+  // Xóa các ca cũ của tuần này nếu chia lại
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.weekKey !== weekKey && as.weekKey);
+
+  let staffCursor = 0;
+  let totalAssigned = 0;
+
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const dayInfo = FLYER_DAYS[dayIdx];
+    shiftsToSchedule.forEach(shift => {
+      groupsToSchedule.forEach(group => {
+        for (let i = 0; i < countPerSlot; i++) {
+          const staff = pool[staffCursor % pool.length];
+          staffCursor++;
+
+          FlyerState.assignmentsList.push({
+            id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            staffId: staff.id,
+            staffName: staff.name,
+            role: staff.role,
+            phone: staff.phone || '',
+            dayIdx,
+            dayName: dayInfo.name,
+            dayShort: dayInfo.short,
+            shiftId: shift.id,
+            shiftName: shift.name,
+            shiftTime: shift.time,
+            groupId: group.id,
+            groupName: group.name,
+            location: `${group.name} - ${group.location}`,
+            note: '500 tờ',
+            weekKey
+          });
+          totalAssigned++;
+        }
+      });
+    });
+  }
+
+  saveFlyerAssignments(false);
+  renderFlyerStats();
+  renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast(`⚡ Đã chia đều ${totalAssigned} ca & lưu tức thì lên Firebase!`, 'success');
+  }
+}
+
+function confirmClearFlyerWeek() {
+  const weekKey = getFlyerWeekKey();
+  if (typeof confirm === 'function' && !confirm(`Bạn có chắc muốn xóa toàn bộ lịch tờ rơi của "${FlyerState.currentMonth} - ${FlyerState.currentWeek}"?`)) {
+    return;
+  }
+
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.weekKey !== weekKey && as.weekKey);
+  FlyerState.scheduleData[weekKey] = {};
+
+  saveFlyerAssignments(false);
+  saveFlyerSchedule(false);
+
+  renderFlyerStats();
+  renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast('Đã xóa toàn bộ lịch tuần và cập nhật Firebase.', 'info');
   }
 }
 
 // ==========================================================================
-// 9. QUẢN LÝ NHÂN VIÊN & PG (THÊM / XOÁ / SỬA)
+// 10. QUẢN LÝ NHÂN VIÊN & PG (THÊM / XOÁ / SỬA)
 // ==========================================================================
 
 function setupFlyerStaffModal() {
@@ -1091,31 +1576,16 @@ function setupFlyerStaffModal() {
   const searchInput = document.getElementById('flyerStaffSearch');
   const filterRole = document.getElementById('flyerStaffRoleFilter');
 
-  if (btnClose) {
-    btnClose.addEventListener('click', closeFlyerStaffModal);
-  }
-
-  if (btnSaveStaff) {
-    btnSaveStaff.addEventListener('click', handleSaveStaffForm);
-  }
-
-  if (btnSyncFromMain) {
-    btnSyncFromMain.addEventListener('click', handleSyncStaffFromMain);
-  }
-
-  if (searchInput) {
-    searchInput.addEventListener('input', renderFlyerStaffTableModal);
-  }
-
-  if (filterRole) {
-    filterRole.addEventListener('change', renderFlyerStaffTableModal);
-  }
+  if (btnClose) btnClose.addEventListener('click', closeFlyerStaffModal);
+  if (btnSaveStaff) btnSaveStaff.addEventListener('click', handleSaveStaffForm);
+  if (btnSyncFromMain) btnSyncFromMain.addEventListener('click', handleSyncStaffFromMain);
+  if (searchInput) searchInput.addEventListener('input', renderFlyerStaffTableModal);
+  if (filterRole) filterRole.addEventListener('change', renderFlyerStaffTableModal);
 }
 
 function openFlyerStaffModal() {
   const modal = document.getElementById('modalFlyerStaffManager');
   if (!modal) return;
-
   resetStaffForm();
   renderFlyerStaffTableModal();
   modal.classList.remove('hidden');
@@ -1125,7 +1595,6 @@ function closeFlyerStaffModal() {
   const modal = document.getElementById('modalFlyerStaffManager');
   if (modal) modal.classList.add('hidden');
   resetStaffForm();
-  // Cập nhật lại dropdown và bảng ngoài màn hình chính
   renderQuickAssignStaffCheckboxes();
   renderFlyerStats();
   renderFlyerTable();
@@ -1229,7 +1698,6 @@ function handleSaveStaffForm() {
     return;
   }
 
-  // Kiểm tra trùng tên nếu thêm mới hoặc sửa
   const existing = FlyerState.staffList.find(s => s.name === name && s.id !== FlyerState.editingStaffId);
   if (existing) {
     if (typeof showToast === 'function') showToast(`Tên "${name}" đã tồn tại trong danh sách!`, 'warning');
@@ -1237,7 +1705,6 @@ function handleSaveStaffForm() {
   }
 
   if (FlyerState.editingStaffId) {
-    // Cập nhật nhân sự
     const staff = FlyerState.staffList.find(s => s.id === FlyerState.editingStaffId);
     if (staff) {
       staff.name = name;
@@ -1245,10 +1712,18 @@ function handleSaveStaffForm() {
       staff.group = groupVal;
       staff.phone = phone;
       staff.note = note;
+
+      // Cập nhật tên trong các ca trực
+      FlyerState.assignmentsList.forEach(as => {
+        if (as.staffId === staff.id) {
+          as.staffName = name;
+          as.role = role;
+          as.phone = phone;
+        }
+      });
     }
-    if (typeof showToast === 'function') showToast(`Đã cập nhật thông tin "${name}"!`, 'success');
+    if (typeof showToast === 'function') showToast(`Đã cập nhật thông tin "${name}" & lưu Firebase!`, 'success');
   } else {
-    // Thêm mới
     const newStaff = {
       id: (role === 'PG' ? 'pg_' : 'nv_') + Date.now(),
       name,
@@ -1258,10 +1733,11 @@ function handleSaveStaffForm() {
       note
     };
     FlyerState.staffList.push(newStaff);
-    if (typeof showToast === 'function') showToast(`Đã thêm thành công "${name}" (${role})!`, 'success');
+    if (typeof showToast === 'function') showToast(`Đã thêm thành công "${name}" & lưu Firebase!`, 'success');
   }
 
-  saveFlyerStaff();
+  saveFlyerStaff(false);
+  saveFlyerAssignments(false);
   resetStaffForm();
   renderFlyerStaffTableModal();
 }
@@ -1295,7 +1771,6 @@ function editFlyerStaff(staffId) {
 
   if (formTitle) formTitle.textContent = `✏️ Chỉnh Sửa Nhân Sự: ${staff.name}`;
   if (btnSave) btnSave.innerHTML = '<i class="fa-solid fa-check"></i> Lưu Thay Đổi';
-
   if (nameInput) nameInput.focus();
 }
 
@@ -1306,36 +1781,16 @@ function deleteFlyerStaff(staffId) {
   const confirmMsg = `Bạn có chắc muốn xóa "${staff.name}" (${staff.role}) khỏi hệ thống tờ rơi?\nThao tác này cũng sẽ xóa người này khỏi các ca trực đã gán.`;
   if (typeof confirm === 'function' && !confirm(confirmMsg)) return;
 
-  // Xóa khỏi danh sách nhân sự
   FlyerState.staffList = FlyerState.staffList.filter(s => s.id !== staffId);
-  saveFlyerStaff();
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.staffId !== staffId);
 
-  // Xóa người này khỏi mọi tuần trong scheduleData
-  Object.keys(FlyerState.scheduleData).forEach(wKey => {
-    const weekSched = FlyerState.scheduleData[wKey];
-    for (let d = 0; d < 7; d++) {
-      if (weekSched[d]) {
-        FLYER_SHIFTS.forEach(shift => {
-          if (weekSched[d][shift.id]) {
-            Object.keys(weekSched[d][shift.id]).forEach(gId => {
-              const list = weekSched[d][shift.id][gId];
-              const idx = list.indexOf(staffId);
-              if (idx !== -1) list.splice(idx, 1);
-            });
-          }
-        });
-      }
-    }
-  });
-
-  saveFlyerSchedule();
+  saveFlyerStaff(false);
+  saveFlyerAssignments(false);
   renderFlyerStaffTableModal();
-  if (typeof showToast === 'function') showToast(`Đã xóa "${staff.name}" thành công!`, 'info');
+
+  if (typeof showToast === 'function') showToast(`Đã xóa "${staff.name}" & cập nhật Firebase!`, 'info');
 }
 
-/**
- * Đồng bộ danh sách nhân viên từ phân ca hành chính chính
- */
 function handleSyncStaffFromMain() {
   if (typeof ALL_STAFF === 'undefined' || !Array.isArray(ALL_STAFF) || ALL_STAFF.length === 0) {
     if (typeof showToast === 'function') showToast('Không tìm thấy danh sách nhân viên từ phân ca hành chính!', 'warning');
@@ -1359,200 +1814,16 @@ function handleSyncStaffFromMain() {
     }
   });
 
-  saveFlyerStaff();
+  saveFlyerStaff(false);
   renderFlyerStaffTableModal();
 
   if (typeof showToast === 'function') {
-    showToast(`Đã đồng bộ thêm ${addedCount} nhân viên từ hệ thống Phân Ca Hành Chính!`, 'success');
+    showToast(`Đã đồng bộ thêm ${addedCount} nhân viên & lưu Firebase!`, 'success');
   }
 }
 
 // ==========================================================================
-// 10. THUẬT TOÁN TỰ ĐỘNG CHIA LỊCH CÂN BẰNG (AUTO-SCHEDULE)
-// ==========================================================================
-
-function openFlyerAutoScheduleModal() {
-  const modal = document.getElementById('modalFlyerAutoSchedule');
-  if (modal) modal.classList.remove('hidden');
-
-  const btnConfirm = document.getElementById('btnConfirmAutoFlyerSchedule');
-  const btnClose = document.getElementById('btnCloseAutoFlyerSchedule');
-
-  if (btnClose) {
-    btnClose.onclick = () => modal.classList.add('hidden');
-  }
-
-  if (btnConfirm) {
-    btnConfirm.onclick = () => {
-      runAutoBalanceFlyerSchedule();
-      modal.classList.add('hidden');
-    };
-  }
-}
-
-function runAutoBalanceFlyerSchedule() {
-  const peoplePerShiftSelect = document.getElementById('autoFlyerPeoplePerShift');
-  const targetGroupSelect = document.getElementById('autoFlyerTargetGroup');
-  const targetShiftSelect = document.getElementById('autoFlyerTargetShift');
-
-  const countPerSlot = peoplePerShiftSelect ? parseInt(peoplePerShiftSelect.value, 10) : 2;
-  const targetGroup = targetGroupSelect ? targetGroupSelect.value : 'all';
-  const targetShift = targetShiftSelect ? targetShiftSelect.value : 'all';
-
-  const weekKey = getFlyerWeekKey();
-  if (!FlyerState.scheduleData[weekKey]) FlyerState.scheduleData[weekKey] = {};
-  const sched = FlyerState.scheduleData[weekKey];
-
-  const pool = [...FlyerState.staffList];
-  if (pool.length === 0) {
-    if (typeof showToast === 'function') showToast('Chưa có nhân viên / PG nào để chia lịch!', 'warning');
-    return;
-  }
-
-  const shiftsToSchedule = targetShift === 'all'
-    ? FLYER_SHIFTS.map(s => s.id)
-    : [targetShift];
-
-  const groupsToSchedule = targetGroup === 'all'
-    ? FlyerState.groupList.map(g => g.id)
-    : [targetGroup];
-
-  // Xoay tua đều danh sách nhân sự
-  let staffCursor = 0;
-  let totalAssigned = 0;
-
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    if (!sched[dayIdx]) sched[dayIdx] = {};
-    shiftsToSchedule.forEach(shiftId => {
-      if (!sched[dayIdx][shiftId]) sched[dayIdx][shiftId] = {};
-      groupsToSchedule.forEach(groupId => {
-        sched[dayIdx][shiftId][groupId] = [];
-
-        // Gán đủ số người cho slot này
-        for (let i = 0; i < countPerSlot; i++) {
-          const pickedStaff = pool[staffCursor % pool.length];
-          staffCursor++;
-          sched[dayIdx][shiftId][groupId].push(pickedStaff.id);
-          totalAssigned++;
-        }
-      });
-    });
-  }
-
-  saveFlyerSchedule();
-  renderFlyerStats();
-  renderFlyerTable();
-
-  if (typeof showToast === 'function') {
-    showToast(`⚡ Đã tự động chia đều ${totalAssigned} ca phát tờ rơi cho cả tuần!`, 'success');
-  }
-}
-
-// ==========================================================================
-// 11. XÓA / ĐẶT LẠI LỊCH TUẦN
-// ==========================================================================
-
-function confirmClearFlyerWeek() {
-  const weekKey = getFlyerWeekKey();
-  if (typeof confirm === 'function' && !confirm(`Bạn có chắc muốn xóa toàn bộ lịch tờ rơi của "${FlyerState.currentMonth} - ${FlyerState.currentWeek}"?`)) {
-    return;
-  }
-
-  FlyerState.scheduleData[weekKey] = {};
-  saveFlyerSchedule();
-  renderFlyerStats();
-  renderFlyerTable();
-
-  if (typeof showToast === 'function') {
-    showToast('Đã làm mới và xóa toàn bộ lịch của tuần này.', 'info');
-  }
-}
-
-// ==========================================================================
-// 12. SAO CHÉP LỊCH ĐỊNH DẠNG ZALO (ZALO TEXT EXPORT)
-// ==========================================================================
-
-function openFlyerZaloModal() {
-  const modal = document.getElementById('modalFlyerZalo');
-  const textarea = document.getElementById('flyerZaloContent');
-  const btnCopy = document.getElementById('btnCopyZaloText');
-  const btnClose = document.getElementById('btnCloseFlyerZalo');
-
-  if (!modal || !textarea) return;
-
-  const text = generateZaloFlyerScheduleText();
-  textarea.value = text;
-  modal.classList.remove('hidden');
-
-  if (btnClose) {
-    btnClose.onclick = () => modal.classList.add('hidden');
-  }
-
-  if (btnCopy) {
-    btnCopy.onclick = () => {
-      navigator.clipboard.writeText(text).then(() => {
-        if (typeof showToast === 'function') {
-          showToast('📋 Đã sao chép lịch! Bạn có thể dán ngay vào nhóm Zalo.', 'success');
-        }
-      }).catch(err => {
-        textarea.select();
-        document.execCommand('copy');
-        if (typeof showToast === 'function') {
-          showToast('📋 Đã sao chép lịch vào bộ nhớ tạm!', 'success');
-        }
-      });
-    };
-  }
-}
-
-function generateZaloFlyerScheduleText() {
-  const weekKey = getFlyerWeekKey();
-  const sched = FlyerState.scheduleData[weekKey] || {};
-
-  let text = `📢 KẾ HOẠCH PHÁT TỜ RƠI • ${FlyerState.currentMonth} - ${FlyerState.currentWeek.toUpperCase()}\n`;
-  text += `════════════════════════════════════\n\n`;
-
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    const day = FLYER_DAYS[dayIdx];
-    text += `📅 ${day.name.toUpperCase()} (${day.short}):\n`;
-
-    let hasShift = false;
-    FLYER_SHIFTS.forEach(shift => {
-      const shiftData = (sched[dayIdx] && sched[dayIdx][shift.id]) || {};
-      let shiftText = '';
-
-      FlyerState.groupList.forEach(group => {
-        const staffIds = shiftData[group.id] || [];
-        if (staffIds.length > 0) {
-          const names = staffIds.map(id => {
-            const s = FlyerState.staffList.find(st => st.id === id);
-            return s ? `${s.name} (${s.role})` : '';
-          }).filter(Boolean);
-
-          shiftText += `   • ${group.name} [${group.location}]: ${names.join(', ')}\n`;
-        }
-      });
-
-      if (shiftText) {
-        hasShift = true;
-        text += `  ⏰ ${shift.name} (${shift.time}):\n${shiftText}`;
-      }
-    });
-
-    if (!hasShift) {
-      text += `  ⚪ Không có ca phát tờ rơi\n`;
-    }
-    text += `\n`;
-  }
-
-  text += `════════════════════════════════════\n`;
-  text += `👉 Lưu ý: Mọi người có mặt trước 10 phút, kiểm tra số lượng tờ rơi và trang phục chỉnh chu. Chúc cả nhà ngày làm việc hiệu quả! ❤️`;
-
-  return text;
-}
-
-// ==========================================================================
-// 13. XUẤT ẢNH PNG LỊCH TỜ RƠI (HTML2CANVAS)
+// 11. XUẤT ẢNH PNG & SAO CHÉP ZALO
 // ==========================================================================
 
 async function exportFlyerScheduleImage() {
@@ -1561,11 +1832,11 @@ async function exportFlyerScheduleImage() {
     return;
   }
 
-  let exportElement = document.getElementById('flyerListContainer');
+  let exportElement = document.getElementById('flyerScheduleTableContainer');
   if (FlyerState.currentView === 'matrix') {
     exportElement = document.getElementById('flyerTableContainer') || exportElement;
   }
-  if (!exportElement) exportElement = document.getElementById('flyerTableContainer');
+  if (!exportElement) exportElement = document.getElementById('flyerScheduleTableContainer');
   if (!exportElement) return;
 
   if (typeof showToast === 'function') {
@@ -1583,12 +1854,12 @@ async function exportFlyerScheduleImage() {
     const link = document.createElement('a');
     const safeMonth = FlyerState.currentMonth.replace(/\s+/g, '_');
     const safeWeek = FlyerState.currentWeek.replace(/\s+/g, '_');
-    link.download = `Lich_Phat_To_Roi_${safeMonth}_${safeWeek}.png`;
+    link.download = `Bang_Phan_Lich_To_Roi_${safeMonth}_${safeWeek}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
 
     if (typeof showToast === 'function') {
-      showToast('✅ Đã xuất ảnh lịch tờ rơi thành công và tải về máy!', 'success');
+      showToast('✅ Đã xuất ảnh bảng lịch thành công và tải về máy!', 'success');
     }
   } catch (err) {
     console.error('Lỗi xuất ảnh:', err);
@@ -1598,23 +1869,104 @@ async function exportFlyerScheduleImage() {
   }
 }
 
+function openFlyerZaloModal() {
+  const modal = document.getElementById('modalFlyerZalo');
+  const textarea = document.getElementById('flyerZaloContent');
+  const btnCopy = document.getElementById('btnCopyZaloText');
+  const btnClose = document.getElementById('btnCloseFlyerZalo');
+
+  if (!modal || !textarea) return;
+
+  const text = generateZaloFlyerScheduleText();
+  textarea.value = text;
+  modal.classList.remove('hidden');
+
+  if (btnClose) btnClose.onclick = () => modal.classList.add('hidden');
+
+  if (btnCopy) {
+    btnCopy.onclick = () => {
+      navigator.clipboard.writeText(text).then(() => {
+        if (typeof showToast === 'function') {
+          showToast('📋 Đã sao chép lịch! Bạn có thể dán ngay vào nhóm Zalo.', 'success');
+        }
+      }).catch(() => {
+        textarea.select();
+        document.execCommand('copy');
+        if (typeof showToast === 'function') {
+          showToast('📋 Đã sao chép lịch vào bộ nhớ tạm!', 'success');
+        }
+      });
+    };
+  }
+}
+
+function generateZaloFlyerScheduleText() {
+  const weekKey = getFlyerWeekKey();
+  const weekAssignments = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
+
+  let text = `📢 KẾ HOẠCH PHÁT TỜ RƠI • ${FlyerState.currentMonth} - ${FlyerState.currentWeek.toUpperCase()}\n`;
+  text += `════════════════════════════════════\n\n`;
+
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const day = FLYER_DAYS[dayIdx];
+    const dayItems = weekAssignments.filter(as => as.dayIdx === dayIdx);
+
+    text += `📅 ${day.name.toUpperCase()} (${day.short}):\n`;
+
+    if (dayItems.length === 0) {
+      text += `  ⚪ Không có ca phát tờ rơi\n\n`;
+      continue;
+    }
+
+    FLYER_SHIFTS.forEach(shift => {
+      const shiftItems = dayItems.filter(as => as.shiftId === shift.id);
+      if (shiftItems.length > 0) {
+        text += `  ⏰ ${shift.name} (${shift.time}):\n`;
+        shiftItems.forEach(item => {
+          text += `    • ${item.staffName} (${item.role}): ${item.location} [${item.note || '500 tờ'}]\n`;
+        });
+      }
+    });
+
+    text += `\n`;
+  }
+
+  text += `════════════════════════════════════\n`;
+  text += `👉 Lưu ý: Mọi người có mặt trước 10 phút, kiểm tra số lượng tờ rơi và trang phục chỉnh chu. Chúc cả nhà ngày làm việc hiệu quả! ❤️`;
+
+  return text;
+}
+
+function setupFlyerCellPicker() {
+  const btnClose = document.getElementById('btnCloseCellPicker');
+  const btnDone = document.getElementById('btnDoneCellPicker');
+  if (btnClose) btnClose.addEventListener('click', () => {
+    const modal = document.getElementById('modalFlyerCellPicker');
+    if (modal) modal.classList.add('hidden');
+  });
+  if (btnDone) btnDone.addEventListener('click', () => {
+    const modal = document.getElementById('modalFlyerCellPicker');
+    if (modal) modal.classList.add('hidden');
+  });
+}
+
 // ==========================================================================
-// 14. KHỞI CHẠY TỰ ĐỘNG KHI TẢI TRANG
+// 12. KHỞI CHẠY TỰ ĐỘNG
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Chạy sau khi app.js đã load dữ liệu ban đầu
   setTimeout(() => {
     initFlyerModule();
   }, 100);
 });
 
 // Cho phép gọi các hàm toàn cục từ HTML onclick
-window.openFlyerCellPicker = openFlyerCellPicker;
-window.removeStaffFromFlyerSlot = removeStaffFromFlyerSlot;
-window.editFlyerStaff = editFlyerStaff;
-window.deleteFlyerStaff = deleteFlyerStaff;
-window.toggleStaffInFlyerSlot = toggleStaffInFlyerSlot;
+window.openFlyerAssignmentModal = openFlyerAssignmentModal;
+window.closeFlyerAssignmentModal = closeFlyerAssignmentModal;
+window.saveFlyerAssignmentFromModal = saveFlyerAssignmentFromModal;
+window.deleteFlyerAssignment = deleteFlyerAssignment;
 window.openFlyerStaffModal = openFlyerStaffModal;
 window.closeFlyerStaffModal = closeFlyerStaffModal;
 window.openFlyerAutoScheduleModal = openFlyerAutoScheduleModal;
+window.exportFlyerScheduleImage = exportFlyerScheduleImage;
+window.saveFlyerToFirebase = saveFlyerToFirebase;
 window.FlyerState = FlyerState;

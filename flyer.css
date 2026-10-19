@@ -1151,6 +1151,212 @@
   padding: 2px 0;
 }
 
+/* ==========================================================================
+   10. BẢNG PHÂN LỊCH TỜ RƠI DẠNG DANH SÁCH (CỘT: STT, NHÂN VIÊN, THỜI GIAN & NGÀY, ĐỊA ĐIỂM, GHI CHÚ)
+   ========================================================================== */
+.flyer-schedule-table-wrap {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.flyer-schedule-toolbar {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-bottom: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.flyer-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  transition: all 0.2s ease;
+}
+
+.flyer-sync-pill.saving {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.flyer-sync-pill.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.flyer-sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+
+.flyer-sync-pill.saving .flyer-sync-dot {
+  background: #f59e0b;
+  animation: pulseDot 1s infinite;
+}
+
+.flyer-sync-pill.error .flyer-sync-dot {
+  background: #ef4444;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.3); }
+}
+
+.flyer-schedule-list-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.flyer-schedule-list-table th {
+  background: #f8fafc;
+  padding: 14px 16px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-align: left;
+  border-bottom: 2px solid #bae6fd;
+  white-space: nowrap;
+}
+
+.flyer-schedule-list-table th:first-child {
+  text-align: center;
+  width: 60px;
+}
+
+.flyer-schedule-list-table th:last-child {
+  text-align: center;
+  width: 110px;
+}
+
+.flyer-schedule-list-table td {
+  padding: 13px 16px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #1e293b;
+}
+
+.flyer-schedule-list-table tr:hover td {
+  background: #f8fafc;
+}
+
+.flyer-stt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.flyer-staff-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flyer-staff-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flyer-staff-name-title {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyer-staff-subinfo {
+  font-size: 0.74rem;
+  color: #64748b;
+  font-family: inherit;
+}
+
+.flyer-datetime-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flyer-datetime-main {
+  font-weight: 800;
+  color: #0369a1;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyer-datetime-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.flyer-location-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flyer-location-group-tag {
+  font-weight: 800;
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.flyer-location-address {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.flyer-note-cell {
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.flyer-note-tag {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+}
+
 /* Print CSS */
 @media print {
   .app-header,

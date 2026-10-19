@@ -695,10 +695,90 @@
         </div>
       </section>
 
-      <!-- View 0: Dạng Danh Sách Lịch Tờ Rơi (List View / Mặc Định Dễ Nhìn) -->
+      <!-- View 0: Bảng Phân Lịch Tờ Rơi Dạng Danh Sách (Cột: STT, Nhân viên, Thời gian & ngày, Địa điểm, Ghi chú) -->
       <div id="flyerListViewWrap">
-        <div class="flyer-list-container" id="flyerListContainer">
-          <!-- Danh sách ngày & ca trực được tạo động bởi flyer.js -->
+        <section class="flyer-schedule-table-wrap" id="flyerScheduleTableContainer">
+          <div class="flyer-schedule-toolbar">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-list-ol text-blue" style="font-size: 1.35rem;"></i>
+                <div>
+                  <h3 style="font-size: 1.15rem; font-weight: 800; color: #0369a1; margin: 0;" id="flyerScheduleTableTitle">
+                    BẢNG PHÂN LỊCH TỜ RƠI
+                  </h3>
+                  <span style="font-size: 0.78rem; color: #64748b;" id="flyerScheduleSubtitle">
+                    Danh sách ca phát tờ rơi chi tiết theo nhân sự, thời gian, địa điểm
+                  </span>
+                </div>
+              </div>
+              <span class="flyer-sync-pill" id="flyerSyncStatusBadge">
+                <span class="flyer-sync-dot"></span>
+                <span id="flyerSyncStatusText">Firebase: Đã lưu tức thì</span>
+              </span>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddAssignmentModal" onclick="openFlyerAssignmentModal()">
+                <i class="fa-solid fa-plus"></i>
+                <span>Thêm Ca Lập Lịch</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnQuickExportSchedule" onclick="exportFlyerScheduleImage()">
+                <i class="fa-solid fa-image text-cyan"></i>
+                <span>Xuất Ảnh Bảng</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bộ lọc nhanh trên bảng -->
+          <div style="padding: 12px 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px; position: relative;">
+              <input type="text" id="flyerTableSearchInput" class="custom-select" placeholder="🔍 Tìm theo tên nhân viên, địa điểm, ghi chú..." style="padding-left: 12px; font-size: 0.85rem;">
+            </div>
+            <select id="flyerTableDayFilter" class="custom-select" style="width: 140px; font-size: 0.85rem;">
+              <option value="all">Tất cả ngày</option>
+              <option value="0">Thứ Hai</option>
+              <option value="1">Thứ Ba</option>
+              <option value="2">Thứ Tư</option>
+              <option value="3">Thứ Năm</option>
+              <option value="4">Thứ Sáu</option>
+              <option value="5">Thứ Bảy</option>
+              <option value="6">Chủ Nhật</option>
+            </select>
+            <select id="flyerTableShiftFilter" class="custom-select" style="width: 130px; font-size: 0.85rem;">
+              <option value="all">Tất cả buổi</option>
+              <option value="sang">🌅 Sáng</option>
+              <option value="chieu">☀️ Chiều</option>
+              <option value="toi">🌙 Tối</option>
+            </select>
+            <select id="flyerTableRoleFilter" class="custom-select" style="width: 125px; font-size: 0.85rem;">
+              <option value="all">Tất cả NV/PG</option>
+              <option value="NV">Chỉ NV</option>
+              <option value="PG">Chỉ PG</option>
+            </select>
+          </div>
+
+          <div style="overflow-x: auto; width: 100%;">
+            <table class="flyer-schedule-list-table" id="flyerScheduleListTable">
+              <thead>
+                <tr>
+                  <th style="text-align: center; width: 60px;">STT</th>
+                  <th style="min-width: 180px;">Nhân Viên</th>
+                  <th style="min-width: 220px;">Thời Gian & Ngày</th>
+                  <th style="min-width: 240px;">Địa Điểm</th>
+                  <th style="min-width: 200px;">Ghi Chú</th>
+                  <th style="text-align: center; width: 110px;">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="flyerScheduleTableBody">
+                <!-- Injected dynamically by flyer.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Thẻ Ngày dạng danh sách mở rộng (Day Cards Agenda) -->
+        <div class="flyer-list-container" id="flyerListContainer" style="display: none;">
+          <!-- Day cards rendered dynamically -->
         </div>
       </div>
 
@@ -1587,10 +1667,96 @@
     </div>
   </div>
 
+  <!-- Modal 5: Thêm / Chỉnh Sửa Ca Phân Lịch Tờ Rơi -->
+  <div class="modal-backdrop hidden" id="modalFlyerAssignmentForm">
+    <div class="modal-card" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-calendar-plus text-blue" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3 id="assignmentModalTitle">Thêm Ca Phân Lịch Tờ Rơi</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Lưu tức thì vào Firebase và cập nhật bảng lịch</span>
+          </div>
+        </div>
+        <button class="modal-close" id="btnCloseAssignmentModal" onclick="closeFlyerAssignmentModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <input type="hidden" id="assignmentEditId" value="">
+
+        <!-- Chọn Nhân Viên / PG -->
+        <div class="form-group">
+          <label class="control-label" for="assignModalStaffSelect">
+            <i class="fa-solid fa-user-check text-blue"></i> Nhân Viên / PG (*):
+          </label>
+          <select id="assignModalStaffSelect" class="custom-select">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Chọn Ngày -->
+        <div class="form-group">
+          <label class="control-label" for="assignModalDaySelect">
+            <i class="fa-solid fa-calendar-day text-emerald"></i> Ngày trong tuần (*):
+          </label>
+          <select id="assignModalDaySelect" class="custom-select">
+            <option value="0">Thứ Hai (T2)</option>
+            <option value="1">Thứ Ba (T3)</option>
+            <option value="2">Thứ Tư (T4)</option>
+            <option value="3">Thứ Năm (T5)</option>
+            <option value="4">Thứ Sáu (T6)</option>
+            <option value="5">Thứ Bảy (T7)</option>
+            <option value="6">Chủ Nhật (CN)</option>
+          </select>
+        </div>
+
+        <!-- Chọn Buổi -->
+        <div class="form-group">
+          <label class="control-label" for="assignModalShiftSelect">
+            <i class="fa-solid fa-clock text-amber"></i> Buổi / Ca Trực (*):
+          </label>
+          <select id="assignModalShiftSelect" class="custom-select">
+            <option value="sang">🌅 Buổi Sáng (07:30 - 09:30)</option>
+            <option value="chieu">☀️ Buổi Chiều (16:30 - 18:30)</option>
+            <option value="toi">🌙 Buổi Tối (19:00 - 21:00)</option>
+          </select>
+        </div>
+
+        <!-- Địa Điểm -->
+        <div class="form-group">
+          <label class="control-label" for="assignModalLocationInput">
+            <i class="fa-solid fa-location-dot text-rose"></i> Địa Điểm / Tuyến Đường Phát (*):
+          </label>
+          <input type="text" id="assignModalLocationInput" class="custom-select" placeholder="VD: Nhóm 1 - Tuyến Chợ & Khu Dân Cư" list="flyerLocationSuggestions">
+          <datalist id="flyerLocationSuggestions">
+            <option value="Nhóm 1 - Tuyến Chợ & Khu Dân Cư"></option>
+            <option value="Nhóm 2 - Tuyến Trường Học & Công Viên"></option>
+            <option value="Nhóm 3 - Tuyến Ngã Tư & Trung Tâm"></option>
+          </datalist>
+        </div>
+
+        <!-- Ghi Chú -->
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="control-label" for="assignModalNoteInput">
+            <i class="fa-solid fa-note-sticky text-indigo"></i> Ghi Chú:
+          </label>
+          <input type="text" id="assignModalNoteInput" class="custom-select" placeholder="VD: 500 tờ, tập trung cổng chợ lúc 7h15...">
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between;">
+        <button class="btn btn-secondary" onclick="closeFlyerAssignmentModal()" type="button">Hủy</button>
+        <button class="btn btn-primary" id="btnSaveAssignmentModal" onclick="saveFlyerAssignmentFromModal()" type="button">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Đồng Bộ Firebase
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Application Script -->
   <script src="app.js?v=20261007_fb"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261019_list"></script>
+  <script src="flyer.js?v=20261019_fb"></script>
 </body>
 </html>
