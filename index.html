@@ -27,7 +27,7 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="flyer.css?v=20261019_toroi">
+  <link rel="stylesheet" href="flyer.css?v=20261019_list">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -596,8 +596,11 @@
 
           <!-- View Switcher -->
           <div class="flyer-view-switch">
-            <button type="button" class="flyer-view-btn active" id="btnFlyerViewMatrix">
-              <i class="fa-solid fa-table-cells"></i> Bảng Lịch Tuần
+            <button type="button" class="flyer-view-btn active" id="btnFlyerViewList">
+              <i class="fa-solid fa-list-check"></i> Dạng Danh Sách
+            </button>
+            <button type="button" class="flyer-view-btn" id="btnFlyerViewMatrix">
+              <i class="fa-solid fa-table-cells"></i> Bảng Lưới (Ma Trận)
             </button>
             <button type="button" class="flyer-view-btn" id="btnFlyerViewSummary">
               <i class="fa-solid fa-chart-pie"></i> Tổng Hợp Công
@@ -692,8 +695,15 @@
         </div>
       </section>
 
+      <!-- View 0: Dạng Danh Sách Lịch Tờ Rơi (List View / Mặc Định Dễ Nhìn) -->
+      <div id="flyerListViewWrap">
+        <div class="flyer-list-container" id="flyerListContainer">
+          <!-- Danh sách ngày & ca trực được tạo động bởi flyer.js -->
+        </div>
+      </div>
+
       <!-- View 1: Weekly Matrix Schedule Table -->
-      <div id="flyerMatrixViewWrap">
+      <div id="flyerMatrixViewWrap" style="display: none;">
         <section class="flyer-table-container" id="flyerTableContainer">
           <div class="flyer-table-header-banner">
             <div class="flyer-table-title">
@@ -1581,6 +1591,6 @@
   <script src="app.js?v=20261007_fb"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261019_toroi"></script>
+  <script src="flyer.js?v=20261019_list"></script>
 </body>
 </html>

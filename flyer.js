@@ -64,7 +64,7 @@ const DEFAULT_FLYER_STAFF = [
 const FlyerState = {
   currentWeek: 'Tuần 1',
   currentMonth: 'THÁNG 10',
-  currentView: 'matrix', // 'matrix' hoặc 'summary'
+  currentView: 'list', // 'list' (mặc định dễ nhìn), 'matrix' hoặc 'summary'
   filterGroup: 'all', // 'all', 'g1', 'g2', 'g3'...
   filterShift: 'all', // 'all', 'sang', 'chieu', 'toi'
   staffList: [],
@@ -368,31 +368,30 @@ function setupFlyerControls() {
     });
   });
 
-  // Chuyển chế độ xem (Bảng Ma Trận / Bảng Thống Kê Tổng Hợp)
+  // Chuyển chế độ xem (Dạng Danh Sách / Bảng Lưới / Tổng Hợp Công)
+  const btnViewList = document.getElementById('btnFlyerViewList');
   const btnViewMatrix = document.getElementById('btnFlyerViewMatrix');
   const btnViewSummary = document.getElementById('btnFlyerViewSummary');
+  const listWrap = document.getElementById('flyerListViewWrap');
   const matrixWrap = document.getElementById('flyerMatrixViewWrap');
   const summaryWrap = document.getElementById('flyerSummaryViewWrap');
 
-  if (btnViewMatrix && btnViewSummary) {
-    btnViewMatrix.addEventListener('click', () => {
-      btnViewMatrix.classList.add('active');
-      btnViewSummary.classList.remove('active');
-      FlyerState.currentView = 'matrix';
-      if (matrixWrap) matrixWrap.style.display = 'block';
-      if (summaryWrap) summaryWrap.style.display = 'none';
-      renderFlyerTable();
-    });
+  function setFlyerView(view) {
+    FlyerState.currentView = view;
+    if (btnViewList) btnViewList.classList.toggle('active', view === 'list');
+    if (btnViewMatrix) btnViewMatrix.classList.toggle('active', view === 'matrix');
+    if (btnViewSummary) btnViewSummary.classList.toggle('active', view === 'summary');
 
-    btnViewSummary.addEventListener('click', () => {
-      btnViewSummary.classList.add('active');
-      btnViewMatrix.classList.remove('active');
-      FlyerState.currentView = 'summary';
-      if (matrixWrap) matrixWrap.style.display = 'none';
-      if (summaryWrap) summaryWrap.style.display = 'block';
-      renderFlyerSummaryTable();
-    });
+    if (listWrap) listWrap.style.display = (view === 'list') ? 'block' : 'none';
+    if (matrixWrap) matrixWrap.style.display = (view === 'matrix') ? 'block' : 'none';
+    if (summaryWrap) summaryWrap.style.display = (view === 'summary') ? 'block' : 'none';
+
+    renderFlyerTable();
   }
+
+  if (btnViewList) btnViewList.addEventListener('click', () => setFlyerView('list'));
+  if (btnViewMatrix) btnViewMatrix.addEventListener('click', () => setFlyerView('matrix'));
+  if (btnViewSummary) btnViewSummary.addEventListener('click', () => setFlyerView('summary'));
 
   // Thu gọn / Mở rộng hộp công cụ phân ca nhanh
   const toggleBtn = document.getElementById('btnToggleFlyerHub');
@@ -484,7 +483,7 @@ function renderFlyerStats() {
 }
 
 // ==========================================================================
-// 5. HIỂN THỊ BẢNG LỊCH MA TRẬN (MATRIX VIEW)
+// 5. HIỂN THỊ DẠNG DANH SÁCH (LIST VIEW / MẶC ĐỊNH DỄ NHÌN) & BẢNG MA TRẬN
 // ==========================================================================
 
 function renderFlyerTable() {
@@ -492,7 +491,161 @@ function renderFlyerTable() {
     renderFlyerSummaryTable();
     return;
   }
+  if (FlyerState.currentView === 'matrix') {
+    renderFlyerMatrixTable();
+    return;
+  }
+  // Mặc định: Dạng Danh Sách (List View)
+  renderFlyerListView();
+}
 
+/**
+ * Hiển thị lịch phát tờ rơi dạng danh sách ngày - buổi - nhóm (RẤT DỄ NHÌN)
+ */
+function renderFlyerListView() {
+  const container = document.getElementById('flyerListContainer');
+  if (!container) return;
+
+  const weekKey = getFlyerWeekKey();
+  const sched = FlyerState.scheduleData[weekKey] || {};
+
+  const now = new Date();
+  const todayDayOfWeek = (now.getDay() + 6) % 7; // T2=0 ... CN=6
+
+  const shiftsToRender = FlyerState.filterShift === 'all'
+    ? FLYER_SHIFTS
+    : FLYER_SHIFTS.filter(s => s.id === FlyerState.filterShift);
+
+  const groupsToRender = FlyerState.filterGroup === 'all'
+    ? FlyerState.groupList
+    : FlyerState.groupList.filter(g => g.id === FlyerState.filterGroup);
+
+  let html = '';
+
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    const day = FLYER_DAYS[dayIdx];
+    const isToday = (dayIdx === todayDayOfWeek);
+
+    // Tính tổng số lượt ca trong ngày
+    let dayTotalShifts = 0;
+    shiftsToRender.forEach(shift => {
+      const shiftData = (sched[dayIdx] && sched[dayIdx][shift.id]) || {};
+      groupsToRender.forEach(group => {
+        const staffIds = shiftData[group.id] || [];
+        dayTotalShifts += staffIds.length;
+      });
+    });
+
+    html += `
+      <div class="flyer-list-day-card ${isToday ? 'is-today' : ''}">
+        <div class="flyer-list-day-header ${isToday ? 'today-header' : ''}">
+          <div class="flyer-list-day-title">
+            <div class="flyer-day-badge-icon">
+              <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div class="flyer-day-title-text">
+              <span>${day.name.toUpperCase()}</span>
+              <span style="font-size: 0.85rem; color: #64748b; font-weight: 700;">(${day.short})</span>
+              ${isToday ? '<span class="flyer-badge-today">Hôm Nay</span>' : ''}
+            </div>
+          </div>
+          <div class="flyer-list-day-meta">
+            <span class="badge ${dayTotalShifts > 0 ? 'bg-blue-subtle text-blue' : ''}" style="padding: 4px 10px; border-radius: 8px; font-weight: 700;">
+              <i class="fa-solid fa-users"></i> ${dayTotalShifts} ca phát • ${groupsToRender.length} nhóm
+            </span>
+          </div>
+        </div>
+
+        <div class="flyer-list-day-body">
+    `;
+
+    // Render từng buổi trong ngày
+    shiftsToRender.forEach(shift => {
+      const shiftData = (sched[dayIdx] && sched[dayIdx][shift.id]) || {};
+
+      html += `
+        <div class="flyer-list-shift-row">
+          <div class="flyer-list-shift-label">
+            <div class="flyer-list-shift-title" style="color: ${shift.color}">
+              <i class="fa-solid ${shift.icon}"></i> ${shift.name}
+            </div>
+            <div class="flyer-list-shift-time">${shift.time}</div>
+          </div>
+
+          <div class="flyer-list-groups-grid">
+      `;
+
+      groupsToRender.forEach((group) => {
+        const staffIds = shiftData[group.id] || [];
+
+        html += `
+          <div class="flyer-list-group-card">
+            <div class="flyer-list-group-header">
+              <div>
+                <span class="flyer-list-group-title" style="color: ${group.color};">
+                  <i class="fa-solid fa-users-viewfinder"></i> ${group.name}
+                </span>
+                <span class="flyer-list-group-location">(${group.location})</span>
+              </div>
+              <button type="button" class="flyer-btn-add-mini" title="Thêm người vào ${group.name} - ${shift.name}" onclick="openFlyerCellPicker(${dayIdx}, '${shift.id}', '${group.id}')">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+
+            <div class="flyer-list-staff-chips">
+        `;
+
+        if (staffIds.length === 0) {
+          html += `<div class="flyer-list-empty-msg"><i class="fa-regular fa-circle-dot"></i> Chưa có người phát</div>`;
+        } else {
+          staffIds.forEach(staffId => {
+            const staff = FlyerState.staffList.find(s => s.id === staffId);
+            if (!staff) return;
+
+            const isPG = staff.role === 'PG';
+            const pillClass = isPG ? 'pill-pg' : 'pill-nv';
+            const roleBadge = isPG ? '<span class="flyer-badge-pg">PG</span>' : '<span class="flyer-badge-nv">NV</span>';
+
+            html += `
+              <div class="flyer-assigned-pill ${pillClass}">
+                <div class="flyer-pill-left">
+                  ${roleBadge}
+                  <strong title="${staff.name}">${staff.name}</strong>
+                  ${staff.phone ? `<span style="font-size: 0.72rem; opacity: 0.85;">(${staff.phone})</span>` : ''}
+                </div>
+                <button type="button" class="flyer-pill-remove" title="Xóa ${staff.name} khỏi ca này" onclick="removeStaffFromFlyerSlot(${dayIdx}, '${shift.id}', '${group.id}', '${staff.id}', event)">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            `;
+          });
+        }
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+/**
+ * Hiển thị lịch dạng bảng lưới ma trận tuần
+ */
+function renderFlyerMatrixTable() {
   const tbody = document.getElementById('flyerMatrixTableBody');
   if (!tbody) return;
 
@@ -1408,7 +1561,11 @@ async function exportFlyerScheduleImage() {
     return;
   }
 
-  const exportElement = document.getElementById('flyerTableContainer');
+  let exportElement = document.getElementById('flyerListContainer');
+  if (FlyerState.currentView === 'matrix') {
+    exportElement = document.getElementById('flyerTableContainer') || exportElement;
+  }
+  if (!exportElement) exportElement = document.getElementById('flyerTableContainer');
   if (!exportElement) return;
 
   if (typeof showToast === 'function') {
