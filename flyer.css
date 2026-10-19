@@ -1,0 +1,980 @@
+/* ==========================================================================
+   MODULE: TỜ RƠI (FLYER DISTRIBUTION SCHEDULING SYSTEM)
+   Tone: Pastel Blue Aesthetic & Modern Dashboard UI
+   Tương thích hoàn toàn với Hệ thống Phân Ca Hành Chính
+   ========================================================================== */
+
+/* 1. Header Navigation Tabs */
+.app-nav-tabs-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(186, 230, 253, 0.7);
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.05);
+  position: sticky;
+  top: 73px;
+  z-index: 95;
+}
+
+.app-nav-tabs {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.main-tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f9ff;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid #bae6fd;
+}
+
+.main-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 20px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+}
+
+.main-tab-btn i {
+  font-size: 1.05rem;
+  transition: transform 0.2s ease;
+}
+
+.main-tab-btn:hover {
+  color: #0284c7;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.main-tab-btn:hover i {
+  transform: translateY(-1px);
+}
+
+.main-tab-btn.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.main-tab-btn.active i {
+  color: #ffffff;
+}
+
+.tab-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.tab-pill-badge.badge-new {
+  background: #f43f5e;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(244, 63, 94, 0.4);
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.nav-actions-quick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 2. Tờ Rơi View Container */
+#sectionFlyer {
+  display: block;
+  animation: fadeInFlyer 0.3s ease-out;
+}
+
+@keyframes fadeInFlyer {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Flyer Stats Grid */
+.flyer-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1024px) {
+  .flyer-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .flyer-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Flyer Control Bar */
+.flyer-controls-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.flyer-controls-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.flyer-week-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flyer-nav-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid #bae6fd;
+  background: #ffffff;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flyer-nav-arrow:hover {
+  background: #e0f2fe;
+  color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.flyer-week-pills {
+  display: flex;
+  gap: 6px;
+  background: #f0f9ff;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e0f2fe;
+}
+
+.flyer-week-pill {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0369a1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flyer-week-pill:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.flyer-week-pill.active {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+}
+
+.flyer-week-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.flyer-week-date-badge i {
+  color: #0284c7;
+}
+
+.flyer-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flyer-controls-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.flyer-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.flyer-filter-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.flyer-filter-btn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flyer-filter-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.flyer-filter-btn.active {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #7dd3fc;
+  font-weight: 700;
+}
+
+.flyer-view-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 9px;
+}
+
+.flyer-view-btn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.flyer-view-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* 3. Flyer Hub: Quick Assignment & Tools */
+.flyer-hub-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 22px;
+  box-shadow: var(--card-shadow);
+}
+
+.flyer-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.flyer-hub-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flyer-hub-title h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.flyer-hub-toggle-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.flyer-hub-body {
+  transition: all 0.3s ease;
+}
+
+.flyer-hub-body.collapsed {
+  display: none;
+}
+
+.flyer-quick-assign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.flyer-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flyer-form-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyer-days-picker {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.flyer-day-chip {
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+
+.flyer-day-chip.selected {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+.flyer-staff-multiselect {
+  max-height: 140px;
+  overflow-y: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flyer-staff-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.flyer-staff-option:hover {
+  background: #f1f5f9;
+}
+
+/* 4. Interactive Schedule Matrix Table */
+.flyer-table-container {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.flyer-table-header-banner {
+  padding: 16px 22px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-bottom: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.flyer-table-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flyer-table-title h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0369a1;
+  margin: 0;
+}
+
+.flyer-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.flyer-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.flyer-badge-nv {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.flyer-badge-pg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #fce7f3;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.flyer-matrix-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.flyer-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 980px;
+}
+
+.flyer-matrix-table th {
+  background: #f8fafc;
+  padding: 12px 10px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-align: center;
+  border-bottom: 2px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.flyer-matrix-table th:first-child {
+  width: 140px;
+  text-align: left;
+  padding-left: 18px;
+}
+
+.flyer-matrix-table th.today-col {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-bottom-color: #3b82f6;
+}
+
+.flyer-matrix-table th .th-day-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  display: block;
+}
+
+.flyer-matrix-table th .th-day-date {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.flyer-matrix-table th.today-col .th-day-date {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.flyer-matrix-table td {
+  padding: 10px 8px;
+  vertical-align: top;
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #f1f5f9;
+  background: #ffffff;
+  transition: background 0.15s ease;
+}
+
+.flyer-matrix-table td.today-cell {
+  background: #fafcff;
+}
+
+.flyer-matrix-table tr:hover td {
+  background: #f8fafc;
+}
+
+.flyer-matrix-table td.shift-header-cell {
+  background: #f0f9ff;
+  padding: 14px 16px;
+  border-right: 2px solid #bae6fd;
+}
+
+.flyer-shift-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flyer-shift-name {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyer-shift-time {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Group Subcard inside Cell */
+.flyer-cell-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 105px;
+}
+
+.flyer-group-slot {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.flyer-group-slot:hover {
+  border-color: #7dd3fc;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.12);
+}
+
+.flyer-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.flyer-group-tag {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flyer-group-tag.group-1 { color: #0284c7; }
+.flyer-group-tag.group-2 { color: #059669; }
+.flyer-group-tag.group-3 { color: #d97706; }
+.flyer-group-tag.group-4 { color: #7c3aed; }
+
+.flyer-btn-add-mini {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0284c7;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.flyer-btn-add-mini:hover {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.flyer-assigned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flyer-assigned-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.flyer-assigned-pill:hover {
+  transform: translateX(2px);
+}
+
+.flyer-assigned-pill.pill-nv {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.flyer-assigned-pill.pill-pg {
+  background: #fce7f3;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+}
+
+.flyer-pill-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flyer-pill-remove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0 2px;
+  transition: opacity 0.15s;
+}
+
+.flyer-pill-remove:hover {
+  opacity: 1;
+  color: #e11d48;
+}
+
+.flyer-empty-slot {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 4px 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 5. Summary / Stats Matrix View */
+.flyer-summary-table-wrap {
+  padding: 20px;
+}
+
+.flyer-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.flyer-summary-table th {
+  background: #f1f5f9;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #334155;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.flyer-summary-table th:first-child,
+.flyer-summary-table th:nth-child(2) {
+  text-align: left;
+}
+
+.flyer-summary-table td {
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.flyer-summary-table td:first-child,
+.flyer-summary-table td:nth-child(2) {
+  text-align: left;
+}
+
+.flyer-summary-table tr:hover td {
+  background: #f8fafc;
+}
+
+/* 6. Modals for Staff & PG Management */
+.flyer-modal-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.flyer-modal-tab-btn {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.flyer-modal-tab-btn.active {
+  color: #0284c7;
+}
+
+.flyer-modal-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #0284c7;
+}
+
+.flyer-staff-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.flyer-staff-table th {
+  background: #f8fafc;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.flyer-staff-table td {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.flyer-staff-table tr:hover td {
+  background: #f8fafc;
+}
+
+.flyer-staff-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: #ffffff;
+  margin-right: 8px;
+}
+
+.flyer-staff-avatar.avatar-nv {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.flyer-staff-avatar.avatar-pg {
+  background: linear-gradient(135deg, #ec4899, #be185d);
+}
+
+/* Quick Add Staff Form */
+.flyer-add-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.flyer-add-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+@media (max-width: 768px) {
+  .flyer-add-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 7. Export Poster View (Offscreen/Print Friendly) */
+.flyer-export-canvas {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.flyer-export-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #0284c7;
+}
+
+.flyer-export-header h2 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0369a1;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.flyer-export-header p {
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+/* 8. Text Format Preview / Zalo Copy Modal */
+.flyer-zalo-textarea {
+  width: 100%;
+  min-height: 280px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+/* Print CSS */
+@media print {
+  .app-header,
+  .app-nav-tabs-wrapper,
+  .flyer-controls-card,
+  .flyer-hub-card,
+  .toast-container,
+  .modal-backdrop,
+  #sectionSchedule {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
+
+  #sectionFlyer {
+    display: block !important;
+  }
+
+  .flyer-table-container {
+    box-shadow: none !important;
+    border: 1px solid #000000 !important;
+  }
+
+  .flyer-matrix-table th,
+  .flyer-matrix-table td {
+    border-color: #999999 !important;
+  }
+}
