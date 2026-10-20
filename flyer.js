@@ -1294,23 +1294,132 @@ function resetFlyerToSample() {
   }
 }
 
+// ==========================================================================
+// 6B. GIAO DIỆN CHỈNH SỬA TUYẾN ĐƯỜNG & CHỌN ICON ĐẸP
+// ==========================================================================
+
+const FLYER_ROUTE_ICONS = [
+  '📍', '🗺️', '🛣️', '🏢', '🏬', '🏪', '🛒', '🛵', '🚗', '🚶',
+  '🌅', '☀️', '🌙', '⭐', '✨', '🎯', '🚩', '📌', '📢', '🎁',
+  '🏫', '🏥', '🏖️', '⚡', '🔔', '🏷️', '📦', '🟢'
+];
+
+const FLYER_ROUTE_TEMPLATES = [
+  '📍 Tuyến Chợ & Khu Dân Cư',
+  '🛵 Tuyến Trường Học & Công Viên',
+  '🏢 Tuyến Ngã Tư & Trung Tâm',
+  '🏬 Tuyến Bến Xe & Phố Đi Bộ',
+  '🌅 BỜ KÈ CHỢ P7, ĐƯỜNG TRƯƠNG PHÙNG XUÂN',
+  '☀️ TRỤC ĐƯỜNG CHÍNH & KHU ĐÔ THỊ'
+];
+
 function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
   const currentLoc = decodeURIComponent(currentLocEncoded || '');
-  const newLoc = prompt('Nhập Tuyến Đường cho ca này:', currentLoc);
-  if (newLoc === null) return;
+  openFlyerLocationModal(shiftId, currentLoc);
+}
+
+function openFlyerLocationModal(shiftId, currentLoc = '') {
+  const modal = document.getElementById('modalFlyerLocationModal');
+  const shiftInput = document.getElementById('flyerLocModalShiftId');
+  const textarea = document.getElementById('flyerLocModalInput');
+  const shiftBadge = document.getElementById('flyerLocModalShiftBadge');
+  const dateBadge = document.getElementById('flyerLocModalDateBadge');
+  const iconGrid = document.getElementById('flyerIconPickerGrid');
+  const sugList = document.getElementById('flyerLocSuggestionsList');
+
+  if (!modal) return;
+
+  const dateTitle = (FlyerState.tableDateTitle || '22/10').trim();
+
+  let shiftName = 'Ca Sáng (7:00)';
+  if (shiftId === 'cangay') shiftName = '⭐ CẢ NGÀY';
+  else if (shiftId === 'sang') shiftName = '🌅 Ca Sáng (7:00)';
+  else if (shiftId === 'chieu') shiftName = '☀️ Ca Chiều (15:00)';
+  else if (shiftId === 'toi') shiftName = '🌙 Ca Tối (19:00)';
+
+  if (shiftInput) shiftInput.value = shiftId;
+  if (shiftBadge) shiftBadge.textContent = shiftName;
+  if (dateBadge) dateBadge.textContent = `NGÀY ${dateTitle}`;
+
+  // Render danh sách Icon Đẹp
+  if (iconGrid) {
+    iconGrid.innerHTML = FLYER_ROUTE_ICONS.map(icon => `
+      <button type="button" class="flyer-icon-btn" onclick="insertIconToFlyerLocation('${icon}')" title="Chèn icon ${icon}">
+        ${icon}
+      </button>
+    `).join('');
+  }
+
+  // Render gợi ý mẫu nhanh
+  if (sugList) {
+    sugList.innerHTML = FLYER_ROUTE_TEMPLATES.map(tpl => `
+      <button type="button" class="flyer-template-pill" onclick="applyFlyerLocationTemplate('${tpl}')">
+        ${tpl}
+      </button>
+    `).join('');
+  }
+
+  if (textarea) {
+    textarea.value = currentLoc;
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }, 120);
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeFlyerLocationModal() {
+  const modal = document.getElementById('modalFlyerLocationModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function insertIconToFlyerLocation(icon) {
+  const textarea = document.getElementById('flyerLocModalInput');
+  if (!textarea) return;
+
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const val = textarea.value;
+
+  const insertText = icon + ' ';
+  textarea.value = val.substring(0, start) + insertText + val.substring(end);
+  const newPos = start + insertText.length;
+  textarea.focus();
+  textarea.setSelectionRange(newPos, newPos);
+}
+
+function applyFlyerLocationTemplate(text) {
+  const textarea = document.getElementById('flyerLocModalInput');
+  if (!textarea) return;
+  textarea.value = text;
+  textarea.focus();
+  textarea.setSelectionRange(text.length, text.length);
+}
+
+function saveFlyerLocationFromModal() {
+  const shiftId = document.getElementById('flyerLocModalShiftId')?.value || 'sang';
+  const textarea = document.getElementById('flyerLocModalInput');
+  const newLoc = textarea ? textarea.value.trim() : '';
 
   const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
+  let updatedCount = 0;
+
   FlyerState.assignmentsList.forEach(item => {
     const itemNorm = normalizeFlyerDate(item.dateStr || '22/10');
     if (item.shiftId === shiftId && itemNorm === activeNorm) {
-      item.location = newLoc.trim();
+      item.location = newLoc;
+      updatedCount++;
     }
   });
 
   saveFlyerAssignments(false);
+  closeFlyerLocationModal();
   renderFlyerTable();
+
   if (typeof showToast === 'function') {
-    showToast(`✅ Đã cập nhật tuyến đường ngày ${FlyerState.tableDateTitle}!`, 'success');
+    showToast(`✅ Đã cập nhật tuyến đường (${updatedCount} nhân sự) ngày ${FlyerState.tableDateTitle}!`, 'success');
   }
 }
 
@@ -2700,6 +2809,11 @@ window.deleteFlyerAssignment = deleteFlyerAssignment;
 window.deleteFlyerGroupShift = deleteFlyerGroupShift;
 window.resetFlyerToSample = resetFlyerToSample;
 window.openFlyerShiftLocationPrompt = openFlyerShiftLocationPrompt;
+window.openFlyerLocationModal = openFlyerLocationModal;
+window.closeFlyerLocationModal = closeFlyerLocationModal;
+window.insertIconToFlyerLocation = insertIconToFlyerLocation;
+window.applyFlyerLocationTemplate = applyFlyerLocationTemplate;
+window.saveFlyerLocationFromModal = saveFlyerLocationFromModal;
 window.openFlyerStaffModal = openFlyerStaffModal;
 window.closeFlyerStaffModal = closeFlyerStaffModal;
 window.openFlyerAutoScheduleModal = openFlyerAutoScheduleModal;

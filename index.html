@@ -1876,6 +1876,72 @@
     </div>
   </div>
 
+  <!-- Modal 6: Chỉnh Sửa Tuyến Đường (Giao diện đẹp & Chọn Icon Sinh Động) -->
+  <div class="modal-backdrop hidden" id="modalFlyerLocationModal">
+    <div class="modal-card" style="max-width: 520px; width: 95%;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-map-location-dot text-rose" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3 id="flyerLocModalTitle">Nhập Tuyến Đường Phát</h3>
+            <span style="font-size: 0.78rem; color: #64748b;" id="flyerLocModalSubtitle">Tùy chỉnh tuyến đường cho ca trực & chọn icon sinh động</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeFlyerLocationModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <input type="hidden" id="flyerLocModalShiftId" value="">
+
+        <!-- Badge thông tin ca & ngày -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #f0f9ff; padding: 8px 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+          <span style="font-size: 0.85rem; font-weight: 800; color: #0369a1;" id="flyerLocModalShiftBadge">
+            🌅 Ca Sáng (7:00)
+          </span>
+          <span style="font-size: 0.8rem; font-weight: 800; color: #b91c1c; background: #fef08a; padding: 2px 8px; border-radius: 4px; border: 1px solid #ca8a04;" id="flyerLocModalDateBadge">
+            NGÀY 21/10
+          </span>
+        </div>
+
+        <!-- Bảng chọn Icon Đẹp -->
+        <div style="margin-bottom: 14px;">
+          <label style="display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px;">
+            <span><i class="fa-solid fa-icons text-amber"></i> CHỌN ICON ĐẸP ĐỂ CHÈN:</span>
+            <span style="font-size: 0.72rem; color: #64748b; font-weight: normal;">Nhấp icon để chèn vào vị trí con trỏ</span>
+          </label>
+          <div class="flyer-icon-picker-grid" id="flyerIconPickerGrid">
+            <!-- Icon buttons generated dynamically -->
+          </div>
+        </div>
+
+        <!-- Ô nhập nội dung tuyến đường -->
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label class="control-label" for="flyerLocModalInput">
+            <i class="fa-solid fa-pen text-blue"></i> Nội dung tuyến đường / Địa điểm:
+          </label>
+          <textarea id="flyerLocModalInput" class="custom-select" rows="3" style="width: 100%; resize: vertical; font-size: 0.92rem; font-weight: 800; color: #0f172a; line-height: 1.5; padding: 10px;" placeholder="VD: 📍 BỜ KÈ CHỢ P7, ĐƯỜNG TRƯƠNG PHÙNG XUÂN..."></textarea>
+        </div>
+
+        <!-- Gợi ý mẫu nhanh -->
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+            💡 Gợi ý mẫu nhanh:
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="flyerLocSuggestionsList">
+            <!-- Dynamic suggestion pills -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button class="btn btn-secondary" onclick="closeFlyerLocationModal()" type="button">Hủy</button>
+        <button class="btn btn-primary" onclick="saveFlyerLocationFromModal()" type="button" style="font-weight: 700;">
+          <i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Đồng Bộ Firebase
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Application Script -->
   <script src="app.js?v=20261007_fb"></script>
 
