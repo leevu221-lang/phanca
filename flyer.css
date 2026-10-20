@@ -320,14 +320,9 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-/* 3. Flyer Hub: Quick Assignment & Tools */
+/* 3. Flyer Hub: Quick Assignment & Tools (Đã ẩn theo yêu cầu) */
 .flyer-hub-card {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 22px;
-  box-shadow: var(--card-shadow);
+  display: none !important;
 }
 
 .flyer-hub-header {
