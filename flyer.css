@@ -1340,7 +1340,16 @@
   color: #000000 !important;
   background-color: #ffffff;
   vertical-align: middle;
-  line-height: 1.5;
+  line-height: 1.65;
+  white-space: pre-line !important;
+  word-break: break-word;
+}
+
+.flyer-sample-table td.td-location strong {
+  white-space: pre-line !important;
+  display: block;
+  flex: 1;
+  line-height: 1.65;
 }
 
 .flyer-sample-table td.td-actions {

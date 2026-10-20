@@ -1249,11 +1249,12 @@ function renderFlyerScheduleTable() {
 
       // 4. TUYẾN ĐƯỜNG: Ô gộp (rowspan) lớn bên phải đúng y như ảnh mẫu!
       if (idx === 0) {
+        const formattedLoc = formatFlyerLocationHtml(shiftLocation);
         html += `
           <td class="td-location" rowspan="${shiftItems.length}">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <strong>${shiftLocation}</strong>
-              <button type="button" class="btn btn-secondary btn-sm no-export" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1;" title="Chỉnh sửa tuyến đường cho ca này" onclick="openFlyerShiftLocationPrompt('${shiftId}', '${encodeURIComponent(shiftLocation)}')">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+              <strong style="white-space: pre-line; line-height: 1.65; flex: 1; text-align: left;">${formattedLoc}</strong>
+              <button type="button" class="btn btn-secondary btn-sm no-export" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1; flex-shrink: 0;" title="Chỉnh sửa tuyến đường cho ca này" onclick="openFlyerShiftLocationPrompt('${shiftId}', '${encodeURIComponent(shiftLocation)}')">
                 <i class="fa-solid fa-pen text-blue"></i>
               </button>
             </div>
@@ -1281,6 +1282,28 @@ function renderFlyerScheduleTable() {
   tbody.innerHTML = html;
 }
 
+/**
+ * Định dạng hiển thị tuyến đường:
+ * - Hỗ trợ xuống dòng (\n -> <br>)
+ * - Tự động tách dòng nếu người dùng nhập dính nhiều buổi (VD: ". 🌅 BUỔI CHIỀU : ")
+ */
+function formatFlyerLocationHtml(loc) {
+  if (!loc) return '';
+  let text = String(loc);
+
+  // Tự động ngắt dòng nếu người dùng nhập nhiều buổi trong 1 ô mà quên bấm Enter
+  text = text.replace(/([.!?])\s*(?=([🌅☀️🌙⭐📍🛵🏢🏬•\*]\s*)?(BUỔI SÁNG|BUỔI CHIỀU|BUỔI TỐI|CA SÁNG|CA CHIỀU|CA TỐI)\b)/gi, '$1\n');
+
+  // Escape HTML để bảo vệ hiển thị an toàn
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Chuyển ký tự xuống dòng thành <br>
+  return escaped.replace(/\r?\n/g, '<br>');
+}
+
 function resetFlyerToSample() {
   FlyerState.tableDateTitle = '22/10';
   const dateInput = document.getElementById('flyerTableDateTitleInput');
@@ -1305,12 +1328,11 @@ const FLYER_ROUTE_ICONS = [
 ];
 
 const FLYER_ROUTE_TEMPLATES = [
+  '☀️ BUỔI SÁNG : BỜ KÈ CHỢ P7, ĐƯỜNG TRƯƠNG PHÙNG XUÂN\n🌅 BUỔI CHIỀU : CẢNG CÁ P8, KCN MINH PHÚ, CHỢ P8',
   '📍 Tuyến Chợ & Khu Dân Cư',
   '🛵 Tuyến Trường Học & Công Viên',
   '🏢 Tuyến Ngã Tư & Trung Tâm',
-  '🏬 Tuyến Bến Xe & Phố Đi Bộ',
-  '🌅 BỜ KÈ CHỢ P7, ĐƯỜNG TRƯƠNG PHÙNG XUÂN',
-  '☀️ TRỤC ĐƯỜNG CHÍNH & KHU ĐÔ THỊ'
+  '🏬 Tuyến Bến Xe & Phố Đi Bộ'
 ];
 
 function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
@@ -1354,13 +1376,19 @@ function openFlyerLocationModal(shiftId, currentLoc = '') {
   if (sugList) {
     sugList.innerHTML = FLYER_ROUTE_TEMPLATES.map(tpl => `
       <button type="button" class="flyer-template-pill" onclick="applyFlyerLocationTemplate('${tpl}')">
-        ${tpl}
+        ${tpl.replace(/\n/g, ' ⤶ ')}
       </button>
     `).join('');
   }
 
+  // Đảm bảo nếu nội dung cũ dính liền buổi sáng & chiều thì tự tách dòng trong textarea
+  let initialLoc = currentLoc;
+  if (initialLoc && !initialLoc.includes('\n')) {
+    initialLoc = initialLoc.replace(/([.!?])\s*(?=([🌅☀️🌙⭐📍🛵🏢🏬•\*]\s*)?(BUỔI SÁNG|BUỔI CHIỀU|BUỔI TỐI|CA SÁNG|CA CHIỀU|CA TỐI)\b)/gi, '$1\n');
+  }
+
   if (textarea) {
-    textarea.value = currentLoc;
+    textarea.value = initialLoc;
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(textarea.value.length, textarea.value.length);
@@ -2814,6 +2842,7 @@ window.closeFlyerLocationModal = closeFlyerLocationModal;
 window.insertIconToFlyerLocation = insertIconToFlyerLocation;
 window.applyFlyerLocationTemplate = applyFlyerLocationTemplate;
 window.saveFlyerLocationFromModal = saveFlyerLocationFromModal;
+window.formatFlyerLocationHtml = formatFlyerLocationHtml;
 window.openFlyerStaffModal = openFlyerStaffModal;
 window.closeFlyerStaffModal = closeFlyerStaffModal;
 window.openFlyerAutoScheduleModal = openFlyerAutoScheduleModal;
