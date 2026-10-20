@@ -1516,7 +1516,7 @@
           <div class="flyer-add-grid">
             <div class="form-group" style="margin-bottom: 0;">
               <label class="control-label" for="staffNameInput">Họ và Tên (*):</label>
-              <input type="text" id="staffNameInput" class="custom-select" placeholder="VD: LAN ANH hoặc PG MỸ DUYÊN" style="font-weight: 700; text-transform: uppercase;">
+              <input type="text" id="staffNameInput" class="custom-select" placeholder="VD: NGUYỄN VĂN A hoặc PG LAN ANH" style="font-weight: 700; text-transform: uppercase;">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
@@ -1539,12 +1539,17 @@
               <input type="text" id="staffPhoneInput" class="custom-select" placeholder="09xxxxxxxxx">
             </div>
 
-            <button type="button" class="btn btn-primary" id="btnSaveFlyerStaff" style="height: 42px; font-weight: 800; white-space: nowrap;">
-              <i class="fa-solid fa-plus"></i> Thêm Nhân Sự
-            </button>
-          </div>
-          <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
-            <input type="text" id="staffNoteInput" class="custom-select" placeholder="Ghi chú thêm (VD: Chuyên ca sáng, chỉ rảnh cuối tuần...)" style="font-size: 0.82rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="control-label" for="staffNoteInput">Ghi chú (tùy chọn):</label>
+              <input type="text" id="staffNoteInput" class="custom-select" placeholder="VD: Chuyên ca sáng, chỉ rảnh cuối tuần...">
+            </div>
+
+            <div style="display: flex; align-items: flex-end;">
+              <button type="button" class="btn btn-primary" id="btnSaveFlyerStaff" style="height: 42px; width: 100%; font-weight: 800; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <i class="fa-solid fa-plus"></i>
+                <span id="btnSaveFlyerStaffText">Thêm Nhân Sự</span>
+              </button>
+            </div>
           </div>
         </div>
 
