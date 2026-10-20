@@ -1238,7 +1238,7 @@
 .flyer-sample-table {
   width: 100%;
   border-collapse: collapse;
-  border: 2px solid #000000;
+  border: 1px solid #334155;
   background-color: #ffffff;
   font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
   box-sizing: border-box;
@@ -1247,82 +1247,82 @@
 .flyer-sample-table th {
   background-color: #fde047 !important; /* Vàng tươi chuẩn mẫu */
   color: #b91c1c !important; /* Đỏ sẫm như mẫu */
-  font-weight: 900 !important;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
+  font-weight: 800 !important;
+  font-size: 0.92rem;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  padding: 12px 14px;
-  border: 1.5px solid #000000 !important;
+  padding: 10px 14px;
+  border: 1px solid #334155 !important;
   vertical-align: middle;
 }
 
 .flyer-sample-table th.th-stt {
   text-align: center;
-  width: 65px;
+  width: 60px;
 }
 
 .flyer-sample-table th.th-staff {
   text-align: left;
-  padding-left: 20px;
-  min-width: 250px;
+  padding-left: 18px;
+  min-width: 240px;
 }
 
 .flyer-sample-table th.th-datetime {
   text-align: center;
   min-width: 190px;
-  width: 220px;
+  width: 210px;
 }
 
 .flyer-sample-table th.th-location {
   text-align: left;
-  padding-left: 20px;
+  padding-left: 18px;
   min-width: 280px;
 }
 
 .flyer-sample-table th.th-actions {
   text-align: center;
-  width: 90px;
+  width: 85px;
 }
 
 .flyer-sample-table td {
-  border: 1.5px solid #000000 !important;
-  padding: 9px 14px;
-  font-size: 0.95rem;
-  color: #000000;
+  border: 1px solid #334155 !important;
+  padding: 8px 14px;
+  font-size: 0.92rem;
+  color: #0f172a;
   vertical-align: middle;
   background-color: #ffffff;
 }
 
 .flyer-sample-table td.td-stt {
   text-align: center;
-  font-weight: 900;
-  font-size: 1rem;
-  color: #000000;
-  width: 65px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  width: 60px;
 }
 
 .flyer-sample-table td.td-staff {
   text-align: left;
-  font-weight: 800;
-  padding-left: 20px;
-  color: #000000;
+  font-weight: 700;
+  padding-left: 18px;
+  color: #0f172a;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
 }
 
 .flyer-sample-table td.td-datetime {
   text-align: center;
-  font-weight: 800;
-  color: #000000;
+  font-weight: 700;
+  color: #0f172a;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .flyer-sample-table td.td-location {
   text-align: left;
-  padding: 14px 20px;
-  font-weight: 800;
-  color: #000000;
+  padding: 12px 18px;
+  font-weight: 700;
+  color: #0f172a;
   background-color: #ffffff;
   vertical-align: middle;
   line-height: 1.5;
@@ -1337,10 +1337,10 @@
 /* Dòng phân cách giữa các ca màu xanh lá nhạt đúng chuẩn ảnh mẫu */
 .flyer-sample-table tr.flyer-shift-divider td {
   background-color: #86efac !important; /* Xanh lá mint tươi */
-  height: 24px !important;
-  min-height: 24px !important;
+  height: 20px !important;
+  min-height: 20px !important;
   padding: 0 !important;
-  border: 1.5px solid #000000 !important;
+  border: 1px solid #334155 !important;
 }
 
 /* Hover nhẹ nhàng khi tương tác trên web */

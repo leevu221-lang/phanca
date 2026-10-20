@@ -2009,7 +2009,7 @@ async function exportFlyerScheduleImage() {
 
   try {
     const canvas = await html2canvas(exportElement, {
-      scale: 3,
+      scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false
