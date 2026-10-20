@@ -1701,6 +1701,47 @@ function deleteFlyerAssignment(assignmentId) {
   }
 }
 
+/**
+ * Xóa toàn bộ lịch phát tờ rơi của ngày hôm đó
+ * Đồng bộ ngay lập tức lên Firebase và LocalStorage
+ */
+function clearCurrentDayFlyerSchedule() {
+  const dateTitle = (FlyerState.tableDateTitle || '22/10').trim();
+  const activeNorm = normalizeFlyerDate(dateTitle);
+
+  // Lấy danh sách các ca của ngày này
+  const itemsInDay = FlyerState.assignmentsList.filter(as => {
+    return normalizeFlyerDate(as.dateStr || '22/10') === activeNorm;
+  });
+
+  if (itemsInDay.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast(`Lịch Ngày ${dateTitle} hiện tại chưa có ca nào để xóa!`, 'info');
+    }
+    return;
+  }
+
+  const confirmMsg = `Bạn có chắc chắn muốn XÓA TOÀN BỘ ${itemsInDay.length} ca phân lịch của NGÀY ${dateTitle}?\n\n⚠️ Lưu ý: Thao tác này sẽ đồng bộ ngay lập tức lên Firebase và xóa sạch lịch ngày ${dateTitle} (các ngày khác vẫn giữ nguyên 100%).`;
+  if (typeof confirm === 'function' && !confirm(confirmMsg)) {
+    return;
+  }
+
+  // Giữ lại toàn bộ ca của các ngày khác
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => {
+    return normalizeFlyerDate(as.dateStr || '22/10') !== activeNorm;
+  });
+
+  // Tự động lưu ngay lập tức lên Firebase và LocalStorage
+  saveFlyerAssignments(false);
+
+  renderFlyerStats();
+  renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast(`🗑 Đã xóa sạch ${itemsInDay.length} ca phân lịch của NGÀY ${dateTitle}!`, 'success');
+  }
+}
+
 // ==========================================================================
 // 8. BẢNG MA TRẬN & BẢNG TỔNG HỢP CÔNG
 // ==========================================================================
@@ -2673,5 +2714,6 @@ window.selectFlyerDateToday = selectFlyerDateToday;
 window.selectFlyerSample22 = selectFlyerSample22;
 window.copyFlyerScheduleFromDate = copyFlyerScheduleFromDate;
 window.promptCopyFromAnyDate = promptCopyFromAnyDate;
+window.clearCurrentDayFlyerSchedule = clearCurrentDayFlyerSchedule;
 window.saveFlyerToFirebase = saveFlyerToFirebase;
 window.FlyerState = FlyerState;
