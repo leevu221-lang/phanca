@@ -1222,6 +1222,138 @@
   50% { opacity: 0.4; transform: scale(1.3); }
 }
 
+/* ==========================================================================
+   BẢNG PHÂN LỊCH TỜ RƠI CHUẨN MẪU (VÀNG CHỮ ĐỎ - DÒNG XANH - TUYẾN ĐƯỜNG MERGE)
+   ========================================================================== */
+
+.flyer-table-box-wrap {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-top: 10px;
+}
+
+.flyer-sample-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #000000;
+  background-color: #ffffff;
+  font-family: 'Plus Jakarta Sans', Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
+.flyer-sample-table th {
+  background-color: #fde047 !important; /* Vàng tươi chuẩn mẫu */
+  color: #b91c1c !important; /* Đỏ sẫm như mẫu */
+  font-weight: 900 !important;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  border: 1.5px solid #000000 !important;
+  vertical-align: middle;
+}
+
+.flyer-sample-table th.th-stt {
+  text-align: center;
+  width: 65px;
+}
+
+.flyer-sample-table th.th-staff {
+  text-align: left;
+  padding-left: 20px;
+  min-width: 250px;
+}
+
+.flyer-sample-table th.th-datetime {
+  text-align: center;
+  min-width: 190px;
+  width: 220px;
+}
+
+.flyer-sample-table th.th-location {
+  text-align: left;
+  padding-left: 20px;
+  min-width: 280px;
+}
+
+.flyer-sample-table th.th-actions {
+  text-align: center;
+  width: 90px;
+}
+
+.flyer-sample-table td {
+  border: 1.5px solid #000000 !important;
+  padding: 9px 14px;
+  font-size: 0.95rem;
+  color: #000000;
+  vertical-align: middle;
+  background-color: #ffffff;
+}
+
+.flyer-sample-table td.td-stt {
+  text-align: center;
+  font-weight: 900;
+  font-size: 1rem;
+  color: #000000;
+  width: 65px;
+}
+
+.flyer-sample-table td.td-staff {
+  text-align: left;
+  font-weight: 800;
+  padding-left: 20px;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.flyer-sample-table td.td-datetime {
+  text-align: center;
+  font-weight: 800;
+  color: #000000;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.flyer-sample-table td.td-location {
+  text-align: left;
+  padding: 14px 20px;
+  font-weight: 800;
+  color: #000000;
+  background-color: #ffffff;
+  vertical-align: middle;
+  line-height: 1.5;
+}
+
+.flyer-sample-table td.td-actions {
+  text-align: center;
+  white-space: nowrap;
+  padding: 4px 8px;
+}
+
+/* Dòng phân cách giữa các ca màu xanh lá nhạt đúng chuẩn ảnh mẫu */
+.flyer-sample-table tr.flyer-shift-divider td {
+  background-color: #86efac !important; /* Xanh lá mint tươi */
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  border: 1.5px solid #000000 !important;
+}
+
+/* Hover nhẹ nhàng khi tương tác trên web */
+.flyer-sample-table tbody tr:not(.flyer-shift-divider):hover td {
+  background-color: #fffbeb;
+}
+
+/* Khi đang xuất ảnh bằng html2canvas, ẩn hoàn toàn cột thao tác */
+.is-exporting .no-export,
+.flyer-sample-table.is-exporting .no-export {
+  display: none !important;
+}
+
 .flyer-schedule-list-table {
   width: 100%;
   border-collapse: collapse;

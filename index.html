@@ -720,57 +720,55 @@
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddAssignmentModal" onclick="openFlyerAssignmentModal()">
                 <i class="fa-solid fa-plus"></i>
-                <span>Thêm Ca Lập Lịch</span>
+                <span>Thêm Nhân Viên</span>
               </button>
-              <button type="button" class="btn btn-secondary btn-sm" id="btnQuickExportSchedule" onclick="exportFlyerScheduleImage()">
-                <i class="fa-solid fa-image text-cyan"></i>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnQuickExportSchedule" onclick="exportFlyerScheduleImage()" style="font-weight: 700; color: #0284c7;">
+                <i class="fa-solid fa-image"></i>
                 <span>Xuất Ảnh Bảng</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetFlyerToSample()" title="Đặt lại đúng dữ liệu mẫu 22/10">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Mẫu 22/10</span>
               </button>
             </div>
           </div>
 
-          <!-- Bộ lọc nhanh trên bảng -->
-          <div style="padding: 12px 20px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 200px; position: relative;">
-              <input type="text" id="flyerTableSearchInput" class="custom-select" placeholder="🔍 Tìm theo tên nhân viên, địa điểm, ghi chú..." style="padding-left: 12px; font-size: 0.85rem;">
+          <!-- Thanh điều khiển & ngày theo mẫu -->
+          <div style="padding: 12px 18px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: #fef9c3; border: 1.5px solid #000000; padding: 4px 10px; border-radius: 6px;">
+              <label for="flyerTableDateTitleInput" style="font-weight: 900; color: #b91c1c; font-size: 0.85rem; margin: 0; text-transform: uppercase;">
+                <i class="fa-solid fa-calendar-day"></i> NGÀY:
+              </label>
+              <input type="text" id="flyerTableDateTitleInput" value="22/10" class="custom-select" style="width: 78px; padding: 2px 4px; font-weight: 900; text-align: center; color: #b91c1c; background: #ffffff; border: 1.5px solid #000000; font-size: 0.9rem; border-radius: 4px;">
             </div>
-            <select id="flyerTableDayFilter" class="custom-select" style="width: 140px; font-size: 0.85rem;">
-              <option value="all">Tất cả ngày</option>
-              <option value="0">Thứ Hai</option>
-              <option value="1">Thứ Ba</option>
-              <option value="2">Thứ Tư</option>
-              <option value="3">Thứ Năm</option>
-              <option value="4">Thứ Sáu</option>
-              <option value="5">Thứ Bảy</option>
-              <option value="6">Chủ Nhật</option>
+
+            <div style="flex: 1; min-width: 180px; position: relative;">
+              <input type="text" id="flyerTableSearchInput" class="custom-select" placeholder="🔍 Tìm theo tên nhân viên, tuyến đường..." style="padding-left: 12px; font-size: 0.85rem; width: 100%;">
+            </div>
+
+            <select id="flyerTableShiftFilter" class="custom-select" style="width: 140px; font-size: 0.85rem;">
+              <option value="all">Tất cả các ca</option>
+              <option value="sang">🌅 Ca Sáng (7:00)</option>
+              <option value="chieu">☀️ Ca Chiều (15:00)</option>
+              <option value="toi">🌙 Ca Tối (19:00)</option>
             </select>
-            <select id="flyerTableShiftFilter" class="custom-select" style="width: 130px; font-size: 0.85rem;">
-              <option value="all">Tất cả buổi</option>
-              <option value="sang">🌅 Sáng</option>
-              <option value="chieu">☀️ Chiều</option>
-              <option value="toi">🌙 Tối</option>
-            </select>
-            <select id="flyerTableRoleFilter" class="custom-select" style="width: 125px; font-size: 0.85rem;">
+
+            <select id="flyerTableRoleFilter" class="custom-select" style="width: 120px; font-size: 0.85rem;">
               <option value="all">Tất cả NV/PG</option>
               <option value="NV">Chỉ NV</option>
               <option value="PG">Chỉ PG</option>
             </select>
-            <select id="flyerTableGroupMode" class="custom-select" style="width: 175px; font-size: 0.85rem; font-weight: 700; color: #0284c7; background-color: #f0f9ff; border-color: #bae6fd;">
-              <option value="grouped" selected>👥 Gom theo ca trực</option>
-              <option value="individual">👤 Từng nhân viên</option>
-            </select>
           </div>
 
-          <div style="overflow-x: auto; width: 100%;">
-            <table class="flyer-schedule-list-table" id="flyerScheduleListTable">
+          <div style="overflow-x: auto; width: 100%; padding: 16px; background: #ffffff;" id="flyerSampleTableContainer">
+            <table class="flyer-sample-table" id="flyerScheduleListTable">
               <thead>
                 <tr>
-                  <th style="text-align: center; width: 55px;">STT</th>
-                  <th style="min-width: 250px;">Nhân Viên Trực</th>
-                  <th style="min-width: 230px;">Thời Gian & Ngày</th>
-                  <th style="min-width: 220px;">Địa Điểm</th>
-                  <th style="min-width: 180px;">Ghi Chú</th>
-                  <th style="text-align: center; width: 100px;">Thao Tác</th>
+                  <th class="th-stt">STT</th>
+                  <th class="th-staff">NHÂN VIÊN</th>
+                  <th class="th-datetime" id="flyerTableDateHeader">NGÀY 22/10</th>
+                  <th class="th-location">TUYẾN ĐƯỜNG</th>
+                  <th class="th-actions no-export">THAO TÁC</th>
                 </tr>
               </thead>
               <tbody id="flyerScheduleTableBody">

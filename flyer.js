@@ -49,40 +49,37 @@ const DEFAULT_FLYER_GROUPS = [
   { id: 'g3', name: 'Nhóm 3', location: 'Tuyến Ngã Tư & Trung Tâm', color: '#d97706' }
 ];
 
-// Nhân sự mặc định ban đầu (Đồng bộ mẫu nhân viên sẵn có và thêm PG mẫu)
+// Nhân sự mặc định ban đầu (Khớp danh sách nhân sự chuẩn mẫu theo yêu cầu)
 const DEFAULT_FLYER_STAFF = [
-  { id: 'nv_1', name: 'NHẠN', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_2', name: 'MẠNH', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_3', name: 'MI', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_4', name: 'MỸ', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_5', name: 'GIANG Ý', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_6', name: 'NGỌC ANH', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
-  { id: 'nv_7', name: 'THẮM', role: 'NV', group: 'Nhóm 2', phone: '', note: '' },
-  { id: 'nv_8', name: 'MY', role: 'NV', group: 'Nhóm 2', phone: '', note: '' },
-  { id: 'nv_9', name: 'PHÚC', role: 'NV', group: 'Nhóm 2', phone: '', note: '' },
-  { id: 'nv_10', name: 'ĐẠI', role: 'NV', group: 'Nhóm 2', phone: '', note: '' },
-  { id: 'nv_11', name: 'LÂM Ý', role: 'NV', group: 'Nhóm 2', phone: '', note: '' },
-  { id: 'pg_1', name: 'PG BÍCH TRÂM', role: 'PG', group: 'Nhóm 1', phone: '0901234567', note: 'Chuyên ca sáng/chiều' },
-  { id: 'pg_2', name: 'PG MAI LINH', role: 'PG', group: 'Nhóm 2', phone: '0912345678', note: 'Chuyên ca chiều/tối' },
-  { id: 'pg_3', name: 'PG NHƯ Ý', role: 'PG', group: 'Nhóm 3', phone: '0987654321', note: 'Chuyên cuối tuần' }
+  { id: 'nv_1', name: 'NGUYỄN THÚY HOA', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_2', name: 'PHẠM VĂN ĐẠI', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_3', name: 'LÂM THỊ NHƯ Ý', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_4', name: 'NGÔ THỊ BÉ THẮM', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_5', name: 'NGUYỄN DIỄM MY', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_6', name: 'HUỲNH HOÀNG PHÚC', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_7', name: 'VÕ VŨ LINH', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_8', name: 'KHANG HI', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'nv_9', name: 'LÊ THỊ MINH THÙY', role: 'NV', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'pg_1', name: 'LAM (PG)', role: 'PG', group: 'Nhóm 1', phone: '', note: '' },
+  { id: 'pg_2', name: 'NHƯ (PG)', role: 'PG', group: 'Nhóm 1', phone: '', note: '' }
 ];
 
 // Trạng thái của Module Tờ Rơi
 const FlyerState = {
   currentWeek: 'Tuần 1',
   currentMonth: 'THÁNG 10',
-  currentView: 'list', // 'list' (Bảng phân lịch 5 cột), 'matrix' hoặc 'summary'
-  tableGroupMode: 'grouped', // 'grouped' (gom nhân viên cùng ca vào 1 dòng) hoặc 'individual'
-  filterGroup: 'all', // 'all', 'g1', 'g2', 'g3'...
-  filterShift: 'all', // 'all', 'sang', 'chieu', 'toi'
+  currentView: 'list', // 'list' (Bảng phân lịch chuẩn mẫu), 'matrix' hoặc 'summary'
+  tableDateTitle: '22/10', // Tiêu đề ngày hiển thị trên cột 3 (mặc định 22/10 theo mẫu)
+  filterGroup: 'all',
+  filterShift: 'all',
   tableSearchQuery: '',
   tableDayFilter: 'all',
   tableShiftFilter: 'all',
   tableRoleFilter: 'all',
   staffList: [],
   groupList: [],
-  scheduleData: {}, // { [weekKey]: { [dayIdx]: { [shiftId]: { [groupId]: [ staffId, ... ] } } } }
-  assignmentsList: [], // Danh sách các dòng ca trực chi tiết cho Bảng Phân Lịch 5 cột
+  scheduleData: {},
+  assignmentsList: [],
   editingStaffId: null,
   activeCellPicker: null
 };
@@ -381,7 +378,13 @@ function loadFlyerAssignments() {
   try {
     const raw = localStorage.getItem(FLYER_STORAGE_ASSIGNMENTS);
     if (raw) {
-      FlyerState.assignmentsList = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(it => it.staffName && it.staffName.includes('NGUYỄN THÚY HOA'))) {
+        FlyerState.assignmentsList = parsed;
+      } else {
+        FlyerState.assignmentsList = [];
+        initDemoAssignments();
+      }
     } else {
       FlyerState.assignmentsList = [];
       initDemoAssignments();
@@ -402,171 +405,199 @@ function saveFlyerAssignments(skipFirebase = false) {
 }
 
 /**
- * Khởi tạo dữ liệu mẫu đẹp mắt cho Bảng Phân Lịch Tờ Rơi 5 Cột
+ * Khởi tạo dữ liệu mẫu chuẩn 100% khớp bảng mẫu ảnh (Ngày 22/10: Ca sáng 7:00 & Ca chiều 15:00)
  */
 function initDemoAssignments() {
   const weekKey = getFlyerWeekKey();
+  const dateStr = FlyerState.tableDateTitle || '22/10';
   FlyerState.assignmentsList = [
+    // 1. Ca sáng 7:00
     {
       id: 'as_1',
       staffId: 'nv_1',
-      staffName: 'NHẠN',
+      staffName: 'NGUYỄN THÚY HOA',
       role: 'NV',
       phone: '',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
       shiftId: 'sang',
       shiftName: 'Buổi Sáng',
-      shiftTime: '07:30 - 09:30',
-      groupId: 'g1',
-      groupName: 'Nhóm 1',
-      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
-      note: '500 tờ • Phát cổng chợ',
+      shiftTime: '7:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
+    // 2. Ca chiều 15:00 (10 nhân sự đúng như mẫu)
     {
       id: 'as_2',
-      staffId: 'pg_1',
-      staffName: 'PG BÍCH TRÂM',
-      role: 'PG',
-      phone: '0901234567',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
-      shiftId: 'sang',
-      shiftName: 'Buổi Sáng',
-      shiftTime: '07:30 - 09:30',
-      groupId: 'g1',
-      groupName: 'Nhóm 1',
-      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
-      note: '500 tờ • Đối diện bách hóa',
+      staffId: 'nv_2',
+      staffName: 'PHẠM VĂN ĐẠI',
+      role: 'NV',
+      phone: '',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_3',
-      staffId: 'nv_7',
-      staffName: 'THẮM',
+      staffId: 'nv_3',
+      staffName: 'LÂM THỊ NHƯ Ý',
       role: 'NV',
       phone: '',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
-      shiftId: 'sang',
-      shiftName: 'Buổi Sáng',
-      shiftTime: '07:30 - 09:30',
-      groupId: 'g2',
-      groupName: 'Nhóm 2',
-      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
-      note: '500 tờ',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_4',
-      staffId: 'nv_2',
-      staffName: 'MẠNH',
+      staffId: 'nv_4',
+      staffName: 'NGÔ THỊ BÉ THẮM',
       role: 'NV',
       phone: '',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
       shiftId: 'chieu',
       shiftName: 'Buổi Chiều',
-      shiftTime: '16:30 - 18:30',
-      groupId: 'g1',
-      groupName: 'Nhóm 1',
-      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
-      note: '500 tờ • Giờ tan tầm',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_5',
-      staffId: 'nv_8',
-      staffName: 'MY',
+      staffId: 'nv_5',
+      staffName: 'NGUYỄN DIỄM MY',
       role: 'NV',
       phone: '',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
       shiftId: 'chieu',
       shiftName: 'Buổi Chiều',
-      shiftTime: '16:30 - 18:30',
-      groupId: 'g2',
-      groupName: 'Nhóm 2',
-      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
-      note: '500 tờ • Cổng trường cấp 3',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_6',
-      staffId: 'pg_2',
-      staffName: 'PG MAI LINH',
-      role: 'PG',
-      phone: '0912345678',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
+      staffId: 'nv_6',
+      staffName: 'HUỲNH HOÀNG PHÚC',
+      role: 'NV',
+      phone: '',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
       shiftId: 'chieu',
       shiftName: 'Buổi Chiều',
-      shiftTime: '16:30 - 18:30',
-      groupId: 'g2',
-      groupName: 'Nhóm 2',
-      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
-      note: '500 tờ • Cổng trường cấp 2',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_7',
-      staffId: 'nv_3',
-      staffName: 'MI',
+      staffId: 'nv_7',
+      staffName: 'VÕ VŨ LINH',
       role: 'NV',
       phone: '',
-      dayIdx: 1,
-      dayName: 'Thứ Ba',
-      dayShort: 'T3',
-      shiftId: 'sang',
-      shiftName: 'Buổi Sáng',
-      shiftTime: '07:30 - 09:30',
-      groupId: 'g1',
-      groupName: 'Nhóm 1',
-      location: 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư',
-      note: '500 tờ',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_8',
-      staffId: 'nv_9',
-      staffName: 'PHÚC',
+      staffId: 'nv_8',
+      staffName: 'KHANG HI',
       role: 'NV',
       phone: '',
-      dayIdx: 1,
-      dayName: 'Thứ Ba',
-      dayShort: 'T3',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
       shiftId: 'chieu',
       shiftName: 'Buổi Chiều',
-      shiftTime: '16:30 - 18:30',
-      groupId: 'g2',
-      groupName: 'Nhóm 2',
-      location: 'Nhóm 2 - Tuyến Trường Học & Công Viên',
-      note: '500 tờ',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     },
     {
       id: 'as_9',
-      staffId: 'pg_3',
-      staffName: 'PG NHƯ Ý',
+      staffId: 'nv_9',
+      staffName: 'LÊ THỊ MINH THÙY',
+      role: 'NV',
+      phone: '',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
+      weekKey
+    },
+    {
+      id: 'as_10',
+      staffId: 'pg_1',
+      staffName: 'LAM (PG)',
       role: 'PG',
-      phone: '0987654321',
-      dayIdx: 5,
-      dayName: 'Thứ Bảy',
-      dayShort: 'T7',
-      shiftId: 'toi',
-      shiftName: 'Buổi Tối',
-      shiftTime: '19:00 - 21:00',
-      groupId: 'g3',
-      groupName: 'Nhóm 3',
-      location: 'Nhóm 3 - Tuyến Ngã Tư & Trung Tâm',
-      note: '500 tờ • Phố đi bộ',
+      phone: '',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
+      weekKey
+    },
+    {
+      id: 'as_11',
+      staffId: 'pg_2',
+      staffName: 'NHƯ (PG)',
+      role: 'PG',
+      phone: '',
+      dayIdx: 2,
+      dayName: 'Thứ Tư',
+      dayShort: 'T4',
+      shiftId: 'chieu',
+      shiftName: 'Buổi Chiều',
+      shiftTime: '15:00',
+      dateStr: dateStr,
+      location: '',
+      note: '',
       weekKey
     }
   ];
@@ -765,10 +796,9 @@ function setupFlyerControls() {
 
 function setupFlyerTableFilters() {
   const searchInput = document.getElementById('flyerTableSearchInput');
-  const dayFilter = document.getElementById('flyerTableDayFilter');
+  const dateTitleInput = document.getElementById('flyerTableDateTitleInput');
   const shiftFilter = document.getElementById('flyerTableShiftFilter');
   const roleFilter = document.getElementById('flyerTableRoleFilter');
-  const groupMode = document.getElementById('flyerTableGroupMode');
 
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -776,10 +806,11 @@ function setupFlyerTableFilters() {
       renderFlyerScheduleTable();
     });
   }
-  if (dayFilter) {
-    dayFilter.addEventListener('change', (e) => {
-      FlyerState.tableDayFilter = e.target.value;
+  if (dateTitleInput) {
+    dateTitleInput.addEventListener('input', (e) => {
+      FlyerState.tableDateTitle = e.target.value.trim();
       renderFlyerScheduleTable();
+      saveFlyerToFirebase();
     });
   }
   if (shiftFilter) {
@@ -791,12 +822,6 @@ function setupFlyerTableFilters() {
   if (roleFilter) {
     roleFilter.addEventListener('change', (e) => {
       FlyerState.tableRoleFilter = e.target.value;
-      renderFlyerScheduleTable();
-    });
-  }
-  if (groupMode) {
-    groupMode.addEventListener('change', (e) => {
-      FlyerState.tableGroupMode = e.target.value;
       renderFlyerScheduleTable();
     });
   }
@@ -843,11 +868,10 @@ function renderFlyerStats() {
 }
 
 // ==========================================================================
-// 6. BẢNG PHÂN LỊCH TỜ RƠI 5 CỘT (STT, NHÂN VIÊN, THỜI GIAN & NGÀY, ĐỊA ĐIỂM, GHI CHÚ)
+// 6. BẢNG PHÂN LỊCH TỜ RƠI CHUẨN MẪU (VÀNG CHỮ ĐỎ - DÒNG XANH - TUYẾN ĐƯỜNG MERGE)
 // ==========================================================================
 
 function renderFlyerTable() {
-  // Luôn cập nhật Bảng Phân Lịch 5 cột chuẩn
   renderFlyerScheduleTable();
 
   if (FlyerState.currentView === 'summary') {
@@ -858,187 +882,122 @@ function renderFlyerTable() {
 }
 
 /**
- * Hiển thị chính xác Bảng Phân Lịch Tờ Rơi 5 Cột theo yêu cầu
- * Cột 1: STT
- * Cột 2: Nhân viên (Họ tên, Vai trò [NV]/[PG], SĐT)
- * Cột 3: Thời gian & Ngày (Buổi Sáng/Chiều/Tối + Giờ + Thứ)
- * Cột 4: Địa điểm (Tên nhóm & Tuyến đường phát)
- * Cột 5: Ghi chú (Mục tiêu tờ rơi, dặn dò...)
- * Cột 6: Thao tác (Sửa, Xóa)
+ * Hiển thị chính xác Bảng Phân Lịch Tờ Rơi Chuẩn Mẫu (Vàng chữ đỏ, Dòng xanh, Tuyến đường merge)
+ * Cột 1: STT (Đếm lại 1..N cho từng ca)
+ * Cột 2: NHÂN VIÊN (In hoa, đậm. PG có hậu tố (PG))
+ * Cột 3: NGÀY [DD/MM] (Giờ + Ngày, ví dụ: 7:00 NGÀY 22/10, 15:00 NGÀY 22/10)
+ * Cột 4: TUYẾN ĐƯỜNG (Ô gộp rowspan theo ca trực)
+ * Cột 5: THAO TÁC (Sửa, Xóa - ẩn khi xuất ảnh)
  */
 function renderFlyerScheduleTable() {
   const tbody = document.getElementById('flyerScheduleTableBody');
+  const dateHeader = document.getElementById('flyerTableDateHeader');
   if (!tbody) return;
+
+  const dateTitle = (FlyerState.tableDateTitle || '22/10').trim();
+  if (dateHeader) {
+    dateHeader.textContent = `NGÀY ${dateTitle}`;
+  }
 
   const weekKey = getFlyerWeekKey();
   let rawList = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
 
   // Áp dụng bộ lọc
   const q = FlyerState.tableSearchQuery;
-  const dayF = FlyerState.tableDayFilter;
   const shiftF = FlyerState.tableShiftFilter;
   const roleF = FlyerState.tableRoleFilter;
 
   let filteredList = rawList.filter(item => {
     const matchSearch = !q ||
       item.staffName.toLowerCase().includes(q) ||
-      (item.location && item.location.toLowerCase().includes(q)) ||
-      (item.note && item.note.toLowerCase().includes(q));
+      (item.location && item.location.toLowerCase().includes(q));
 
-    const matchDay = (dayF === 'all') || (String(item.dayIdx) === String(dayF));
     const matchShift = (shiftF === 'all') || (item.shiftId === shiftF);
     const matchRole = (roleF === 'all') || (item.role === roleF);
 
-    return matchSearch && matchDay && matchShift && matchRole;
-  });
-
-  // Sắp xếp: Theo thứ tự ngày (T2 -> CN), rồi theo buổi (Sáng -> Chiều -> Tối)
-  const shiftOrder = { 'sang': 1, 'chieu': 2, 'toi': 3 };
-  filteredList.sort((a, b) => {
-    if (a.dayIdx !== b.dayIdx) return a.dayIdx - b.dayIdx;
-    return (shiftOrder[a.shiftId] || 0) - (shiftOrder[b.shiftId] || 0);
+    return matchSearch && matchShift && matchRole;
   });
 
   if (filteredList.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
+        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
           <div style="font-size: 2rem; margin-bottom: 8px;">📂</div>
           <strong style="color: #64748b; font-size: 0.95rem;">Chưa có ca phân lịch nào phù hợp bộ lọc.</strong>
-          <p style="font-size: 0.8rem; margin-top: 4px;">Hãy bấm nút <strong>[+ Thêm Ca Lập Lịch]</strong> ở trên để thêm ca trực mới.</p>
+          <p style="font-size: 0.8rem; margin-top: 4px;">Hãy bấm nút <strong>[+ Thêm Nhân Viên]</strong> ở trên hoặc nút <strong>[Mẫu 22/10]</strong> để nạp bảng chuẩn.</p>
         </td>
       </tr>
     `;
     return;
   }
 
-  if (FlyerState.tableGroupMode !== 'individual') {
-    // CHẾ ĐỘ MẶC ĐỊNH: GOM CÁC NHÂN VIÊN CÙNG THỜI GIAN & ĐỊA ĐIỂM VÀO CHUNG 1 DÒNG
-    const groupsMap = new Map();
-    filteredList.forEach(item => {
-      const locKey = (item.location || item.groupName || '').trim().toLowerCase();
-      const groupKey = `${item.dayIdx}__${item.shiftId}__${locKey}`;
-      if (!groupsMap.has(groupKey)) {
-        groupsMap.set(groupKey, {
-          key: groupKey,
-          dayIdx: item.dayIdx,
-          dayName: item.dayName,
-          dayShort: item.dayShort,
-          shiftId: item.shiftId,
-          shiftName: item.shiftName,
-          shiftTime: item.shiftTime,
-          location: item.location || item.groupName || 'Tuyến phát tờ rơi',
-          items: []
-        });
+  // Phân chia theo từng ca: Sáng (7:00), Chiều (15:00), Tối (19:00)
+  const shiftKeys = ['sang', 'chieu', 'toi'];
+  let html = '';
+  let renderedShiftsCount = 0;
+
+  shiftKeys.forEach(shiftId => {
+    const shiftItems = filteredList.filter(it => it.shiftId === shiftId);
+    if (shiftItems.length === 0) return;
+
+    // Dòng ngăn cách xanh lá giữa các ca (đúng như hình mẫu)
+    if (renderedShiftsCount > 0) {
+      html += `
+        <tr class="flyer-shift-divider">
+          <td colspan="5"></td>
+        </tr>
+      `;
+    }
+    renderedShiftsCount++;
+
+    const defaultShiftTime = (shiftId === 'sang' ? '7:00' : (shiftId === 'chieu' ? '15:00' : '19:00'));
+
+    // Tuyến đường chung của ca
+    const shiftLocation = shiftItems.find(it => it.location && it.location.trim())?.location || '';
+
+    shiftItems.forEach((item, idx) => {
+      let displayName = item.staffName.trim().toUpperCase();
+      if (item.role === 'PG' && !displayName.includes('(PG)')) {
+        displayName += ' (PG)';
       }
-      groupsMap.get(groupKey).items.push(item);
-    });
 
-    const groupsList = Array.from(groupsMap.values());
-    let html = '';
+      const itemTime = item.shiftTime || defaultShiftTime;
+      const timeText = `${itemTime} NGÀY ${item.dateStr || dateTitle}`;
 
-    groupsList.forEach((group, idx) => {
-      const shiftInfo = FLYER_SHIFTS.find(s => s.id === group.shiftId) || { color: '#0284c7', icon: 'fa-sun' };
+      html += `
+        <tr>
+          <!-- 1. STT: Đếm lại từ 1 cho từng ca y hệt ảnh mẫu -->
+          <td class="td-stt">${idx + 1}</td>
 
-      // Render nhân viên trong nhóm ca
-      const staffChipsHtml = group.items.map(item => {
-        const isPG = item.role === 'PG';
-        const avatarClass = isPG ? 'avatar-pg' : 'avatar-nv';
-        const roleBadge = isPG
-          ? `<span class="flyer-badge-pg"><i class="fa-solid fa-sparkles"></i> PG</span>`
-          : `<span class="flyer-badge-nv"><i class="fa-solid fa-user-tie"></i> NV</span>`;
-        const initial = item.staffName ? item.staffName.charAt(0).toUpperCase() : 'N';
+          <!-- 2. NHÂN VIÊN: In hoa đậm -->
+          <td class="td-staff">${displayName}</td>
 
-        return `
-          <div class="flyer-staff-chip-item ${isPG ? 'is-pg' : 'is-nv'}">
-            <div class="flyer-chip-avatar ${avatarClass}">${initial}</div>
-            <div class="flyer-chip-content">
-              ${roleBadge}
-              <strong class="flyer-chip-name">${item.staffName}</strong>
-              ${item.phone ? `<span class="flyer-chip-phone">${item.phone}</span>` : ''}
-            </div>
-            <div class="flyer-chip-actions">
-              <button type="button" class="flyer-chip-btn" title="Chỉnh sửa ca của ${item.staffName}" onclick="openFlyerAssignmentModal('${item.id}')">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
-              <button type="button" class="flyer-chip-btn btn-del" title="Xóa ${item.staffName} khỏi ca này" onclick="deleteFlyerAssignment('${item.id}')">
-                <i class="fa-solid fa-trash-can"></i>
+          <!-- 3. THỜI GIAN & NGÀY: Căn giữa, in đậm -->
+          <td class="td-datetime">${timeText}</td>
+      `;
+
+      // 4. TUYẾN ĐƯỜNG: Ô gộp (rowspan) lớn bên phải đúng y như ảnh mẫu!
+      if (idx === 0) {
+        html += `
+          <td class="td-location" rowspan="${shiftItems.length}">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <span>${shiftLocation}</span>
+              <button type="button" class="btn btn-secondary btn-sm no-export" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1;" title="Chỉnh sửa tuyến đường cho ca này" onclick="openFlyerShiftLocationPrompt('${shiftId}', '${encodeURIComponent(shiftLocation)}')">
+                <i class="fa-solid fa-pen text-blue"></i>
               </button>
             </div>
-          </div>
+          </td>
         `;
-      }).join('');
-
-      // Xử lý ghi chú
-      const uniqueNotes = Array.from(new Set(group.items.map(it => (it.note || '').trim()).filter(Boolean)));
-      let noteHtml = '';
-      if (uniqueNotes.length === 0) {
-        noteHtml = '<span style="color: #cbd5e1;">-</span>';
-      } else if (uniqueNotes.length === 1 && group.items.length > 1) {
-        // Cùng chung 1 ghi chú (vd: 500 tờ)
-        noteHtml = `<span class="flyer-note-tag"><i class="fa-regular fa-note-sticky text-amber"></i> ${uniqueNotes[0]}</span>`;
-      } else {
-        // Từng bạn có ghi chú riêng
-        noteHtml = group.items.map(it => {
-          if (!it.note) return '';
-          return `<span class="flyer-note-tag" title="${it.staffName}"><i class="fa-regular fa-note-sticky text-amber"></i> <strong>${it.staffName}:</strong> ${it.note}</span>`;
-        }).filter(Boolean).join(' ');
       }
 
-      const encodedLoc = encodeURIComponent(group.location);
-
+      // 5. THAO TÁC: Nút sửa / xóa (ẩn khi xuất ảnh)
       html += `
-        <tr>
-          <!-- 1. STT -->
-          <td style="text-align: center; vertical-align: middle;">
-            <span class="flyer-stt-badge">${idx + 1}</span>
-          </td>
-
-          <!-- 2. Nhân Viên (Gom chung các bạn cùng ca trên 1 dòng) -->
-          <td style="vertical-align: middle;">
-            <div class="flyer-staff-grouped-wrap">
-              ${staffChipsHtml}
-              <button type="button" class="btn-add-staff-inline" title="Thêm nhân viên khác vào ca này" onclick="openFlyerAssignmentModal(null, ${group.dayIdx}, '${group.shiftId}', '${encodedLoc}')">
-                <i class="fa-solid fa-plus"></i> Thêm NV
+          <td class="td-actions no-export">
+            <div style="display: flex; gap: 4px; justify-content: center;">
+              <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" title="Sửa ca của ${displayName}" onclick="openFlyerAssignmentModal('${item.id}')">
+                <i class="fa-solid fa-pen"></i>
               </button>
-            </div>
-          </td>
-
-          <!-- 3. Thời Gian & Ngày (Gom chung 1 dòng) -->
-          <td style="vertical-align: middle; white-space: nowrap;">
-            <div class="flyer-datetime-cell-inline">
-              <span class="flyer-day-pill">
-                <i class="fa-regular fa-calendar"></i> <strong>${group.dayName}</strong> (${group.dayShort})
-              </span>
-              <span class="flyer-shift-pill shift-${group.shiftId}" style="color: ${shiftInfo.color};">
-                <i class="fa-solid ${shiftInfo.icon}"></i> ${group.shiftName} (${group.shiftTime})
-              </span>
-            </div>
-          </td>
-
-          <!-- 4. Địa Điểm (1 dòng) -->
-          <td style="vertical-align: middle; white-space: nowrap;">
-            <div class="flyer-location-cell-inline">
-              <span class="flyer-location-group-tag" style="color: #0369a1;">
-                <i class="fa-solid fa-location-dot text-rose"></i> ${group.location}
-              </span>
-            </div>
-          </td>
-
-          <!-- 5. Ghi Chú (1 dòng) -->
-          <td style="vertical-align: middle;">
-            <div class="flyer-note-cell-inline">
-              ${noteHtml}
-            </div>
-          </td>
-
-          <!-- 6. Thao Tác -->
-          <td style="text-align: center; vertical-align: middle;">
-            <div style="display: flex; gap: 6px; justify-content: center;">
-              <button type="button" class="btn btn-secondary btn-sm" title="Thêm nhân viên vào ca này" onclick="openFlyerAssignmentModal(null, ${group.dayIdx}, '${group.shiftId}', '${encodedLoc}')">
-                <i class="fa-solid fa-user-plus text-blue"></i>
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color: #e11d48;" title="Xóa toàn bộ ca trực này (${group.items.length} người)" onclick="deleteFlyerGroupShift('${group.key}')">
+              <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem; color: #dc2626;" title="Xóa ${displayName} khỏi ca này" onclick="deleteFlyerAssignment('${item.id}')">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             </div>
@@ -1046,85 +1005,40 @@ function renderFlyerScheduleTable() {
         </tr>
       `;
     });
+  });
 
-    tbody.innerHTML = html;
-  } else {
-    // CHẾ ĐỘ TỪNG NHÂN VIÊN 1 DÒNG (Nội dung từng ô vẫn gom trên 1 dòng)
-    let html = '';
-    filteredList.forEach((item, idx) => {
-      const isPG = item.role === 'PG';
-      const avatarClass = isPG ? 'avatar-pg' : 'avatar-nv';
-      const roleBadge = isPG
-        ? `<span class="flyer-badge-pg"><i class="fa-solid fa-sparkles"></i> PG</span>`
-        : `<span class="flyer-badge-nv"><i class="fa-solid fa-user-tie"></i> NV</span>`;
+  tbody.innerHTML = html;
+}
 
-      const shiftInfo = FLYER_SHIFTS.find(s => s.id === item.shiftId) || { color: '#0284c7', icon: 'fa-sun' };
-      const initial = item.staffName ? item.staffName.charAt(0).toUpperCase() : 'N';
+function resetFlyerToSample() {
+  FlyerState.tableDateTitle = '22/10';
+  const dateInput = document.getElementById('flyerTableDateTitleInput');
+  if (dateInput) dateInput.value = '22/10';
+  initDemoAssignments();
+  saveFlyerAssignments(false);
+  renderFlyerStats();
+  renderFlyerTable();
+  if (typeof showToast === 'function') {
+    showToast('✅ Đã nạp lại bảng mẫu Ngày 22/10 chuẩn theo hình!', 'success');
+  }
+}
 
-      html += `
-        <tr>
-          <!-- 1. STT -->
-          <td style="text-align: center; vertical-align: middle;">
-            <span class="flyer-stt-badge">${idx + 1}</span>
-          </td>
+function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
+  const currentLoc = decodeURIComponent(currentLocEncoded || '');
+  const newLoc = prompt('Nhập Tuyến Đường cho ca này:', currentLoc);
+  if (newLoc === null) return;
 
-          <!-- 2. Nhân Viên -->
-          <td style="vertical-align: middle;">
-            <div class="flyer-staff-cell">
-              <div class="flyer-staff-avatar ${avatarClass}">${initial}</div>
-              <div class="flyer-staff-info-box">
-                <span class="flyer-staff-name-title">
-                  ${roleBadge} <strong>${item.staffName}</strong>
-                </span>
-                ${item.phone ? `<span class="flyer-staff-subinfo"><i class="fa-solid fa-phone" style="font-size: 0.7rem;"></i> ${item.phone}</span>` : ''}
-              </div>
-            </div>
-          </td>
+  const weekKey = getFlyerWeekKey();
+  FlyerState.assignmentsList.forEach(item => {
+    if (item.shiftId === shiftId && (item.weekKey === weekKey || !item.weekKey)) {
+      item.location = newLoc.trim();
+    }
+  });
 
-          <!-- 3. Thời Gian & Ngày (1 dòng) -->
-          <td style="vertical-align: middle; white-space: nowrap;">
-            <div class="flyer-datetime-cell-inline">
-              <span class="flyer-day-pill">
-                <i class="fa-regular fa-calendar"></i> <strong>${item.dayName}</strong> (${item.dayShort})
-              </span>
-              <span class="flyer-shift-pill shift-${item.shiftId}" style="color: ${shiftInfo.color};">
-                <i class="fa-solid ${shiftInfo.icon}"></i> ${item.shiftName} (${item.shiftTime})
-              </span>
-            </div>
-          </td>
-
-          <!-- 4. Địa Điểm -->
-          <td style="vertical-align: middle; white-space: nowrap;">
-            <div class="flyer-location-cell-inline">
-              <span class="flyer-location-group-tag" style="color: #0369a1;">
-                <i class="fa-solid fa-location-dot text-rose"></i> ${item.location || item.groupName}
-              </span>
-            </div>
-          </td>
-
-          <!-- 5. Ghi Chú -->
-          <td style="vertical-align: middle;">
-            <div class="flyer-note-cell-inline">
-              ${item.note ? `<span class="flyer-note-tag"><i class="fa-regular fa-note-sticky text-amber"></i> ${item.note}</span>` : '<span style="color: #cbd5e1;">-</span>'}
-            </div>
-          </td>
-
-          <!-- 6. Thao Tác -->
-          <td style="text-align: center; vertical-align: middle;">
-            <div style="display: flex; gap: 6px; justify-content: center;">
-              <button type="button" class="btn btn-secondary btn-sm" title="Chỉnh sửa ca này" onclick="openFlyerAssignmentModal('${item.id}')">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm" style="color: #e11d48;" title="Xóa ca này" onclick="deleteFlyerAssignment('${item.id}')">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
-
-    tbody.innerHTML = html;
+  saveFlyerAssignments(false);
+  renderFlyerTable();
+  if (typeof showToast === 'function') {
+    showToast('✅ Đã cập nhật tuyến đường!', 'success');
   }
 }
 
@@ -2009,36 +1923,36 @@ async function exportFlyerScheduleImage() {
     return;
   }
 
-  let exportElement = document.getElementById('flyerScheduleTableContainer');
-  if (FlyerState.currentView === 'matrix') {
-    exportElement = document.getElementById('flyerTableContainer') || exportElement;
-  }
-  if (!exportElement) exportElement = document.getElementById('flyerScheduleTableContainer');
+  const exportElement = document.getElementById('flyerSampleTableContainer') || document.getElementById('flyerScheduleTableContainer');
   if (!exportElement) return;
 
+  exportElement.classList.add('is-exporting');
+
   if (typeof showToast === 'function') {
-    showToast('📸 Đang tạo ảnh lịch tờ rơi chất lượng cao...', 'info');
+    showToast('📸 Đang tạo ảnh bảng theo mẫu chuẩn (vàng chữ đỏ, dòng xanh)...', 'info');
   }
 
   try {
     const canvas = await html2canvas(exportElement, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false
     });
 
+    exportElement.classList.remove('is-exporting');
+
     const link = document.createElement('a');
-    const safeMonth = FlyerState.currentMonth.replace(/\s+/g, '_');
-    const safeWeek = FlyerState.currentWeek.replace(/\s+/g, '_');
-    link.download = `Bang_Phan_Lich_To_Roi_${safeMonth}_${safeWeek}.png`;
+    const safeDate = (FlyerState.tableDateTitle || '22-10').replace(/[\/\\]/g, '-');
+    link.download = `Bang_Phan_Lich_To_Roi_Ngay_${safeDate}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
 
     if (typeof showToast === 'function') {
-      showToast('✅ Đã xuất ảnh bảng lịch thành công và tải về máy!', 'success');
+      showToast('✅ Đã xuất ảnh bảng chuẩn mẫu thành công!', 'success');
     }
   } catch (err) {
+    exportElement.classList.remove('is-exporting');
     console.error('Lỗi xuất ảnh:', err);
     if (typeof showToast === 'function') {
       showToast('Lỗi khi tạo ảnh: ' + err.message, 'error');
@@ -2078,35 +1992,36 @@ function openFlyerZaloModal() {
 }
 
 function generateZaloFlyerScheduleText() {
+  const dateTitle = (FlyerState.tableDateTitle || '22/10').trim();
   const weekKey = getFlyerWeekKey();
   const weekAssignments = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
 
-  let text = `📢 KẾ HOẠCH PHÁT TỜ RƠI • ${FlyerState.currentMonth} - ${FlyerState.currentWeek.toUpperCase()}\n`;
+  let text = `📢 BẢNG PHÂN LỊCH TỜ RƠI • NGÀY ${dateTitle}\n`;
   text += `════════════════════════════════════\n\n`;
 
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    const day = FLYER_DAYS[dayIdx];
-    const dayItems = weekAssignments.filter(as => as.dayIdx === dayIdx);
+  const shiftKeys = ['sang', 'chieu', 'toi'];
+  shiftKeys.forEach(shiftId => {
+    const shiftItems = weekAssignments.filter(it => it.shiftId === shiftId);
+    if (shiftItems.length === 0) return;
 
-    text += `📅 ${day.name.toUpperCase()} (${day.short}):\n`;
+    const defaultTime = shiftId === 'sang' ? '7:00' : (shiftId === 'chieu' ? '15:00' : '19:00');
+    const shiftName = shiftId === 'sang' ? 'CA SÁNG' : (shiftId === 'chieu' ? 'CA CHIỀU' : 'CA TỐI');
 
-    if (dayItems.length === 0) {
-      text += `  ⚪ Không có ca phát tờ rơi\n\n`;
-      continue;
-    }
-
-    FLYER_SHIFTS.forEach(shift => {
-      const shiftItems = dayItems.filter(as => as.shiftId === shift.id);
-      if (shiftItems.length > 0) {
-        text += `  ⏰ ${shift.name} (${shift.time}):\n`;
-        shiftItems.forEach(item => {
-          text += `    • ${item.staffName} (${item.role}): ${item.location} [${item.note || '500 tờ'}]\n`;
-        });
+    text += `⏰ ${shiftName} (${defaultTime} NGÀY ${dateTitle}):\n`;
+    shiftItems.forEach((item, idx) => {
+      let displayName = item.staffName.trim().toUpperCase();
+      if (item.role === 'PG' && !displayName.includes('(PG)')) {
+        displayName += ' (PG)';
       }
+      text += `  ${idx + 1}. ${displayName}\n`;
     });
 
+    const shiftLoc = shiftItems.find(it => it.location && it.location.trim())?.location;
+    if (shiftLoc) {
+      text += `  📍 Tuyến đường: ${shiftLoc}\n`;
+    }
     text += `\n`;
-  }
+  });
 
   text += `════════════════════════════════════\n`;
   text += `👉 Lưu ý: Mọi người có mặt trước 10 phút, kiểm tra số lượng tờ rơi và trang phục chỉnh chu. Chúc cả nhà ngày làm việc hiệu quả! ❤️`;
@@ -2142,6 +2057,8 @@ window.closeFlyerAssignmentModal = closeFlyerAssignmentModal;
 window.saveFlyerAssignmentFromModal = saveFlyerAssignmentFromModal;
 window.deleteFlyerAssignment = deleteFlyerAssignment;
 window.deleteFlyerGroupShift = deleteFlyerGroupShift;
+window.resetFlyerToSample = resetFlyerToSample;
+window.openFlyerShiftLocationPrompt = openFlyerShiftLocationPrompt;
 window.openFlyerStaffModal = openFlyerStaffModal;
 window.closeFlyerStaffModal = closeFlyerStaffModal;
 window.openFlyerAutoScheduleModal = openFlyerAutoScheduleModal;
