@@ -2657,24 +2657,61 @@ async function exportFlyerScheduleImage() {
     return;
   }
 
-  const exportElement = document.getElementById('flyerSampleTableContainer') || document.getElementById('flyerScheduleTableContainer');
-  if (!exportElement) return;
-
-  exportElement.classList.add('is-exporting');
+  const sourceElement = document.getElementById('flyerScheduleListTable');
+  if (!sourceElement) return;
 
   if (typeof showToast === 'function') {
-    showToast('📸 Đang tạo ảnh và tự động sao chép...', 'info');
+    showToast('📸 Đang tạo ảnh chuẩn Desktop & tự động sao chép...', 'info');
   }
 
+  // 1. Tạo container ẩn giả lập màn hình Desktop chuẩn (rộng 1050px)
+  // Dù người dùng đang mở trên điện thoại hay máy tính, ảnh xuất ra luôn ở chế độ Desktop
+  const desktopWrapper = document.createElement('div');
+  desktopWrapper.style.position = 'fixed';
+  desktopWrapper.style.left = '-9999px';
+  desktopWrapper.style.top = '0';
+  desktopWrapper.style.width = '1050px';
+  desktopWrapper.style.minWidth = '1050px';
+  desktopWrapper.style.maxWidth = '1050px';
+  desktopWrapper.style.background = '#ffffff';
+  desktopWrapper.style.padding = '24px 20px';
+  desktopWrapper.style.boxSizing = 'border-box';
+  desktopWrapper.style.zIndex = '-9999';
+  desktopWrapper.style.fontFamily = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+  // 2. Clone bảng sang desktopWrapper
+  const cloneTable = sourceElement.cloneNode(true);
+  cloneTable.classList.add('is-exporting');
+
+  // Loại bỏ tất cả nút sửa / xóa trong cột thao tác của clone
+  cloneTable.querySelectorAll('.no-export').forEach(el => el.remove());
+
+  // Thiết lập độ rộng cột Desktop chuẩn mẫu cho cloneTable
+  cloneTable.style.width = '100%';
+  cloneTable.style.minWidth = '1000px';
+  cloneTable.style.maxWidth = '100%';
+  cloneTable.style.borderCollapse = 'collapse';
+  cloneTable.style.margin = '0 auto';
+  cloneTable.style.background = '#ffffff';
+
+  desktopWrapper.appendChild(cloneTable);
+  document.body.appendChild(desktopWrapper);
+
   try {
-    const canvas = await html2canvas(exportElement, {
+    // 3. Render canvas bằng html2canvas với chuẩn kích thước Desktop (windowWidth: 1200)
+    const canvas = await html2canvas(desktopWrapper, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      windowWidth: 1200,
+      width: 1050
     });
 
-    exportElement.classList.remove('is-exporting');
+    // Xóa ngay desktopWrapper khỏi DOM sau khi chụp
+    if (document.body.contains(desktopWrapper)) {
+      document.body.removeChild(desktopWrapper);
+    }
 
     lastFlyerCanvas = canvas;
     lastFlyerDataUrl = canvas.toDataURL('image/png');
@@ -2690,7 +2727,7 @@ async function exportFlyerScheduleImage() {
       modal.classList.remove('hidden');
     }
 
-    // Tự động sao chép ảnh vào clipboard (KHÔNG lưu tải về máy)
+    // Tự động sao chép ảnh vào clipboard (KHÔNG tự lưu tải về máy)
     canvas.toBlob(async (blob) => {
       lastFlyerBlob = blob;
       if (blob && navigator.clipboard && navigator.clipboard.write) {
@@ -2699,7 +2736,7 @@ async function exportFlyerScheduleImage() {
           await navigator.clipboard.write([item]);
           updateFlyerCopyStatus(true);
           if (typeof showToast === 'function') {
-            showToast('📋 Đã tự động sao chép ảnh! Bạn có thể dán (Ctrl+V) vào Zalo ngay.', 'success');
+            showToast('📋 Đã tự động sao chép ảnh chuẩn Desktop! Bạn có thể dán (Ctrl+V) vào Zalo ngay.', 'success');
           }
         } catch (clipErr) {
           console.warn('Auto clipboard write prevented:', clipErr);
@@ -2711,7 +2748,9 @@ async function exportFlyerScheduleImage() {
     }, 'image/png');
 
   } catch (err) {
-    exportElement.classList.remove('is-exporting');
+    if (document.body.contains(desktopWrapper)) {
+      document.body.removeChild(desktopWrapper);
+    }
     console.error('Lỗi xuất ảnh:', err);
     if (typeof showToast === 'function') {
       showToast('Lỗi khi tạo ảnh: ' + err.message, 'error');

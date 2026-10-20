@@ -717,7 +717,7 @@
               </span>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="flyer-toolbar-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
               <button type="button" class="btn btn-primary btn-sm" id="btnOpenAddAssignmentModal" onclick="openFlyerAssignmentModal()">
                 <i class="fa-solid fa-plus"></i>
                 <span>Thêm Nhân Viên</span>
@@ -738,7 +738,7 @@
           </div>
 
           <!-- Thanh điều khiển & ngày theo mẫu -->
-          <div style="padding: 12px 18px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div class="flyer-table-controls-bar" style="padding: 12px 18px; background: #ffffff; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <!-- Chọn & Hiển Thị Ngày với Bảng Lịch Popup -->
             <div class="flyer-datepicker-container" style="position: relative; display: inline-block;">
               <div id="flyerDateBadgeTrigger" onclick="toggleFlyerCalendar(event)" style="display: inline-flex; align-items: center; gap: 6px; background: #fef9c3; border: 1px solid #334155; padding: 4px 10px; border-radius: 6px; cursor: pointer; user-select: none;" title="Nhấp vào để mở bảng lịch chọn ngày">
@@ -805,6 +805,10 @@
           </div>
 
           <div style="overflow-x: auto; width: 100%; padding: 16px; background: #ffffff;" id="flyerSampleTableContainer">
+            <div class="flyer-mobile-scroll-hint no-export">
+              <i class="fa-solid fa-arrows-left-right"></i>
+              <span>Vuốt ngang để xem toàn bộ bảng</span>
+            </div>
             <table class="flyer-sample-table" id="flyerScheduleListTable">
               <thead>
                 <tr>
