@@ -1315,52 +1315,222 @@ function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
 }
 
 // ==========================================================================
-// 7. THAO TÁC THÊM / SỬA / XÓA CA TRỰC (TỰ ĐỘNG LƯU FIREBASE NGAY LẬP TỨC)
+// 7. THAO TÁC THÊM / SỬA / XÓA CA TRỰC (CHỌN NHIỀU NHÂN VIÊN VÀ TỰ ĐỘNG LƯU FIREBASE)
 // ==========================================================================
 
 function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift = null, presetLocation = null) {
   const modal = document.getElementById('modalFlyerAssignmentForm');
   const title = document.getElementById('assignmentModalTitle');
+  const subtitle = document.getElementById('assignmentModalSubtitle');
   const idInput = document.getElementById('assignmentEditId');
-  const staffSelect = document.getElementById('assignModalStaffSelect');
-  const daySelect = document.getElementById('assignModalDaySelect');
-  const shiftSelect = document.getElementById('assignModalShiftSelect');
-  const locationInput = document.getElementById('assignModalLocationInput');
-  const noteInput = document.getElementById('assignModalNoteInput');
+  const multiWrap = document.getElementById('assignMultiStaffWrap');
+  const singleWrap = document.getElementById('assignSingleStaffWrap');
+  const saveBtnText = document.getElementById('btnSaveAssignmentModalText');
 
   if (!modal) return;
 
-  // Cập nhật danh sách nhân viên vào dropdown
-  if (staffSelect) {
-    staffSelect.innerHTML = FlyerState.staffList.map(s => {
-      const roleText = s.role === 'PG' ? 'PG' : 'Nhân viên';
-      return `<option value="${s.id}">${s.name} (${roleText} • ${s.group || ''})</option>`;
-    }).join('');
-  }
+  const activeDate = (FlyerState.tableDateTitle || '22/10').trim();
 
   if (editId) {
+    // Chế độ chỉnh sửa 1 ca cụ thể (bấm icon bút chì ở từng dòng)
     const item = FlyerState.assignmentsList.find(as => as.id === editId);
-    if (item) {
-      if (title) title.textContent = `✏️ Chỉnh Sửa Ca Phân Lịch: ${item.staffName}`;
-      if (idInput) idInput.value = item.id;
-      if (staffSelect) staffSelect.value = item.staffId;
-      if (daySelect) daySelect.value = String(item.dayIdx);
-      if (shiftSelect) shiftSelect.value = item.shiftId;
-      if (locationInput) locationInput.value = item.location || '';
-      if (noteInput) noteInput.value = item.note || '';
-    }
+    if (!item) return;
+
+    if (idInput) idInput.value = item.id;
+    if (multiWrap) multiWrap.classList.add('hidden');
+    if (singleWrap) singleWrap.classList.remove('hidden');
+
+    if (title) title.textContent = '✏️ Chỉnh Sửa Ca Phân Lịch';
+    if (subtitle) subtitle.textContent = `Cập nhật thông tin ca trực của nhân sự ngày ${activeDate}`;
+    if (saveBtnText) saveBtnText.textContent = 'Lưu Thay Đổi';
+
+    const nameDisplay = document.getElementById('assignSingleStaffNameDisplay');
+    const singleShift = document.getElementById('assignSingleShiftSelect');
+    const singleLoc = document.getElementById('assignSingleLocationInput');
+    const singleNote = document.getElementById('assignSingleNoteInput');
+
+    let displayName = item.staffName;
+    if (item.role === 'PG' && !displayName.includes('(PG)')) displayName += ' (PG)';
+    if (nameDisplay) nameDisplay.textContent = displayName;
+    if (singleShift) singleShift.value = item.shiftId || 'sang';
+    if (singleLoc) singleLoc.value = item.location || '';
+    if (singleNote) singleNote.value = item.note || '';
+
   } else {
-    if (title) title.textContent = '➕ Thêm Ca Phân Lịch Tờ Rơi Mới';
+    // Chế độ thêm nhiều nhân viên vào lịch theo checklist (Đúng theo yêu cầu người dùng)
     if (idInput) idInput.value = '';
-    if (daySelect) daySelect.value = (presetDay !== null && presetDay !== undefined) ? String(presetDay) : '0';
-    if (shiftSelect) shiftSelect.value = presetShift || 'sang';
-    if (locationInput) {
-      locationInput.value = presetLocation ? decodeURIComponent(presetLocation) : 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư';
+    if (multiWrap) multiWrap.classList.remove('hidden');
+    if (singleWrap) singleWrap.classList.add('hidden');
+
+    if (title) title.textContent = '👥 Chọn Nhân Viên Thêm Vào Lịch';
+    if (subtitle) subtitle.textContent = `Tích chọn nhân viên để thêm nhanh vào Ngày ${activeDate}`;
+
+    // Xác định ca trực mặc định
+    let targetShift = presetShift || 'sang';
+    if (!presetShift && FlyerState.tableShiftFilter && FlyerState.tableShiftFilter !== 'all') {
+      targetShift = FlyerState.tableShiftFilter;
     }
-    if (noteInput) noteInput.value = '500 tờ';
+
+    selectFlyerAddShift(targetShift, false);
+
+    // Reset ô tìm kiếm
+    const searchInput = document.getElementById('assignStaffCheckSearch');
+    if (searchInput) searchInput.value = '';
+
+    renderMultiStaffChecklist();
   }
 
   modal.classList.remove('hidden');
+}
+
+function selectFlyerAddShift(shiftId, reRender = true) {
+  const shiftInput = document.getElementById('assignModalShiftSelect');
+  if (shiftInput) shiftInput.value = shiftId;
+
+  // Cập nhật giao diện pills
+  const pills = document.querySelectorAll('#flyerAddShiftPills .flyer-shift-pill');
+  pills.forEach(pill => {
+    if (pill.getAttribute('data-shift') === shiftId) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+
+  if (reRender) {
+    renderMultiStaffChecklist();
+  }
+}
+
+function renderMultiStaffChecklist() {
+  const container = document.getElementById('assignStaffChecklistContainer');
+  if (!container) return;
+
+  const currentShift = document.getElementById('assignModalShiftSelect')?.value || 'sang';
+  const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
+
+  // Tập hợp các nhân sự đã có trong ca này của ngày đang xem
+  const staffInThisShift = new Set();
+  FlyerState.assignmentsList.forEach(as => {
+    if (normalizeFlyerDate(as.dateStr || '22/10') === activeNorm && as.shiftId === currentShift) {
+      staffInThisShift.add(as.staffId);
+    }
+  });
+
+  const staffList = (FlyerState.staffList && FlyerState.staffList.length > 0)
+    ? FlyerState.staffList
+    : DEFAULT_FLYER_STAFF;
+
+  if (staffList.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; color: #64748b; padding: 24px 10px; font-size: 0.85rem;">
+        Chưa có nhân sự nào trong danh mục. Hãy bấm nút Thêm Nhân Sự để tạo danh sách trước.
+      </div>
+    `;
+    updateStaffChecklistCount();
+    return;
+  }
+
+  const searchQuery = (document.getElementById('assignStaffCheckSearch')?.value || '').toLowerCase().trim();
+
+  let html = '';
+  staffList.forEach(s => {
+    const isInShift = staffInThisShift.has(s.id);
+    const roleBadge = s.role === 'PG'
+      ? '<span class="flyer-badge-role role-pg">PG</span>'
+      : '<span class="flyer-badge-role role-nv">NV</span>';
+
+    const groupText = s.group ? `<span class="flyer-staff-check-group">• ${s.group}</span>` : '';
+    const inShiftBadge = isInShift
+      ? '<span class="flyer-staff-in-shift-badge"><i class="fa-solid fa-check"></i> Đã trong ca</span>'
+      : '';
+
+    const isMatch = !searchQuery || s.name.toLowerCase().includes(searchQuery) || (s.group && s.group.toLowerCase().includes(searchQuery));
+    const displayStyle = isMatch ? 'display: flex;' : 'display: none;';
+
+    html += `
+      <label class="flyer-staff-check-item ${isInShift ? 'in-shift' : ''}" style="${displayStyle}" data-id="${s.id}" data-name="${s.name.toLowerCase()}" data-inshift="${isInShift ? '1' : '0'}">
+        <input type="checkbox" value="${s.id}" class="flyer-staff-cb" ${isInShift ? 'disabled' : ''} onchange="onStaffChecklistChange(this)">
+        <div class="flyer-staff-check-info">
+          <span class="flyer-staff-check-name">${s.name}</span>
+          ${roleBadge}
+          ${groupText}
+        </div>
+        ${inShiftBadge}
+      </label>
+    `;
+  });
+
+  container.innerHTML = html;
+  updateStaffChecklistCount();
+}
+
+function onStaffChecklistChange(checkbox) {
+  if (checkbox) {
+    const item = checkbox.closest('.flyer-staff-check-item');
+    if (item) {
+      if (checkbox.checked) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+    }
+  }
+  updateStaffChecklistCount();
+}
+
+function updateStaffChecklistCount() {
+  const checkedCbs = document.querySelectorAll('#assignStaffChecklistContainer input.flyer-staff-cb:checked:not(:disabled)');
+  const count = checkedCbs.length;
+
+  const countBadge = document.getElementById('assignSelectedCountBadge');
+  if (countBadge) {
+    countBadge.textContent = `Đã chọn: ${count} nhân sự`;
+  }
+
+  const saveBtnText = document.getElementById('btnSaveAssignmentModalText');
+  if (saveBtnText) {
+    saveBtnText.textContent = count > 0 ? `Thêm (${count}) Nhân Viên Vào Lịch` : 'Thêm Vào Lịch';
+  }
+}
+
+function selectAllStaffChecklist(isSelectAll) {
+  const container = document.getElementById('assignStaffChecklistContainer');
+  if (!container) return;
+
+  const items = container.querySelectorAll('.flyer-staff-check-item');
+  items.forEach(item => {
+    // Chỉ chọn những mục đang hiển thị và chưa có trong ca (không bị disabled)
+    if (item.style.display !== 'none') {
+      const cb = item.querySelector('input.flyer-staff-cb:not(:disabled)');
+      if (cb) {
+        cb.checked = isSelectAll;
+        if (isSelectAll) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      }
+    }
+  });
+
+  updateStaffChecklistCount();
+}
+
+function filterMultiStaffChecklist() {
+  const query = (document.getElementById('assignStaffCheckSearch')?.value || '').toLowerCase().trim();
+  const container = document.getElementById('assignStaffChecklistContainer');
+  if (!container) return;
+
+  const items = container.querySelectorAll('.flyer-staff-check-item');
+  items.forEach(item => {
+    const name = item.getAttribute('data-name') || '';
+    if (!query || name.includes(query)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
 }
 
 function deleteFlyerGroupShift(groupKey) {
@@ -1398,82 +1568,117 @@ function closeFlyerAssignmentModal() {
 
 function saveFlyerAssignmentFromModal() {
   const idInput = document.getElementById('assignmentEditId');
-  const staffSelect = document.getElementById('assignModalStaffSelect');
-  const daySelect = document.getElementById('assignModalDaySelect');
-  const shiftSelect = document.getElementById('assignModalShiftSelect');
-  const locationInput = document.getElementById('assignModalLocationInput');
-  const noteInput = document.getElementById('assignModalNoteInput');
-
-  const staffId = staffSelect ? staffSelect.value : '';
-  const dayIdx = daySelect ? parseInt(daySelect.value, 10) : 0;
-  const shiftId = shiftSelect ? shiftSelect.value : 'sang';
-  const location = locationInput ? locationInput.value.trim() : '';
-  const note = noteInput ? noteInput.value.trim() : '';
   const editId = idInput ? idInput.value : '';
-
-  const staff = FlyerState.staffList.find(s => s.id === staffId);
-  if (!staff) {
-    if (typeof showToast === 'function') showToast('Vui lòng chọn nhân viên / PG!', 'warning');
-    return;
-  }
-
-  const dayInfo = FLYER_DAYS[dayIdx] || { name: 'Thứ Hai', short: 'T2' };
-  const shiftInfo = FLYER_SHIFTS.find(s => s.id === shiftId) || { name: 'Buổi Sáng', time: '07:30 - 09:30' };
-  const weekKey = getFlyerWeekKey();
 
   if (editId) {
     // Cập nhật ca đã có
     const item = FlyerState.assignmentsList.find(as => as.id === editId);
     if (item) {
-      item.staffId = staff.id;
-      item.staffName = staff.name;
-      item.role = staff.role;
-      item.phone = staff.phone || '';
-      item.dayIdx = dayIdx;
-      item.dayName = dayInfo.name;
-      item.dayShort = dayInfo.short;
+      const singleShift = document.getElementById('assignSingleShiftSelect');
+      const singleLoc = document.getElementById('assignSingleLocationInput');
+      const singleNote = document.getElementById('assignSingleNoteInput');
+
+      const shiftId = singleShift ? singleShift.value : item.shiftId;
+      const shiftInfo = FLYER_SHIFTS.find(s => s.id === shiftId) || { name: 'Buổi Sáng', time: '07:30 - 09:30' };
+
+      let defaultShiftTime = '7:00';
+      if (shiftId === 'cangay') defaultShiftTime = 'CẢ NGÀY';
+      else if (shiftId === 'sang') defaultShiftTime = '7:00';
+      else if (shiftId === 'chieu') defaultShiftTime = '15:00';
+      else if (shiftId === 'toi') defaultShiftTime = '19:00';
+
       item.shiftId = shiftId;
       item.shiftName = shiftInfo.name;
-      item.shiftTime = shiftInfo.time;
-      item.location = location || (staff.group + ' - ' + (location || 'Tuyến phát'));
-      item.note = note;
-      item.weekKey = weekKey;
-      item.dateStr = item.dateStr || (FlyerState.tableDateTitle || '22/10');
-      item.dateKey = item.dateKey || (FlyerState.currentDateKey || '2026-10-22');
+      item.shiftTime = defaultShiftTime;
+      if (singleLoc && singleLoc.value.trim()) item.location = singleLoc.value.trim();
+      if (singleNote) item.note = singleNote.value.trim();
+
+      saveFlyerAssignments(false);
+      closeFlyerAssignmentModal();
+      renderFlyerStats();
+      renderFlyerTable();
+
+      if (typeof showToast === 'function') {
+        showToast(`✅ Đã cập nhật ca cho ${item.staffName}!`, 'success');
+      }
     }
-    if (typeof showToast === 'function') showToast(`✅ Đã cập nhật ca cho ${staff.name}!`, 'success');
-  } else {
-    // Thêm ca mới
-    const newAssignment = {
-      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      staffId: staff.id,
-      staffName: staff.name,
-      role: staff.role,
-      phone: staff.phone || '',
-      dayIdx,
-      dayName: dayInfo.name,
-      dayShort: dayInfo.short,
-      shiftId,
-      shiftName: shiftInfo.name,
-      shiftTime: shiftInfo.time,
-      groupId: 'g1',
-      groupName: staff.group || 'Nhóm 1',
-      location: location || (staff.group + ' - Tuyến phát'),
-      note,
-      dateStr: FlyerState.tableDateTitle || '22/10',
-      dateKey: FlyerState.currentDateKey || '2026-10-22',
-      weekKey
-    };
-    FlyerState.assignmentsList.push(newAssignment);
-    if (typeof showToast === 'function') showToast(`✅ Đã thêm ca phát tờ rơi cho ${staff.name} (Ngày ${FlyerState.tableDateTitle})!`, 'success');
+    return;
   }
 
-  // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
+  // Thêm nhanh nhiều nhân viên đã tích chọn từ checklist
+  const checkedCbs = Array.from(document.querySelectorAll('#assignStaffChecklistContainer input.flyer-staff-cb:checked:not(:disabled)'));
+  if (checkedCbs.length === 0) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Vui lòng tích chọn ít nhất 1 nhân sự để thêm vào lịch!', 'warning');
+    }
+    return;
+  }
+
+  const shiftSelect = document.getElementById('assignModalShiftSelect');
+  const shiftId = shiftSelect ? shiftSelect.value : 'sang';
+
+  const dateStr = (FlyerState.tableDateTitle || '22/10').trim();
+  const dateKey = FlyerState.currentDateKey || '2026-10-22';
+  const activeNorm = normalizeFlyerDate(dateStr);
+
+  const shiftInfo = FLYER_SHIFTS.find(s => s.id === shiftId) || { name: 'Buổi Sáng', time: '07:30 - 09:30' };
+  let defaultShiftTime = '7:00';
+  let shiftDisplayName = 'Ca Sáng (7:00)';
+  if (shiftId === 'cangay') { defaultShiftTime = 'CẢ NGÀY'; shiftDisplayName = 'CẢ NGÀY'; }
+  else if (shiftId === 'sang') { defaultShiftTime = '7:00'; shiftDisplayName = 'Ca Sáng (7:00)'; }
+  else if (shiftId === 'chieu') { defaultShiftTime = '15:00'; shiftDisplayName = 'Ca Chiều (15:00)'; }
+  else if (shiftId === 'toi') { defaultShiftTime = '19:00'; shiftDisplayName = 'Ca Tối (19:00)'; }
+
+  // Tìm tuyến đường hiện tại của ca này trong ngày (để nhân viên mới tự động gom chung tuyến đường mẫu)
+  const existingShiftItems = FlyerState.assignmentsList.filter(as => {
+    return normalizeFlyerDate(as.dateStr || '22/10') === activeNorm && as.shiftId === shiftId;
+  });
+  const commonLocation = existingShiftItems.find(it => it.location && it.location.trim())?.location
+    || (shiftId === 'chieu' ? 'Nhóm 1 - Tuyến Công Viên & Bến Xe' : 'Nhóm 1 - Tuyến Chợ & Khu Dân Cư');
+
+  const weekKey = getFlyerWeekKey();
+  let addedCount = 0;
+
+  checkedCbs.forEach(cb => {
+    const staffId = cb.value;
+    const staff = FlyerState.staffList.find(s => s.id === staffId);
+    if (!staff) return;
+
+    const newAssignment = {
+      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      staffId: staff.id,
+      staffName: staff.name,
+      role: staff.role || 'NV',
+      phone: staff.phone || '',
+      dayIdx: 0,
+      dayName: 'Thứ Hai',
+      dayShort: 'T2',
+      shiftId,
+      shiftName: shiftInfo.name,
+      shiftTime: defaultShiftTime,
+      groupId: 'g1',
+      groupName: staff.group || 'Nhóm 1',
+      location: commonLocation,
+      note: '500 tờ',
+      dateStr,
+      dateKey,
+      weekKey
+    };
+
+    FlyerState.assignmentsList.push(newAssignment);
+    addedCount++;
+  });
+
+  // Tự động lưu ngay lập tức lên Firebase và LocalStorage
   saveFlyerAssignments(false);
 
   closeFlyerAssignmentModal();
   renderFlyerStats();
   renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast(`✅ Đã thêm thành công ${addedCount} nhân viên vào ${shiftDisplayName} ngày ${dateStr}!`, 'success');
+  }
 }
 
 function deleteFlyerAssignment(assignmentId) {
@@ -2445,6 +2650,11 @@ document.addEventListener('DOMContentLoaded', () => {
 window.openFlyerAssignmentModal = openFlyerAssignmentModal;
 window.closeFlyerAssignmentModal = closeFlyerAssignmentModal;
 window.saveFlyerAssignmentFromModal = saveFlyerAssignmentFromModal;
+window.selectFlyerAddShift = selectFlyerAddShift;
+window.renderMultiStaffChecklist = renderMultiStaffChecklist;
+window.onStaffChecklistChange = onStaffChecklistChange;
+window.selectAllStaffChecklist = selectAllStaffChecklist;
+window.filterMultiStaffChecklist = filterMultiStaffChecklist;
 window.deleteFlyerAssignment = deleteFlyerAssignment;
 window.deleteFlyerGroupShift = deleteFlyerGroupShift;
 window.resetFlyerToSample = resetFlyerToSample;
