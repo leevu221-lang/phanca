@@ -939,37 +939,100 @@ function selectFlyerSample22() {
   selectFlyerDate(2026, 9, 22);
 }
 
+function generateDateKeyFromStr(dateStr) {
+  const norm = normalizeFlyerDate(dateStr);
+  const parts = norm.split('/');
+  if (parts.length === 2) {
+    const d = parts[0].padStart(2, '0');
+    const m = parts[1].padStart(2, '0');
+    const y = FlyerState.calYear || 2026;
+    return `${y}-${m}-${d}`;
+  }
+  return '2026-10-22';
+}
+
 function copyFlyerScheduleFromDate(srcDateStr) {
-  const targetDateStr = FlyerState.tableDateTitle || '22/10';
-  const srcNorm = normalizeFlyerDate(srcDateStr);
+  const targetDateStr = (FlyerState.tableDateTitle || '22/10').trim();
+  const srcNorm = normalizeFlyerDate(srcDateStr || '22/10');
   const targetNorm = normalizeFlyerDate(targetDateStr);
 
-  const srcItems = FlyerState.assignmentsList.filter(as => normalizeFlyerDate(as.dateStr || '22/10') === srcNorm);
-  if (srcItems.length === 0) {
-    if (typeof showToast === 'function') showToast(`Không tìm thấy dữ liệu mẫu của ngày ${srcDateStr}!`, 'warning');
+  if (srcNorm === targetNorm) {
+    if (typeof showToast === 'function') showToast(`Bạn đang ở chính ngày ${targetDateStr}!`, 'info');
     return;
   }
 
-  // Xóa ca cũ của ngày đích nếu có
-  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => normalizeFlyerDate(as.dateStr || '22/10') !== targetNorm);
-
-  // Tạo bản sao cho ngày đích
-  srcItems.forEach(item => {
-    FlyerState.assignmentsList.push({
-      ...item,
-      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-      dateStr: targetDateStr,
-      dateKey: FlyerState.currentDateKey,
-      weekKey: getFlyerWeekKey()
-    });
+  // 1. Tìm các ca của Ngày A (Ngày nguồn)
+  let srcItems = FlyerState.assignmentsList.filter(as => {
+    return normalizeFlyerDate(as.dateStr || '22/10') === srcNorm;
   });
 
+  // Nếu trong bộ nhớ chưa có ca nào của Ngày A, nhưng Ngày A là '22/10' mẫu
+  if (srcItems.length === 0 && (srcNorm === '22/10' || srcNorm === '22-10')) {
+    initDemoAssignments();
+    srcItems = FlyerState.assignmentsList.filter(as => normalizeFlyerDate(as.dateStr || '22/10') === '22/10');
+  }
+
+  if (srcItems.length === 0) {
+    if (typeof showToast === 'function') showToast(`Không tìm thấy dữ liệu ca của ngày ${srcDateStr} để sao chép!`, 'warning');
+    return;
+  }
+
+  // Đảm bảo Ngày A có đầy đủ thuộc tính dateStr và dateKey rõ ràng để không bao giờ bị mất hoặc lẫn
+  srcItems.forEach(it => {
+    it.dateStr = srcDateStr;
+    it.dateKey = it.dateKey || generateDateKeyFromStr(srcDateStr);
+  });
+
+  // 2. GIỮ NGUYÊN HOÀN TOÀN TẤT CẢ DỮ LIỆU NGÀY A VÀ CÁC NGÀY KHÁC!
+  // Chỉ lọc bỏ các ca cũ của Ngày B (ngày đích) nếu trước đó Ngày B đã có ca
+  const otherDaysItems = FlyerState.assignmentsList.filter(as => {
+    return normalizeFlyerDate(as.dateStr || '22/10') !== targetNorm;
+  });
+
+  // 3. Deep-clone độc lập từng ca từ Ngày A sang Ngày B với ID mới tinh
+  const targetDateKey = FlyerState.currentDateKey || generateDateKeyFromStr(targetDateStr);
+  const clonedTargetItems = srcItems.map((item, idx) => ({
+    id: 'as_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2, 6),
+    staffId: item.staffId,
+    staffName: item.staffName,
+    role: item.role,
+    phone: item.phone || '',
+    dayIdx: item.dayIdx !== undefined ? item.dayIdx : 2,
+    dayName: item.dayName || 'Thứ Tư',
+    dayShort: item.dayShort || 'T4',
+    shiftId: item.shiftId,
+    shiftName: item.shiftName,
+    shiftTime: item.shiftTime,
+    groupId: item.groupId || 'g1',
+    groupName: item.groupName || 'Nhóm 1',
+    location: item.location || '',
+    note: item.note || '',
+    dateStr: targetDateStr,
+    dateKey: targetDateKey,
+    weekKey: item.weekKey || getFlyerWeekKey()
+  }));
+
+  // 4. Gộp lại: Dữ liệu Ngày A (và các ngày khác nguyên vẹn) + Dữ liệu mới độc lập của Ngày B
+  FlyerState.assignmentsList = [...otherDaysItems, ...clonedTargetItems];
+
+  // 5. Lưu ngay tức thì vào LocalStorage và Firebase
   saveFlyerAssignments(false);
   renderFlyerStats();
   renderFlyerTable();
 
   if (typeof showToast === 'function') {
-    showToast(`✅ Đã sao chép lịch từ ngày ${srcDateStr} sang ngày ${targetDateStr}!`, 'success');
+    showToast(`✅ Đã sao chép lịch sang Ngày ${targetDateStr}! Dữ liệu ngày ${srcDateStr} vẫn được giữ nguyên 100%.`, 'success');
+  }
+}
+
+function promptCopyFromAnyDate() {
+  const otherScheduledDates = Array.from(new Set(
+    FlyerState.assignmentsList.map(as => as.dateStr).filter(Boolean)
+  ));
+  const defaultDate = otherScheduledDates[0] || '22/10';
+  const choice = prompt(`Nhập ngày bạn muốn sao chép sang ngày ${FlyerState.tableDateTitle}:\n(Các ngày đang có lịch: ${otherScheduledDates.join(', ')})`, defaultDate);
+  if (choice && choice.trim()) {
+    copyFlyerScheduleFromDate(choice.trim());
   }
 }
 
@@ -1120,8 +1183,11 @@ function renderFlyerScheduleTable() {
             <button type="button" class="btn btn-primary btn-sm" onclick="openFlyerAssignmentModal()">
               <i class="fa-solid fa-plus"></i> Thêm Nhân Viên Cho Ngày Này
             </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromDate('22/10')" style="font-weight: 700; color: #0284c7;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromDate('22/10')" style="font-weight: 700; color: #0284c7;" title="Sao chép từ ngày 22/10 sang ngày này (dữ liệu ngày 22/10 vẫn giữ nguyên 100%)">
               <i class="fa-solid fa-copy"></i> Sao Chép Lịch Mẫu 22/10 Sang Ngày Này
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="promptCopyFromAnyDate()" style="font-weight: 700; color: #475569;" title="Chọn ngày bất kỳ để sao chép sang ngày này">
+              <i class="fa-solid fa-clone"></i> Sao Chép Từ Ngày Khác...
             </button>
           </div>
         </td>
@@ -2396,5 +2462,6 @@ window.selectFlyerDate = selectFlyerDate;
 window.selectFlyerDateToday = selectFlyerDateToday;
 window.selectFlyerSample22 = selectFlyerSample22;
 window.copyFlyerScheduleFromDate = copyFlyerScheduleFromDate;
+window.promptCopyFromAnyDate = promptCopyFromAnyDate;
 window.saveFlyerToFirebase = saveFlyerToFirebase;
 window.FlyerState = FlyerState;
