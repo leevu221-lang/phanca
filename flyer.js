@@ -26,9 +26,10 @@ const FLYER_FIRESTORE_DOC = 'flyer_master';
 
 // Cấu hình danh mục Buổi mặc định
 const FLYER_SHIFTS = [
-  { id: 'sang', name: 'Buổi Sáng', time: '07:30 - 09:30', icon: 'fa-sun', color: '#0284c7' },
-  { id: 'chieu', name: 'Buổi Chiều', time: '16:30 - 18:30', icon: 'fa-cloud-sun', color: '#d97706' },
-  { id: 'toi', name: 'Buổi Tối', time: '19:00 - 21:00', icon: 'fa-moon', color: '#6366f1' }
+  { id: 'cangay', name: 'Cả Ngày', time: 'Cả Ngày', icon: 'fa-star', color: '#16a34a' },
+  { id: 'sang', name: 'Ca Sáng', time: '7:00', icon: 'fa-sun', color: '#0284c7' },
+  { id: 'chieu', name: 'Ca Chiều', time: '15:00', icon: 'fa-cloud-sun', color: '#d97706' },
+  { id: 'toi', name: 'Ca Tối', time: '19:00', icon: 'fa-moon', color: '#6366f1' }
 ];
 
 // Danh sách thứ trong tuần
@@ -931,8 +932,8 @@ function renderFlyerScheduleTable() {
     return;
   }
 
-  // Phân chia theo từng ca: Sáng (7:00), Chiều (15:00), Tối (19:00)
-  const shiftKeys = ['sang', 'chieu', 'toi'];
+  // Phân chia theo từng ca: Cả Ngày, Sáng (7:00), Chiều (15:00), Tối (19:00)
+  const shiftKeys = ['cangay', 'sang', 'chieu', 'toi'];
   let html = '';
   let renderedShiftsCount = 0;
 
@@ -950,7 +951,11 @@ function renderFlyerScheduleTable() {
     }
     renderedShiftsCount++;
 
-    const defaultShiftTime = (shiftId === 'sang' ? '7:00' : (shiftId === 'chieu' ? '15:00' : '19:00'));
+    let defaultShiftTime = '7:00';
+    if (shiftId === 'cangay') defaultShiftTime = 'CẢ NGÀY';
+    else if (shiftId === 'sang') defaultShiftTime = '7:00';
+    else if (shiftId === 'chieu') defaultShiftTime = '15:00';
+    else if (shiftId === 'toi') defaultShiftTime = '19:00';
 
     // Tuyến đường chung của ca
     const shiftLocation = shiftItems.find(it => it.location && it.location.trim())?.location || '';
@@ -962,7 +967,9 @@ function renderFlyerScheduleTable() {
       }
 
       const itemTime = item.shiftTime || defaultShiftTime;
-      const timeText = `${itemTime} NGÀY ${item.dateStr || dateTitle}`;
+      const timeText = (shiftId === 'cangay' || itemTime.toUpperCase() === 'CẢ NGÀY')
+        ? `CẢ NGÀY ${item.dateStr || dateTitle}`
+        : `${itemTime} NGÀY ${item.dateStr || dateTitle}`;
 
       html += `
         <tr>
@@ -2099,15 +2106,29 @@ function generateZaloFlyerScheduleText() {
   let text = `📢 BẢNG PHÂN LỊCH TỜ RƠI • NGÀY ${dateTitle}\n`;
   text += `════════════════════════════════════\n\n`;
 
-  const shiftKeys = ['sang', 'chieu', 'toi'];
+  const shiftKeys = ['cangay', 'sang', 'chieu', 'toi'];
   shiftKeys.forEach(shiftId => {
     const shiftItems = weekAssignments.filter(it => it.shiftId === shiftId);
     if (shiftItems.length === 0) return;
 
-    const defaultTime = shiftId === 'sang' ? '7:00' : (shiftId === 'chieu' ? '15:00' : '19:00');
-    const shiftName = shiftId === 'sang' ? 'CA SÁNG' : (shiftId === 'chieu' ? 'CA CHIỀU' : 'CA TỐI');
+    let defaultTime = '7:00';
+    let shiftName = 'CA SÁNG';
+    if (shiftId === 'cangay') {
+      defaultTime = 'CẢ NGÀY';
+      shiftName = 'CẢ NGÀY';
+    } else if (shiftId === 'sang') {
+      defaultTime = '7:00';
+      shiftName = 'CA SÁNG';
+    } else if (shiftId === 'chieu') {
+      defaultTime = '15:00';
+      shiftName = 'CA CHIỀU';
+    } else if (shiftId === 'toi') {
+      defaultTime = '19:00';
+      shiftName = 'CA TỐI';
+    }
 
-    text += `⏰ ${shiftName} (${defaultTime} NGÀY ${dateTitle}):\n`;
+    const timeHeader = shiftId === 'cangay' ? `CẢ NGÀY ${dateTitle}` : `${defaultTime} NGÀY ${dateTitle}`;
+    text += `⏰ ${shiftName} (${timeHeader}):\n`;
     shiftItems.forEach((item, idx) => {
       let displayName = item.staffName.trim().toUpperCase();
       if (item.role === 'PG' && !displayName.includes('(PG)')) {
