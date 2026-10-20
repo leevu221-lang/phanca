@@ -2250,3 +2250,243 @@
     border-color: #999999 !important;
   }
 }
+
+/* ==========================================================================
+   GROUP SWITCHER TABS & TABLE TITLE HEADER BANNER (NHÓM 1 & NHÓM 2)
+   ========================================================================== */
+
+/* 1. Group Switcher Bar Above Table */
+.flyer-group-switcher-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 10px 16px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.flyer-group-switcher-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.flyer-group-switcher-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #475569;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.flyer-group-tabs-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flyer-group-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flyer-group-tab:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+}
+
+.flyer-group-tab.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+}
+
+.flyer-group-tab .tab-badge {
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #1e293b;
+  font-weight: 900;
+}
+
+.flyer-group-tab.active .tab-badge {
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+/* 2. Table Header Title Row (Captured in Exported Images & Viewable on Desktop/Mobile) */
+.flyer-sample-table th.th-group-main-title {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+  color: #ffffff !important;
+  padding: 12px 18px !important;
+  border: 1px solid #0f172a !important;
+  text-align: left !important;
+}
+
+.flyer-table-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.flyer-table-title-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.flyer-table-group-pill {
+  background: #fde047;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.flyer-table-group-heading {
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.flyer-table-group-sub {
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.flyer-btn-title-edit {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.flyer-btn-title-edit:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fde047;
+  border-color: #fde047;
+}
+
+/* 3. Group Divider Rows in Table Body (When Viewing All Groups) */
+.flyer-sample-table tr.flyer-group-divider-row td {
+  background: #f1f5f9 !important;
+  padding: 10px 16px !important;
+  border: 1px solid #334155 !important;
+}
+
+.flyer-group-divider-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.flyer-group-divider-content .badge-group-pill {
+  background: #0284c7;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-right: 8px;
+}
+
+/* 4. Modal Group Picker Pills */
+.flyer-group-picker-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flyer-group-pill-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-align: center;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.flyer-group-pill-btn:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.flyer-group-pill-btn.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+@media (max-width: 768px) {
+  .flyer-group-switcher-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+  }
+  .flyer-group-tabs-list {
+    width: 100%;
+  }
+  .flyer-group-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  .flyer-table-title-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .flyer-table-group-heading {
+    font-size: 1rem;
+  }
+}
+

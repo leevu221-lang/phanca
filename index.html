@@ -804,13 +804,59 @@
             </select>
           </div>
 
+          <!-- Thanh chọn Nhóm (TÊN NHÓM 1 / NHÓM 2 / TẤT CẢ CÁC NHÓM) -->
+          <div class="flyer-group-switcher-wrapper no-export" id="flyerGroupSwitcherWrapper">
+            <div class="flyer-group-switcher-inner">
+              <div class="flyer-group-switcher-label">
+                <i class="fa-solid fa-users-line text-blue"></i>
+                <span>CHỌN NHÓM:</span>
+              </div>
+              <div class="flyer-group-tabs-list" id="flyerGroupTabsList">
+                <button type="button" class="flyer-group-tab active" id="tabGroup_g1" onclick="switchFlyerGroup('g1')">
+                  <span class="tab-badge">NHÓM 1</span>
+                  <span class="tab-name" id="tabName_g1">TÊN NHÓM 1</span>
+                </button>
+                <button type="button" class="flyer-group-tab" id="tabGroup_g2" onclick="switchFlyerGroup('g2')">
+                  <span class="tab-badge">NHÓM 2</span>
+                  <span class="tab-name" id="tabName_g2">NHÓM 2</span>
+                </button>
+                <button type="button" class="flyer-group-tab" id="tabGroup_all" onclick="switchFlyerGroup('all')">
+                  <i class="fa-solid fa-table-cells"></i>
+                  <span>Tất Cả Các Nhóm</span>
+                </button>
+              </div>
+            </div>
+            <div class="flyer-group-switcher-actions">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="promptEditCurrentGroupName()" title="Đổi tên tiêu đề nhóm đang chọn" style="font-size: 0.8rem; font-weight: 700;">
+                <i class="fa-solid fa-pen-to-square text-blue"></i> Đổi Tên Tiêu Đề
+              </button>
+            </div>
+          </div>
+
           <div style="overflow-x: auto; width: 100%; padding: 16px; background: #ffffff;" id="flyerSampleTableContainer">
             <div class="flyer-mobile-scroll-hint no-export">
               <i class="fa-solid fa-arrows-left-right"></i>
               <span>Vuốt ngang để xem toàn bộ bảng</span>
             </div>
             <table class="flyer-sample-table" id="flyerScheduleListTable">
-              <thead>
+              <thead id="flyerScheduleTableThead">
+                <!-- Dòng TIÊU ĐỀ BẢNG CHO NHÓM (Hiển thị rõ ràng trên web và tự động chụp vào ảnh khi Xuất) -->
+                <tr class="flyer-table-title-row" id="flyerTableTitleRow">
+                  <th colspan="5" class="th-group-main-title">
+                    <div class="flyer-table-title-container">
+                      <div class="flyer-table-title-left">
+                        <span class="flyer-table-group-pill" id="flyerTableGroupPill">NHÓM 1</span>
+                        <span class="flyer-table-group-heading" id="flyerTableGroupHeading">TÊN NHÓM 1</span>
+                        <span class="flyer-table-group-sub" id="flyerTableGroupSub">BẢNG PHÂN LỊCH PHÁT TỜ RƠI CHI TIẾT</span>
+                      </div>
+                      <div class="flyer-table-title-right no-export">
+                        <button type="button" class="btn btn-sm flyer-btn-title-edit" onclick="promptEditCurrentGroupName()" title="Đổi tên tiêu đề nhóm">
+                          <i class="fa-solid fa-pen"></i> Đổi tên tiêu đề
+                        </button>
+                      </div>
+                    </div>
+                  </th>
+                </tr>
                 <tr>
                   <th class="th-stt"><strong>STT</strong></th>
                   <th class="th-staff"><strong>NHÂN VIÊN</strong></th>
@@ -1784,6 +1830,22 @@
 
         <!-- Multi-Staff Checklist Section (Hiển thị khi bấm Thêm Nhân Viên) -->
         <div id="assignMultiStaffWrap">
+          <!-- Chọn Nhóm (TÊN NHÓM 1 / NHÓM 2) -->
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              <i class="fa-solid fa-users-rectangle text-blue"></i> Phân Vào Nhóm:
+            </label>
+            <div class="flyer-group-picker-group" id="flyerAddGroupPills">
+              <button type="button" class="flyer-group-pill-btn active" data-group="g1" onclick="selectFlyerAddGroup('g1')">
+                ⭐ <span id="modalAddGroupName_g1">TÊN NHÓM 1</span>
+              </button>
+              <button type="button" class="flyer-group-pill-btn" data-group="g2" onclick="selectFlyerAddGroup('g2')">
+                ⭐ <span id="modalAddGroupName_g2">NHÓM 2</span>
+              </button>
+            </div>
+            <input type="hidden" id="assignModalGroupSelect" value="g1">
+          </div>
+
           <!-- Chọn Buổi / Ca Trực -->
           <div style="margin-bottom: 14px;">
             <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
@@ -1841,6 +1903,16 @@
               <i class="fa-solid fa-user-check text-blue"></i> Nhân Viên / PG:
             </label>
             <div id="assignSingleStaffNameDisplay" style="font-weight: 800; font-size: 1.05rem; color: #0f172a; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="control-label" for="assignSingleGroupSelect">
+              <i class="fa-solid fa-users text-blue"></i> Phân Nhóm:
+            </label>
+            <select id="assignSingleGroupSelect" class="custom-select">
+              <option value="g1">TÊN NHÓM 1</option>
+              <option value="g2">NHÓM 2</option>
+            </select>
           </div>
 
           <div class="form-group">
