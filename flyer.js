@@ -1191,17 +1191,16 @@ function renderFlyerGroupTabs() {
 }
 
 /**
-/**
- * Mở modal đổi tiêu đề nhóm (dành cho mobile & desktop, không dùng prompt bị trình duyệt chặn)
+ * Mở modal đổi tiêu đề bảng (dành cho mobile & desktop, không dùng prompt bị trình duyệt chặn)
  */
-function openEditGroupTitleModal(groupId = null) {
+function openEditGroupTitleModal() {
   const modal = document.getElementById('modalEditGroupTitle');
   if (!modal) return;
-  const targetId = groupId || (FlyerState.activeGroup === 'g2' ? 'g2' : 'g1');
-  selectRenameGroupTab(targetId);
+  const curName = FlyerState.customTableTitle || localStorage.getItem('flyer_custom_table_title') || 'BẢNG PHÂN LỊCH TỜ RƠI';
+  const input = document.getElementById('editGroupTitleInput');
+  if (input) input.value = curName;
   modal.classList.remove('hidden');
   setTimeout(() => {
-    const input = document.getElementById('editGroupTitleInput');
     if (input) {
       input.focus();
       input.select();
@@ -1214,30 +1213,6 @@ function closeEditGroupTitleModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-function selectRenameGroupTab(groupId) {
-  const targetId = groupId === 'g2' ? 'g2' : 'g1';
-  const hiddenInput = document.getElementById('editGroupTargetId');
-  if (hiddenInput) hiddenInput.value = targetId;
-
-  ['g1', 'g2'].forEach(id => {
-    const btn = document.getElementById(`btnSelectRenameGroup_${id}`);
-    if (btn) {
-      if (id === targetId) {
-        btn.classList.add('active');
-        btn.style.borderColor = targetId === 'g1' ? '#0284c7' : '#059669';
-      } else {
-        btn.classList.remove('active');
-        btn.style.borderColor = '#cbd5e1';
-      }
-    }
-  });
-
-  const grp = FlyerState.groupList.find(g => g.id === targetId);
-  const curName = grp ? grp.name : (targetId === 'g1' ? 'TÊN NHÓM 1' : 'NHÓM 2');
-  const input = document.getElementById('editGroupTitleInput');
-  if (input) input.value = curName;
-}
-
 function setQuickGroupName(name) {
   const input = document.getElementById('editGroupTitleInput');
   if (input) {
@@ -1247,57 +1222,37 @@ function setQuickGroupName(name) {
 }
 
 function confirmSaveGroupTitleModal() {
-  const targetId = document.getElementById('editGroupTargetId')?.value || 'g1';
   const input = document.getElementById('editGroupTitleInput');
   const newTitle = input ? input.value.trim() : '';
 
   if (!newTitle) {
-    if (typeof showToast === 'function') showToast('⚠️ Vui lòng nhập tiêu đề nhóm!', 'warning');
+    if (typeof showToast === 'function') showToast('⚠️ Vui lòng nhập tiêu đề bảng!', 'warning');
     return;
   }
 
   const trimmed = newTitle.toUpperCase();
-  ensureDefaultGroups();
-  let group = FlyerState.groupList.find(g => g.id === targetId);
-  if (group) {
-    group.name = trimmed;
-  } else {
-    group = { id: targetId, name: trimmed, location: '', color: targetId === 'g1' ? '#0284c7' : '#059669' };
-    FlyerState.groupList.push(group);
+  FlyerState.customTableTitle = trimmed;
+  try {
+    localStorage.setItem('flyer_custom_table_title', trimmed);
+    saveFlyerToFirebase();
+  } catch (e) {
+    console.error(e);
   }
 
-  FlyerState.assignmentsList.forEach(as => {
-    if ((as.groupId || 'g1') === targetId) {
-      as.groupName = trimmed;
-    }
-  });
-
-  saveFlyerGroups(false);
-  saveFlyerAssignments(false);
-  renderFlyerGroupTabs();
   renderFlyerScheduleTable();
-  renderFlyerStats();
   closeEditGroupTitleModal();
 
   if (typeof showToast === 'function') {
-    showToast(`✅ Đã đổi tiêu đề thành: "${trimmed}"`, 'success');
+    showToast(`✅ Đã đổi tiêu đề bảng thành: "${trimmed}"`, 'success');
   }
 }
 
-/**
- * Đổi tên tiêu đề của nhóm đang được chọn (chuyển hướng sang modal trực quan)
- */
 function promptEditCurrentGroupName() {
-  const cur = FlyerState.activeGroup;
-  const targetId = (cur === 'g2') ? 'g2' : 'g1';
-  openEditGroupTitleModal(targetId);
+  openEditGroupTitleModal();
 }
 
-/**
- * Hộp thoại đổi tên tiêu đề nhóm (chuyển hướng sang modal trực quan)
- */
-function promptEditGroupName(groupId) {
-  openEditGroupTitleModal(groupId);
+function promptEditGroupName() {
+  openEditGroupTitleModal();
 }
 
 /**
@@ -1369,42 +1324,29 @@ function renderFlyerScheduleTable() {
   const dateHeader = document.getElementById('flyerTableDateHeader');
   if (!tbody) return;
 
-  ensureDefaultGroups();
-  const g1 = FlyerState.groupList.find(g => g.id === 'g1') || { name: 'TÊN NHÓM 1' };
-  const g2 = FlyerState.groupList.find(g => g.id === 'g2') || { name: 'NHÓM 2' };
-  const curGroup = FlyerState.activeGroup || 'g1';
-
   const dateTitle = (FlyerState.tableDateTitle || '22/10').trim();
   if (dateHeader) {
     dateHeader.textContent = `NGÀY ${dateTitle}`;
   }
 
-  // Cập nhật tiêu đề bảng nhóm (nằm ngay trên đầu bảng, xuất hiện cả trên web và khi chụp ảnh)
+  // Cập nhật tiêu đề bảng
   const groupPill = document.getElementById('flyerTableGroupPill');
   const groupHeading = document.getElementById('flyerTableGroupHeading');
   const groupSub = document.getElementById('flyerTableGroupSub');
 
-  if (groupPill && groupHeading) {
-    if (curGroup === 'g1') {
-      groupPill.textContent = 'NHÓM 1';
-      groupHeading.textContent = g1.name;
-      if (groupSub) groupSub.textContent = `BẢNG PHÂN LỊCH TỜ RƠI • NGÀY ${dateTitle}`;
-    } else if (curGroup === 'g2') {
-      groupPill.textContent = 'NHÓM 2';
-      groupHeading.textContent = g2.name;
-      if (groupSub) groupSub.textContent = `BẢNG PHÂN LỊCH TỜ RƠI • NGÀY ${dateTitle}`;
-    } else {
-      groupPill.textContent = 'TỔNG HỢP';
-      groupHeading.textContent = `${g1.name} & ${g2.name}`;
-      if (groupSub) groupSub.textContent = `BẢNG PHÂN LỊCH TẤT CẢ CÁC NHÓM • NGÀY ${dateTitle}`;
-    }
-  }
+  const customTitle = FlyerState.customTableTitle || localStorage.getItem('flyer_custom_table_title') || 'BẢNG PHÂN LỊCH TỜ RƠI';
 
-  renderFlyerGroupTabs();
+  if (groupPill) groupPill.style.display = 'none';
+  if (groupHeading) groupHeading.textContent = customTitle;
+  if (groupSub) groupSub.textContent = `BẢNG PHÂN LỊCH PHÁT TỜ RƠI CHI TIẾT • NGÀY ${dateTitle}`;
+
+  // Ẩn thanh chọn nhóm
+  const switcher = document.getElementById('flyerGroupSwitcherWrapper');
+  if (switcher) switcher.style.display = 'none';
 
   const activeNorm = normalizeFlyerDate(dateTitle);
 
-  // Lọc chính xác các ca thuộc ngày đang chọn
+  // Lấy toàn bộ nhân sự trong ngày đang chọn (chung 1 bảng duy nhất)
   let rawList = FlyerState.assignmentsList.filter(as => {
     const asNorm = normalizeFlyerDate(as.dateStr || '22/10');
     return asNorm === activeNorm;
@@ -1426,96 +1368,24 @@ function renderFlyerScheduleTable() {
     return matchSearch && matchShift && matchRole;
   });
 
-  // Chế độ xem: TẤT CẢ CÁC NHÓM
-  if (curGroup === 'all') {
-    let combinedHtml = '';
-    const groupsToRender = [
-      { id: 'g1', pill: 'NHÓM 1', name: g1.name },
-      { id: 'g2', pill: 'NHÓM 2', name: g2.name }
-    ];
-
-    groupsToRender.forEach(grp => {
-      const groupItems = filteredList.filter(as => (as.groupId || 'g1') === grp.id);
-      if (groupItems.length > 0) {
-        combinedHtml += `
-          <tr class="flyer-group-divider-row">
-            <td colspan="5">
-              <div class="flyer-group-divider-content">
-                <span>
-                  <span class="badge-group-pill">${grp.pill}</span>
-                  <strong>${grp.name}</strong>
-                </span>
-                <button type="button" class="btn btn-sm btn-ghost no-export" onclick="promptEditGroupName('${grp.id}')" title="Đổi tên tiêu đề nhóm">
-                  <i class="fa-solid fa-pen"></i> Đổi tên
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-        combinedHtml += renderShiftsHtmlForList(groupItems, dateTitle);
-      }
-    });
-
-    if (!combinedHtml) {
-      const isSearching = !!q || shiftF !== 'all' || roleF !== 'all';
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align: center; color: #64748b; padding: 40px 20px;">
-            <div style="font-size: 2.2rem; margin-bottom: 10px;">📅</div>
-            <strong style="color: #1e293b; font-size: 1rem;">
-              ${isSearching ? 'Không có ca phân lịch nào phù hợp bộ lọc.' : `Chưa có lịch phát tờ rơi cho NGÀY ${dateTitle}`}
-            </strong>
-            <p style="font-size: 0.82rem; color: #64748b; margin: 6px 0 14px;">
-              ${isSearching ? 'Hãy thử chọn lại ca trực hoặc từ khóa tìm kiếm.' : 'Bạn có thể bấm thêm nhân viên hoặc sao chép nhanh danh sách nhân sự từ ngày khác sang.'}
-            </p>
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-              <button type="button" class="btn btn-primary btn-sm" onclick="openFlyerAssignmentModal()">
-                <i class="fa-solid fa-plus"></i> Thêm Nhân Viên Cho Ngày Này
-              </button>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromDate('22/10')" style="font-weight: 700; color: #0284c7;">
-                <i class="fa-solid fa-copy"></i> Sao Chép Lịch Mẫu 22/10
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = combinedHtml;
-    return;
-  }
-
-  // Chế độ xem: 1 NHÓM CỤ THỂ (g1 hoặc g2)
-  const groupFilteredList = filteredList.filter(as => (as.groupId || 'g1') === curGroup);
-  const activeGroupName = curGroup === 'g2' ? g2.name : g1.name;
-
-  if (groupFilteredList.length === 0) {
+  if (filteredList.length === 0) {
     const isSearching = !!q || shiftF !== 'all' || roleF !== 'all';
-    const otherGroupId = curGroup === 'g1' ? 'g2' : 'g1';
-    const otherGroupName = curGroup === 'g1' ? g2.name : g1.name;
-    const otherGroupHasItems = rawList.some(as => (as.groupId || 'g1') === otherGroupId);
-
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: #64748b; padding: 40px 20px;">
           <div style="font-size: 2.2rem; margin-bottom: 10px;">📅</div>
           <strong style="color: #1e293b; font-size: 1rem;">
-            ${isSearching ? 'Không có ca phân lịch nào phù hợp bộ lọc.' : `Chưa có lịch phát tờ rơi cho ${activeGroupName} - NGÀY ${dateTitle}`}
+            ${isSearching ? 'Không có ca phân lịch nào phù hợp bộ lọc.' : `Chưa có lịch phát tờ rơi cho NGÀY ${dateTitle}`}
           </strong>
           <p style="font-size: 0.82rem; color: #64748b; margin: 6px 0 14px;">
-            ${isSearching ? 'Hãy thử chọn lại ca trực hoặc từ khóa tìm kiếm.' : `Bạn có thể bấm thêm nhân sự vào ${activeGroupName} hoặc sao chép nhanh danh sách từ ${otherGroupName}.`}
+            ${isSearching ? 'Hãy thử chọn lại ca trực hoặc từ khóa tìm kiếm.' : 'Bạn có thể bấm thêm nhân viên hoặc sao chép nhanh danh sách nhân sự từ ngày khác sang.'}
           </p>
           <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary btn-sm" onclick="openFlyerAssignmentModal()">
-              <i class="fa-solid fa-plus"></i> Thêm Nhân Viên Vào ${activeGroupName}
+              <i class="fa-solid fa-plus"></i> Thêm Nhân Viên Cho Ngày Này
             </button>
-            ${otherGroupHasItems ? `
-            <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromGroup('${otherGroupId}', '${curGroup}')" style="font-weight: 700; color: #0284c7;" title="Sao chép toàn bộ nhân sự từ ${otherGroupName} sang ${activeGroupName}">
-              <i class="fa-solid fa-copy"></i> Sao Chép Danh Sách Từ ${otherGroupName} Sang
-            </button>` : ''}
-            <button type="button" class="btn btn-ghost btn-sm" onclick="promptEditCurrentGroupName()" style="font-weight: 700; color: #475569;">
-              <i class="fa-solid fa-pen"></i> Đổi Tiêu Đề Nhóm
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromDate('22/10')" style="font-weight: 700; color: #0284c7;">
+              <i class="fa-solid fa-copy"></i> Sao Chép Lịch Mẫu 22/10
             </button>
           </div>
         </td>
@@ -1524,7 +1394,8 @@ function renderFlyerScheduleTable() {
     return;
   }
 
-  tbody.innerHTML = renderShiftsHtmlForList(groupFilteredList, dateTitle);
+  // Hiển thị chung tất cả nhân viên trong 1 bảng duy nhất
+  tbody.innerHTML = renderShiftsHtmlForList(filteredList, dateTitle);
 }
 
 /**
@@ -1838,10 +1709,6 @@ function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift =
     if (title) title.textContent = '👥 Chọn Nhân Viên Thêm Vào Lịch';
     if (subtitle) subtitle.textContent = `Tích chọn nhân viên để thêm nhanh vào Ngày ${activeDate}`;
 
-    // Xác định nhóm mặc định: theo nhóm đang xem trên bảng
-    const targetGroup = (FlyerState.activeGroup === 'g2') ? 'g2' : 'g1';
-    selectFlyerAddGroup(targetGroup, false);
-
     // Xác định ca trực mặc định
     let targetShift = presetShift || 'sang';
     if (!presetShift && FlyerState.tableShiftFilter && FlyerState.tableShiftFilter !== 'all') {
@@ -1902,15 +1769,11 @@ function renderMultiStaffChecklist() {
   if (!container) return;
 
   const currentShift = document.getElementById('assignModalShiftSelect')?.value || 'sang';
-  const curGroup = document.getElementById('assignModalGroupSelect')?.value || (FlyerState.activeGroup === 'g2' ? 'g2' : 'g1');
-  const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
-
-  // Tập hợp các nhân sự đã có trong ca này của ngày và nhóm đang xem
+  // Tập hợp các nhân sự đã có trong ca này của ngày đang xem (chung cả bảng)
   const staffInThisShift = new Set();
   FlyerState.assignmentsList.forEach(as => {
     if (normalizeFlyerDate(as.dateStr || '22/10') === activeNorm &&
-        as.shiftId === currentShift &&
-        (as.groupId || 'g1') === curGroup) {
+        as.shiftId === currentShift) {
       staffInThisShift.add(as.staffId);
     }
   });
@@ -2089,13 +1952,8 @@ function saveFlyerAssignmentFromModal() {
       item.shiftName = shiftInfo.name;
       item.shiftTime = defaultShiftTime;
 
-      const singleGroup = document.getElementById('assignSingleGroupSelect');
-      if (singleGroup) {
-        const gId = singleGroup.value || 'g1';
-        const gInfo = FlyerState.groupList.find(g => g.id === gId) || { name: gId === 'g2' ? 'NHÓM 2' : 'TÊN NHÓM 1' };
-        item.groupId = gId;
-        item.groupName = gInfo.name;
-      }
+      item.groupId = 'all';
+      item.groupName = 'Chung';
 
       if (singleLoc && singleLoc.value.trim()) item.location = singleLoc.value.trim();
       if (singleNote) item.note = singleNote.value.trim();
@@ -2124,10 +1982,6 @@ function saveFlyerAssignmentFromModal() {
   const shiftSelect = document.getElementById('assignModalShiftSelect');
   const shiftId = shiftSelect ? shiftSelect.value : 'sang';
 
-  const groupSelect = document.getElementById('assignModalGroupSelect');
-  const targetGroupId = groupSelect ? groupSelect.value : (FlyerState.activeGroup === 'g2' ? 'g2' : 'g1');
-  ensureDefaultGroups();
-  const groupInfo = FlyerState.groupList.find(g => g.id === targetGroupId) || { id: targetGroupId, name: targetGroupId === 'g2' ? 'NHÓM 2' : 'TÊN NHÓM 1' };
 
   const dateStr = (FlyerState.tableDateTitle || '22/10').trim();
   const dateKey = FlyerState.currentDateKey || '2026-10-22';
@@ -2141,16 +1995,12 @@ function saveFlyerAssignmentFromModal() {
   else if (shiftId === 'chieu') { defaultShiftTime = '15:00'; shiftDisplayName = 'Ca Chiều (15:00)'; }
   else if (shiftId === 'toi') { defaultShiftTime = '19:00'; shiftDisplayName = 'Ca Tối (19:00)'; }
 
-  // Tìm tuyến đường hiện tại của ca này trong nhóm đang chọn (để nhân viên mới tự động gom chung tuyến đường mẫu)
+  // Tìm tuyến đường hiện tại của ca này (dùng chung cho toàn bộ nhân sự trong ca)
   const existingShiftItems = FlyerState.assignmentsList.filter(as => {
     return normalizeFlyerDate(as.dateStr || '22/10') === activeNorm &&
-      as.shiftId === shiftId &&
-      (as.groupId || 'g1') === targetGroupId;
+      as.shiftId === shiftId;
   });
-  const defaultLocation = targetGroupId === 'g2'
-    ? `${groupInfo.name} - Tuyến Trường Học & Công Viên`
-    : (shiftId === 'chieu' ? `${groupInfo.name} - Tuyến Công Viên & Bến Xe` : `${groupInfo.name} - Tuyến Chợ & Khu Dân Cư`);
-
+  const defaultLocation = (shiftId === 'chieu' ? 'Tuyến Công Viên & Bến Xe' : 'Tuyến Chợ & Khu Dân Cư');
   const commonLocation = existingShiftItems.find(it => it.location && it.location.trim())?.location || defaultLocation;
 
   const weekKey = getFlyerWeekKey();
@@ -2173,8 +2023,8 @@ function saveFlyerAssignmentFromModal() {
       shiftId,
       shiftName: shiftInfo.name,
       shiftTime: defaultShiftTime,
-      groupId: targetGroupId,
-      groupName: groupInfo.name,
+      groupId: 'all',
+      groupName: 'Chung',
       location: commonLocation,
       note: '500 tờ',
       dateStr,

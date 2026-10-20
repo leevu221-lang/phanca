@@ -27,7 +27,7 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="flyer.css?v=20261020_rename_modal">
+  <link rel="stylesheet" href="flyer.css?v=20261020_single_table">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -804,8 +804,8 @@
             </select>
           </div>
 
-          <!-- Thanh chọn Nhóm (TÊN NHÓM 1 / NHÓM 2 / TẤT CẢ CÁC NHÓM) -->
-          <div class="flyer-group-switcher-wrapper no-export" id="flyerGroupSwitcherWrapper">
+          <!-- Thanh chọn Nhóm (Đã ẩn theo yêu cầu: Hiển thị chung tất cả nhân viên trong 1 bảng duy nhất) -->
+          <div class="flyer-group-switcher-wrapper no-export" id="flyerGroupSwitcherWrapper" style="display: none !important;">
             <div class="flyer-group-switcher-inner">
               <div class="flyer-group-switcher-label">
                 <i class="fa-solid fa-users-line text-blue"></i>
@@ -840,18 +840,17 @@
             </div>
             <table class="flyer-sample-table" id="flyerScheduleListTable">
               <thead id="flyerScheduleTableThead">
-                <!-- Dòng TIÊU ĐỀ BẢNG CHO NHÓM (Hiển thị rõ ràng trên web và tự động chụp vào ảnh khi Xuất) -->
                 <tr class="flyer-table-title-row" id="flyerTableTitleRow">
                   <th colspan="5" class="th-group-main-title">
                     <div class="flyer-table-title-container">
-                      <div class="flyer-table-title-left" onclick="openEditGroupTitleModal()" style="cursor: pointer;" title="Nhấp vào để đổi tên tiêu đề">
-                        <span class="flyer-table-group-pill" id="flyerTableGroupPill">NHÓM 1</span>
-                        <span class="flyer-table-group-heading" id="flyerTableGroupHeading">TÊN NHÓM 1</span>
+                      <div class="flyer-table-title-left" onclick="openEditGroupTitleModal()" style="cursor: pointer;" title="Nhấp vào để đổi tiêu đề bảng">
+                        <span class="flyer-table-group-pill" id="flyerTableGroupPill" style="display: none;"></span>
+                        <span class="flyer-table-group-heading" id="flyerTableGroupHeading">BẢNG PHÂN LỊCH TỜ RƠI</span>
                         <span class="flyer-table-group-sub" id="flyerTableGroupSub">BẢNG PHÂN LỊCH PHÁT TỜ RƠI CHI TIẾT</span>
                       </div>
                       <div class="flyer-table-title-right no-export">
-                        <button type="button" class="btn btn-sm flyer-btn-title-edit" onclick="openEditGroupTitleModal()" title="Đổi tên tiêu đề nhóm">
-                          <i class="fa-solid fa-pen"></i> Đổi tên tiêu đề
+                        <button type="button" class="btn btn-sm flyer-btn-title-edit" onclick="openEditGroupTitleModal()" title="Đổi tiêu đề bảng">
+                          <i class="fa-solid fa-pen"></i> Đổi tiêu đề
                         </button>
                       </div>
                     </div>
@@ -1830,21 +1829,8 @@
 
         <!-- Multi-Staff Checklist Section (Hiển thị khi bấm Thêm Nhân Viên) -->
         <div id="assignMultiStaffWrap">
-          <!-- Chọn Nhóm (TÊN NHÓM 1 / NHÓM 2) -->
-          <div style="margin-bottom: 14px;">
-            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
-              <i class="fa-solid fa-users-rectangle text-blue"></i> Phân Vào Nhóm:
-            </label>
-            <div class="flyer-group-picker-group" id="flyerAddGroupPills">
-              <button type="button" class="flyer-group-pill-btn active" data-group="g1" onclick="selectFlyerAddGroup('g1')">
-                ⭐ <span id="modalAddGroupName_g1">TÊN NHÓM 1</span>
-              </button>
-              <button type="button" class="flyer-group-pill-btn" data-group="g2" onclick="selectFlyerAddGroup('g2')">
-                ⭐ <span id="modalAddGroupName_g2">NHÓM 2</span>
-              </button>
-            </div>
-            <input type="hidden" id="assignModalGroupSelect" value="g1">
-          </div>
+          <!-- Chọn Nhóm (Đã ẩn vì hiển thị chung một bảng không chia nhóm) -->
+          <input type="hidden" id="assignModalGroupSelect" value="all">
 
           <!-- Chọn Buổi / Ca Trực -->
           <div style="margin-bottom: 14px;">
@@ -1905,15 +1891,7 @@
             <div id="assignSingleStaffNameDisplay" style="font-weight: 800; font-size: 1.05rem; color: #0f172a; padding: 8px 12px; background: #f1f5f9; border-radius: 6px; border: 1px solid #cbd5e1;"></div>
           </div>
 
-          <div class="form-group">
-            <label class="control-label" for="assignSingleGroupSelect">
-              <i class="fa-solid fa-users text-blue"></i> Phân Nhóm:
-            </label>
-            <select id="assignSingleGroupSelect" class="custom-select">
-              <option value="g1">TÊN NHÓM 1</option>
-              <option value="g2">NHÓM 2</option>
-            </select>
-          </div>
+          <input type="hidden" id="assignSingleGroupSelect" value="all">
 
           <div class="form-group">
             <label class="control-label" for="assignSingleShiftSelect">
@@ -2038,36 +2016,19 @@
 
       <div class="modal-body" style="padding: 16px 20px;">
         <div class="form-group" style="margin-bottom: 14px;">
-          <label class="control-label" style="font-weight: 800; font-size: 0.82rem; text-transform: uppercase;">
-            <i class="fa-solid fa-layer-group text-blue"></i> Chọn Nhóm Cần Đổi Tên:
-          </label>
-          <div style="display: flex; gap: 8px;">
-            <button type="button" class="flyer-group-pill-btn active" id="btnSelectRenameGroup_g1" onclick="selectRenameGroupTab('g1')">
-              ⭐ Nhóm 1
-            </button>
-            <button type="button" class="flyer-group-pill-btn" id="btnSelectRenameGroup_g2" onclick="selectRenameGroupTab('g2')">
-              ⭐ Nhóm 2
-            </button>
-          </div>
-          <input type="hidden" id="editGroupTargetId" value="g1">
-        </div>
-
-        <div class="form-group" style="margin-bottom: 14px;">
           <label class="control-label" for="editGroupTitleInput" style="font-weight: 800; font-size: 0.82rem; text-transform: uppercase;">
             <i class="fa-solid fa-heading text-amber"></i> Tiêu Đề Hiển Thị Trên Bảng:
           </label>
-          <input type="text" id="editGroupTitleInput" class="custom-select" placeholder="VD: TÊN NHÓM 1, NHÓM 1, ĐỘI 1..." style="width: 100%; font-size: 1rem; font-weight: 800; padding: 10px 12px; color: #0f172a;" onkeydown="if(event.key === 'Enter') confirmSaveGroupTitleModal()">
+          <input type="text" id="editGroupTitleInput" class="custom-select" placeholder="VD: BẢNG PHÂN LỊCH TỜ RƠI..." style="width: 100%; font-size: 1rem; font-weight: 800; padding: 10px 12px; color: #0f172a;" onkeydown="if(event.key === 'Enter') confirmSaveGroupTitleModal()">
         </div>
 
         <div>
-          <span style="font-size: 0.76rem; font-weight: 700; color: #64748b;">💡 Gợi ý tên nhanh:</span>
+          <span style="font-size: 0.76rem; font-weight: 700; color: #64748b;">💡 Gợi ý tiêu đề nhanh:</span>
           <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('NHÓM 1')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">NHÓM 1</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('TÊN NHÓM 1')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">TÊN NHÓM 1</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('NHÓM 2')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">NHÓM 2</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('TÊN NHÓM 2')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">TÊN NHÓM 2</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('ĐỘI 1 - TUYẾN CHỢ')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">ĐỘI 1 - TUYẾN CHỢ</button>
-            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('ĐỘI 2 - TUYẾN CÔNG VIÊN')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">ĐỘI 2 - TUYẾN CÔNG VIÊN</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('BẢNG PHÂN LỊCH TỜ RƠI')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">BẢNG PHÂN LỊCH TỜ RƠI</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('LỊCH PHÁT TỜ RƠI TOÀN HỆ THỐNG')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">LỊCH PHÁT TỜ RƠI TOÀN HỆ THỐNG</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('LỊCH TRỰC HÀNH CHÍNH & TỜ RƠI')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">LỊCH TRỰC HÀNH CHÍNH & TỜ RƠI</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('DANH SÁCH PHÂN CÔNG PHÁT TỜ RƠI')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">DANH SÁCH PHÂN CÔNG PHÁT TỜ RƠI</button>
           </div>
         </div>
       </div>
@@ -2085,6 +2046,6 @@
   <script src="app.js?v=20261007_fb"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261020_rename_modal"></script>
+  <script src="flyer.js?v=20261020_single_table"></script>
 </body>
 </html>
