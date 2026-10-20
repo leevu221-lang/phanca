@@ -358,16 +358,12 @@ function ensureDefaultGroups() {
   if (!g1) {
     g1 = { id: 'g1', name: 'TÊN NHÓM 1', location: 'Tuyến Chợ & Khu Dân Cư', color: '#0284c7' };
     FlyerState.groupList.unshift(g1);
-  } else if (g1.name === 'Nhóm 1') {
-    g1.name = 'TÊN NHÓM 1';
   }
 
   let g2 = FlyerState.groupList.find(g => g.id === 'g2');
   if (!g2) {
     g2 = { id: 'g2', name: 'NHÓM 2', location: 'Tuyến Trường Học & Công Viên', color: '#059669' };
     FlyerState.groupList.push(g2);
-  } else if (g2.name === 'Nhóm 2') {
-    g2.name = 'NHÓM 2';
   }
 }
 
@@ -1195,47 +1191,113 @@ function renderFlyerGroupTabs() {
 }
 
 /**
- * Đổi tên tiêu đề của nhóm đang được chọn
+/**
+ * Mở modal đổi tiêu đề nhóm (dành cho mobile & desktop, không dùng prompt bị trình duyệt chặn)
+ */
+function openEditGroupTitleModal(groupId = null) {
+  const modal = document.getElementById('modalEditGroupTitle');
+  if (!modal) return;
+  const targetId = groupId || (FlyerState.activeGroup === 'g2' ? 'g2' : 'g1');
+  selectRenameGroupTab(targetId);
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    const input = document.getElementById('editGroupTitleInput');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }, 60);
+}
+
+function closeEditGroupTitleModal() {
+  const modal = document.getElementById('modalEditGroupTitle');
+  if (modal) modal.classList.add('hidden');
+}
+
+function selectRenameGroupTab(groupId) {
+  const targetId = groupId === 'g2' ? 'g2' : 'g1';
+  const hiddenInput = document.getElementById('editGroupTargetId');
+  if (hiddenInput) hiddenInput.value = targetId;
+
+  ['g1', 'g2'].forEach(id => {
+    const btn = document.getElementById(`btnSelectRenameGroup_${id}`);
+    if (btn) {
+      if (id === targetId) {
+        btn.classList.add('active');
+        btn.style.borderColor = targetId === 'g1' ? '#0284c7' : '#059669';
+      } else {
+        btn.classList.remove('active');
+        btn.style.borderColor = '#cbd5e1';
+      }
+    }
+  });
+
+  const grp = FlyerState.groupList.find(g => g.id === targetId);
+  const curName = grp ? grp.name : (targetId === 'g1' ? 'TÊN NHÓM 1' : 'NHÓM 2');
+  const input = document.getElementById('editGroupTitleInput');
+  if (input) input.value = curName;
+}
+
+function setQuickGroupName(name) {
+  const input = document.getElementById('editGroupTitleInput');
+  if (input) {
+    input.value = name;
+    input.focus();
+  }
+}
+
+function confirmSaveGroupTitleModal() {
+  const targetId = document.getElementById('editGroupTargetId')?.value || 'g1';
+  const input = document.getElementById('editGroupTitleInput');
+  const newTitle = input ? input.value.trim() : '';
+
+  if (!newTitle) {
+    if (typeof showToast === 'function') showToast('⚠️ Vui lòng nhập tiêu đề nhóm!', 'warning');
+    return;
+  }
+
+  const trimmed = newTitle.toUpperCase();
+  ensureDefaultGroups();
+  let group = FlyerState.groupList.find(g => g.id === targetId);
+  if (group) {
+    group.name = trimmed;
+  } else {
+    group = { id: targetId, name: trimmed, location: '', color: targetId === 'g1' ? '#0284c7' : '#059669' };
+    FlyerState.groupList.push(group);
+  }
+
+  FlyerState.assignmentsList.forEach(as => {
+    if ((as.groupId || 'g1') === targetId) {
+      as.groupName = trimmed;
+    }
+  });
+
+  saveFlyerGroups(false);
+  saveFlyerAssignments(false);
+  renderFlyerGroupTabs();
+  renderFlyerScheduleTable();
+  renderFlyerStats();
+  closeEditGroupTitleModal();
+
+  if (typeof showToast === 'function') {
+    showToast(`✅ Đã đổi tiêu đề thành: "${trimmed}"`, 'success');
+  }
+}
+
+/**
+ * Đổi tên tiêu đề của nhóm đang được chọn (chuyển hướng sang modal trực quan)
  */
 function promptEditCurrentGroupName() {
   const cur = FlyerState.activeGroup;
   const targetId = (cur === 'g2') ? 'g2' : 'g1';
-  promptEditGroupName(targetId);
+  openEditGroupTitleModal(targetId);
 }
 
 /**
- * Hộp thoại đổi tên tiêu đề nhóm (Lưu vào Firebase & tự động cập nhật mọi ca trực)
+ * Hộp thoại đổi tên tiêu đề nhóm (chuyển hướng sang modal trực quan)
  */
 function promptEditGroupName(groupId) {
-  const gId = groupId || 'g1';
-  ensureDefaultGroups();
-  let group = FlyerState.groupList.find(g => g.id === gId);
-  const defaultName = gId === 'g1' ? 'TÊN NHÓM 1' : 'NHÓM 2';
-  const curName = group ? group.name : defaultName;
-  const newName = prompt(`Nhập tiêu đề / tên hiển thị cho ${gId === 'g1' ? 'Nhóm 1' : 'Nhóm 2'}:`, curName);
-  if (newName !== null && newName.trim()) {
-    const trimmed = newName.trim().toUpperCase();
-    if (group) {
-      group.name = trimmed;
-    } else {
-      group = { id: gId, name: trimmed, location: '', color: gId === 'g1' ? '#0284c7' : '#059669' };
-      FlyerState.groupList.push(group);
-    }
-    // Cập nhật tên nhóm cho các ca trực của nhóm này
-    FlyerState.assignmentsList.forEach(as => {
-      if ((as.groupId || 'g1') === gId) {
-        as.groupName = trimmed;
-      }
-    });
-    saveFlyerGroups(false);
-    saveFlyerAssignments(false);
-    renderFlyerGroupTabs();
-    renderFlyerScheduleTable();
-    renderFlyerStats();
-    if (typeof showToast === 'function') {
-      showToast(`✅ Đã cập nhật tiêu đề nhóm: "${trimmed}"`, 'success');
-    }
-  }
+  openEditGroupTitleModal(groupId);
 }
 
 /**
@@ -3190,6 +3252,11 @@ window.selectFlyerAddGroup = selectFlyerAddGroup;
 window.switchFlyerGroup = switchFlyerGroup;
 window.promptEditCurrentGroupName = promptEditCurrentGroupName;
 window.promptEditGroupName = promptEditGroupName;
+window.openEditGroupTitleModal = openEditGroupTitleModal;
+window.closeEditGroupTitleModal = closeEditGroupTitleModal;
+window.selectRenameGroupTab = selectRenameGroupTab;
+window.setQuickGroupName = setQuickGroupName;
+window.confirmSaveGroupTitleModal = confirmSaveGroupTitleModal;
 window.copyFlyerScheduleFromGroup = copyFlyerScheduleFromGroup;
 window.renderFlyerGroupTabs = renderFlyerGroupTabs;
 window.renderMultiStaffChecklist = renderMultiStaffChecklist;

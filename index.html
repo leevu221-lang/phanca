@@ -827,7 +827,7 @@
               </div>
             </div>
             <div class="flyer-group-switcher-actions">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="promptEditCurrentGroupName()" title="Đổi tên tiêu đề nhóm đang chọn" style="font-size: 0.8rem; font-weight: 700;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openEditGroupTitleModal()" title="Đổi tên tiêu đề nhóm đang chọn" style="font-size: 0.8rem; font-weight: 700;">
                 <i class="fa-solid fa-pen-to-square text-blue"></i> Đổi Tên Tiêu Đề
               </button>
             </div>
@@ -844,13 +844,13 @@
                 <tr class="flyer-table-title-row" id="flyerTableTitleRow">
                   <th colspan="5" class="th-group-main-title">
                     <div class="flyer-table-title-container">
-                      <div class="flyer-table-title-left">
+                      <div class="flyer-table-title-left" onclick="openEditGroupTitleModal()" style="cursor: pointer;" title="Nhấp vào để đổi tên tiêu đề">
                         <span class="flyer-table-group-pill" id="flyerTableGroupPill">NHÓM 1</span>
                         <span class="flyer-table-group-heading" id="flyerTableGroupHeading">TÊN NHÓM 1</span>
                         <span class="flyer-table-group-sub" id="flyerTableGroupSub">BẢNG PHÂN LỊCH PHÁT TỜ RƠI CHI TIẾT</span>
                       </div>
                       <div class="flyer-table-title-right no-export">
-                        <button type="button" class="btn btn-sm flyer-btn-title-edit" onclick="promptEditCurrentGroupName()" title="Đổi tên tiêu đề nhóm">
+                        <button type="button" class="btn btn-sm flyer-btn-title-edit" onclick="openEditGroupTitleModal()" title="Đổi tên tiêu đề nhóm">
                           <i class="fa-solid fa-pen"></i> Đổi tên tiêu đề
                         </button>
                       </div>
@@ -2017,6 +2017,65 @@
         <button class="btn btn-secondary" onclick="closeFlyerLocationModal()" type="button">Hủy</button>
         <button class="btn btn-primary" onclick="saveFlyerLocationFromModal()" type="button" style="font-weight: 700;">
           <i class="fa-solid fa-cloud-arrow-up"></i> Lưu & Đồng Bộ Firebase
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Đổi Tiêu Đề Bảng Nhóm (Tùy biến nhanh, không lo bị chặn prompt trên điện thoại) -->
+  <div class="modal-backdrop hidden" id="modalEditGroupTitle" onclick="if(event.target === this) closeEditGroupTitleModal()">
+    <div class="modal-card" style="max-width: 450px; width: 95%;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-pen-to-square text-blue" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3>Đổi Tiêu Đề Bảng Phân Lịch</h3>
+            <span style="font-size: 0.78rem; color: #64748b;">Tùy chỉnh tiêu đề nhóm hiển thị trên bảng & ảnh xuất</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeEditGroupTitleModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="control-label" style="font-weight: 800; font-size: 0.82rem; text-transform: uppercase;">
+            <i class="fa-solid fa-layer-group text-blue"></i> Chọn Nhóm Cần Đổi Tên:
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="flyer-group-pill-btn active" id="btnSelectRenameGroup_g1" onclick="selectRenameGroupTab('g1')">
+              ⭐ Nhóm 1
+            </button>
+            <button type="button" class="flyer-group-pill-btn" id="btnSelectRenameGroup_g2" onclick="selectRenameGroupTab('g2')">
+              ⭐ Nhóm 2
+            </button>
+          </div>
+          <input type="hidden" id="editGroupTargetId" value="g1">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="control-label" for="editGroupTitleInput" style="font-weight: 800; font-size: 0.82rem; text-transform: uppercase;">
+            <i class="fa-solid fa-heading text-amber"></i> Tiêu Đề Hiển Thị Trên Bảng:
+          </label>
+          <input type="text" id="editGroupTitleInput" class="custom-select" placeholder="VD: TÊN NHÓM 1, NHÓM 1, ĐỘI 1..." style="width: 100%; font-size: 1rem; font-weight: 800; padding: 10px 12px; color: #0f172a;" onkeydown="if(event.key === 'Enter') confirmSaveGroupTitleModal()">
+        </div>
+
+        <div>
+          <span style="font-size: 0.76rem; font-weight: 700; color: #64748b;">💡 Gợi ý tên nhanh:</span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('NHÓM 1')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">NHÓM 1</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('TÊN NHÓM 1')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">TÊN NHÓM 1</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('NHÓM 2')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">NHÓM 2</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('TÊN NHÓM 2')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">TÊN NHÓM 2</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('ĐỘI 1 - TUYẾN CHỢ')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">ĐỘI 1 - TUYẾN CHỢ</button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="setQuickGroupName('ĐỘI 2 - TUYẾN CÔNG VIÊN')" style="font-size: 0.74rem; padding: 4px 10px; background: #f1f5f9; font-weight: 700;">ĐỘI 2 - TUYẾN CÔNG VIÊN</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button class="btn btn-secondary" onclick="closeEditGroupTitleModal()" type="button">Hủy</button>
+        <button class="btn btn-primary" onclick="confirmSaveGroupTitleModal()" type="button" style="font-weight: 800; padding: 8px 18px;">
+          <i class="fa-solid fa-check"></i> Lưu & Áp Dụng Ngay
         </button>
       </div>
     </div>
