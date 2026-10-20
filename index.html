@@ -27,7 +27,7 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="flyer.css?v=20261019_list">
+  <link rel="stylesheet" href="flyer.css?v=20261020_group">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -755,18 +755,22 @@
               <option value="NV">Chỉ NV</option>
               <option value="PG">Chỉ PG</option>
             </select>
+            <select id="flyerTableGroupMode" class="custom-select" style="width: 175px; font-size: 0.85rem; font-weight: 700; color: #0284c7; background-color: #f0f9ff; border-color: #bae6fd;">
+              <option value="grouped" selected>👥 Gom theo ca trực</option>
+              <option value="individual">👤 Từng nhân viên</option>
+            </select>
           </div>
 
           <div style="overflow-x: auto; width: 100%;">
             <table class="flyer-schedule-list-table" id="flyerScheduleListTable">
               <thead>
                 <tr>
-                  <th style="text-align: center; width: 60px;">STT</th>
-                  <th style="min-width: 180px;">Nhân Viên</th>
-                  <th style="min-width: 220px;">Thời Gian & Ngày</th>
-                  <th style="min-width: 240px;">Địa Điểm</th>
-                  <th style="min-width: 200px;">Ghi Chú</th>
-                  <th style="text-align: center; width: 110px;">Thao Tác</th>
+                  <th style="text-align: center; width: 55px;">STT</th>
+                  <th style="min-width: 250px;">Nhân Viên Trực</th>
+                  <th style="min-width: 230px;">Thời Gian & Ngày</th>
+                  <th style="min-width: 220px;">Địa Điểm</th>
+                  <th style="min-width: 180px;">Ghi Chú</th>
+                  <th style="text-align: center; width: 100px;">Thao Tác</th>
                 </tr>
               </thead>
               <tbody id="flyerScheduleTableBody">
@@ -1757,6 +1761,6 @@
   <script src="app.js?v=20261007_fb"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261019_fb"></script>
+  <script src="flyer.js?v=20261020_group"></script>
 </body>
 </html>

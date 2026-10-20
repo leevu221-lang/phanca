@@ -1306,6 +1306,54 @@
   gap: 4px;
 }
 
+.flyer-datetime-cell-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.flyer-day-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.flyer-shift-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.flyer-shift-pill.shift-sang {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.flyer-shift-pill.shift-chieu {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.flyer-shift-pill.shift-toi {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #ddd6fe;
+}
+
 .flyer-datetime-main {
   font-weight: 800;
   color: #0369a1;
@@ -1327,6 +1375,10 @@
   gap: 3px;
 }
 
+.flyer-location-cell-inline {
+  white-space: nowrap;
+}
+
 .flyer-location-group-tag {
   font-weight: 800;
   font-size: 0.84rem;
@@ -1346,6 +1398,13 @@
   font-size: 0.84rem;
 }
 
+.flyer-note-cell-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
 .flyer-note-tag {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -1355,6 +1414,132 @@
   align-items: center;
   gap: 5px;
   font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.flyer-staff-grouped-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.flyer-staff-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.flyer-staff-chip-item:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.12);
+}
+
+.flyer-staff-chip-item.is-pg {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
+
+.flyer-staff-chip-item.is-nv {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.flyer-chip-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flyer-chip-avatar.avatar-nv {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.flyer-chip-avatar.avatar-pg {
+  background: linear-gradient(135deg, #ec4899, #db2777);
+}
+
+.flyer-chip-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.flyer-chip-name {
+  font-size: 0.85rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.flyer-chip-phone {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.flyer-chip-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 3px;
+}
+
+.flyer-chip-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.flyer-chip-btn:hover {
+  color: #0284c7;
+  background: #e0f2fe;
+}
+
+.flyer-chip-btn.btn-del:hover {
+  color: #e11d48;
+  background: #ffe4e6;
+}
+
+.btn-add-staff-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px dashed #38bdf8;
+  background: #f0f9ff;
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-staff-inline:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-style: solid;
 }
 
 /* Print CSS */
