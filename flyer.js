@@ -71,6 +71,9 @@ const FlyerState = {
   currentMonth: 'THÁNG 10',
   currentView: 'list', // 'list' (Bảng phân lịch chuẩn mẫu), 'matrix' hoặc 'summary'
   tableDateTitle: '22/10', // Tiêu đề ngày hiển thị trên cột 3 (mặc định 22/10 theo mẫu)
+  currentDateKey: '2026-10-22', // Khóa ngày chuẩn dạng YYYY-MM-DD
+  calYear: 2026,
+  calMonth: 9, // 0-based: 9 = Tháng 10
   filterGroup: 'all',
   filterShift: 'all',
   tableSearchQuery: '',
@@ -795,6 +798,181 @@ function setupFlyerControls() {
   if (btnClearWeek) btnClearWeek.addEventListener('click', confirmClearFlyerWeek);
 }
 
+function normalizeFlyerDate(str) {
+  if (!str) return '22/10';
+  const clean = String(str).trim();
+  const m = clean.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+  if (m) {
+    const d = parseInt(m[1], 10);
+    const mo = parseInt(m[2], 10);
+    return `${d}/${mo}`;
+  }
+  return clean;
+}
+
+function initFlyerCalendar() {
+  document.addEventListener('click', (e) => {
+    const popover = document.getElementById('flyerCalendarPopover');
+    const trigger = document.getElementById('flyerDateBadgeTrigger');
+    if (!popover || popover.classList.contains('hidden')) return;
+    if (!popover.contains(e.target) && !trigger?.contains(e.target)) {
+      popover.classList.add('hidden');
+    }
+  });
+}
+
+function toggleFlyerCalendar(e) {
+  if (e) e.stopPropagation();
+  const popover = document.getElementById('flyerCalendarPopover');
+  if (!popover) return;
+  const isHidden = popover.classList.contains('hidden');
+  if (isHidden) {
+    const dStr = FlyerState.tableDateTitle || '22/10';
+    const m = dStr.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+    if (m) {
+      FlyerState.calMonth = parseInt(m[2], 10) - 1;
+    }
+    renderFlyerCalendar();
+    popover.classList.remove('hidden');
+  } else {
+    popover.classList.add('hidden');
+  }
+}
+
+function changeFlyerCalMonth(delta) {
+  FlyerState.calMonth = (FlyerState.calMonth !== undefined ? FlyerState.calMonth : 9) + delta;
+  if (FlyerState.calMonth < 0) {
+    FlyerState.calMonth = 11;
+    FlyerState.calYear = (FlyerState.calYear || 2026) - 1;
+  } else if (FlyerState.calMonth > 11) {
+    FlyerState.calMonth = 0;
+    FlyerState.calYear = (FlyerState.calYear || 2026) + 1;
+  }
+  renderFlyerCalendar();
+}
+
+function renderFlyerCalendar() {
+  const titleElem = document.getElementById('flyerCalMonthYearTitle');
+  const gridElem = document.getElementById('flyerCalendarDaysGrid');
+  if (!titleElem || !gridElem) return;
+
+  const y = FlyerState.calYear || 2026;
+  const m = (FlyerState.calMonth !== undefined) ? FlyerState.calMonth : 9;
+
+  titleElem.textContent = `Tháng ${m + 1} / ${y}`;
+
+  // Thứ 2 là 0 .. CN là 6
+  const firstDay = new Date(y, m, 1).getDay();
+  const startDay = (firstDay + 6) % 7;
+  const totalDays = new Date(y, m + 1, 0).getDate();
+
+  const now = new Date();
+  const isCurrentMonthNow = (now.getFullYear() === y && now.getMonth() === m);
+  const todayDate = now.getDate();
+
+  const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
+
+  // Tập hợp các ngày đã có phân lịch
+  const datesWithSchedule = new Set();
+  FlyerState.assignmentsList.forEach(as => {
+    if (as.dateStr) {
+      datesWithSchedule.add(normalizeFlyerDate(as.dateStr));
+    }
+  });
+
+  let html = '';
+  for (let i = 0; i < startDay; i++) {
+    html += `<div class="flyer-cal-day-cell empty"></div>`;
+  }
+
+  for (let d = 1; d <= totalDays; d++) {
+    const normDay = `${d}/${m + 1}`;
+    const isSelected = (normDay === activeNorm);
+    const hasSched = datesWithSchedule.has(normDay);
+    const isToday = (isCurrentMonthNow && d === todayDate);
+
+    let classes = ['flyer-cal-day-cell'];
+    if (isSelected) classes.push('selected');
+    if (isToday) classes.push('today');
+    if (hasSched) classes.push('has-schedule');
+
+    html += `
+      <div class="${classes.join(' ')}" onclick="selectFlyerDate(${y}, ${m}, ${d})" title="Ngày ${d}/${m + 1}/${y}${hasSched ? ' (Đã có lịch)' : ''}">
+        <span>${d}</span>
+        ${hasSched ? '<span class="flyer-cal-day-dot"></span>' : ''}
+      </div>
+    `;
+  }
+
+  gridElem.innerHTML = html;
+}
+
+function selectFlyerDate(year, month, day) {
+  const dayStr = `${day}/${month + 1}`;
+  const fullKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  FlyerState.calYear = year;
+  FlyerState.calMonth = month;
+  FlyerState.tableDateTitle = dayStr;
+  FlyerState.currentDateKey = fullKey;
+
+  const dateInput = document.getElementById('flyerTableDateTitleInput');
+  if (dateInput) dateInput.value = dayStr;
+
+  const popover = document.getElementById('flyerCalendarPopover');
+  if (popover) popover.classList.add('hidden');
+
+  renderFlyerScheduleTable();
+  saveFlyerToFirebase();
+
+  if (typeof showToast === 'function') {
+    showToast(`📅 Đã chuyển sang lịch Ngày ${dayStr}!`, 'info');
+  }
+}
+
+function selectFlyerDateToday() {
+  const now = new Date();
+  selectFlyerDate(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function selectFlyerSample22() {
+  selectFlyerDate(2026, 9, 22);
+}
+
+function copyFlyerScheduleFromDate(srcDateStr) {
+  const targetDateStr = FlyerState.tableDateTitle || '22/10';
+  const srcNorm = normalizeFlyerDate(srcDateStr);
+  const targetNorm = normalizeFlyerDate(targetDateStr);
+
+  const srcItems = FlyerState.assignmentsList.filter(as => normalizeFlyerDate(as.dateStr || '22/10') === srcNorm);
+  if (srcItems.length === 0) {
+    if (typeof showToast === 'function') showToast(`Không tìm thấy dữ liệu mẫu của ngày ${srcDateStr}!`, 'warning');
+    return;
+  }
+
+  // Xóa ca cũ của ngày đích nếu có
+  FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => normalizeFlyerDate(as.dateStr || '22/10') !== targetNorm);
+
+  // Tạo bản sao cho ngày đích
+  srcItems.forEach(item => {
+    FlyerState.assignmentsList.push({
+      ...item,
+      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      dateStr: targetDateStr,
+      dateKey: FlyerState.currentDateKey,
+      weekKey: getFlyerWeekKey()
+    });
+  });
+
+  saveFlyerAssignments(false);
+  renderFlyerStats();
+  renderFlyerTable();
+
+  if (typeof showToast === 'function') {
+    showToast(`✅ Đã sao chép lịch từ ngày ${srcDateStr} sang ngày ${targetDateStr}!`, 'success');
+  }
+}
+
 function setupFlyerTableFilters() {
   const searchInput = document.getElementById('flyerTableSearchInput');
   const dateTitleInput = document.getElementById('flyerTableDateTitleInput');
@@ -826,6 +1004,8 @@ function setupFlyerTableFilters() {
       renderFlyerScheduleTable();
     });
   }
+
+  initFlyerCalendar();
 }
 
 // ==========================================================================
@@ -900,8 +1080,13 @@ function renderFlyerScheduleTable() {
     dateHeader.textContent = `NGÀY ${dateTitle}`;
   }
 
-  const weekKey = getFlyerWeekKey();
-  let rawList = FlyerState.assignmentsList.filter(as => as.weekKey === weekKey || !as.weekKey);
+  const activeNorm = normalizeFlyerDate(dateTitle);
+
+  // Lọc chính xác các ca thuộc ngày đang chọn
+  let rawList = FlyerState.assignmentsList.filter(as => {
+    const asNorm = normalizeFlyerDate(as.dateStr || '22/10');
+    return asNorm === activeNorm;
+  });
 
   // Áp dụng bộ lọc
   const q = FlyerState.tableSearchQuery;
@@ -920,12 +1105,25 @@ function renderFlyerScheduleTable() {
   });
 
   if (filteredList.length === 0) {
+    const isSearching = !!q || shiftF !== 'all' || roleF !== 'all';
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 36px 20px;">
-          <div style="font-size: 2rem; margin-bottom: 8px;">📂</div>
-          <strong style="color: #64748b; font-size: 0.95rem;">Chưa có ca phân lịch nào phù hợp bộ lọc.</strong>
-          <p style="font-size: 0.8rem; margin-top: 4px;">Hãy bấm nút <strong>[+ Thêm Nhân Viên]</strong> ở trên hoặc nút <strong>[Mẫu 22/10]</strong> để nạp bảng chuẩn.</p>
+        <td colspan="5" style="text-align: center; color: #64748b; padding: 40px 20px;">
+          <div style="font-size: 2.2rem; margin-bottom: 10px;">📅</div>
+          <strong style="color: #1e293b; font-size: 1rem;">
+            ${isSearching ? 'Không có ca phân lịch nào phù hợp bộ lọc.' : `Chưa có lịch phát tờ rơi cho NGÀY ${dateTitle}`}
+          </strong>
+          <p style="font-size: 0.82rem; color: #64748b; margin: 6px 0 14px;">
+            ${isSearching ? 'Hãy thử chọn lại ca trực hoặc từ khóa tìm kiếm.' : 'Bạn có thể bấm thêm nhân viên hoặc sao chép nhanh danh sách nhân sự từ ngày khác sang.'}
+          </p>
+          <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openFlyerAssignmentModal()">
+              <i class="fa-solid fa-plus"></i> Thêm Nhân Viên Cho Ngày Này
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyFlyerScheduleFromDate('22/10')" style="font-weight: 700; color: #0284c7;">
+              <i class="fa-solid fa-copy"></i> Sao Chép Lịch Mẫu 22/10 Sang Ngày Này
+            </button>
+          </div>
         </td>
       </tr>
     `;
@@ -1035,9 +1233,10 @@ function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
   const newLoc = prompt('Nhập Tuyến Đường cho ca này:', currentLoc);
   if (newLoc === null) return;
 
-  const weekKey = getFlyerWeekKey();
+  const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
   FlyerState.assignmentsList.forEach(item => {
-    if (item.shiftId === shiftId && (item.weekKey === weekKey || !item.weekKey)) {
+    const itemNorm = normalizeFlyerDate(item.dateStr || '22/10');
+    if (item.shiftId === shiftId && itemNorm === activeNorm) {
       item.location = newLoc.trim();
     }
   });
@@ -1045,7 +1244,7 @@ function openFlyerShiftLocationPrompt(shiftId, currentLocEncoded) {
   saveFlyerAssignments(false);
   renderFlyerTable();
   if (typeof showToast === 'function') {
-    showToast('✅ Đã cập nhật tuyến đường!', 'success');
+    showToast(`✅ Đã cập nhật tuyến đường ngày ${FlyerState.tableDateTitle}!`, 'success');
   }
 }
 
@@ -1173,6 +1372,8 @@ function saveFlyerAssignmentFromModal() {
       item.location = location || (staff.group + ' - ' + (location || 'Tuyến phát'));
       item.note = note;
       item.weekKey = weekKey;
+      item.dateStr = item.dateStr || (FlyerState.tableDateTitle || '22/10');
+      item.dateKey = item.dateKey || (FlyerState.currentDateKey || '2026-10-22');
     }
     if (typeof showToast === 'function') showToast(`✅ Đã cập nhật ca cho ${staff.name}!`, 'success');
   } else {
@@ -1193,10 +1394,12 @@ function saveFlyerAssignmentFromModal() {
       groupName: staff.group || 'Nhóm 1',
       location: location || (staff.group + ' - Tuyến phát'),
       note,
+      dateStr: FlyerState.tableDateTitle || '22/10',
+      dateKey: FlyerState.currentDateKey || '2026-10-22',
       weekKey
     };
     FlyerState.assignmentsList.push(newAssignment);
-    if (typeof showToast === 'function') showToast(`✅ Đã thêm ca phát tờ rơi cho ${staff.name}!`, 'success');
+    if (typeof showToast === 'function') showToast(`✅ Đã thêm ca phát tờ rơi cho ${staff.name} (Ngày ${FlyerState.tableDateTitle})!`, 'success');
   }
 
   // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
@@ -2187,5 +2390,11 @@ window.exportFlyerScheduleImage = exportFlyerScheduleImage;
 window.closeFlyerImagePreviewModal = closeFlyerImagePreviewModal;
 window.copyFlyerImageToClipboard = copyFlyerImageToClipboard;
 window.downloadFlyerImageManual = downloadFlyerImageManual;
+window.toggleFlyerCalendar = toggleFlyerCalendar;
+window.changeFlyerCalMonth = changeFlyerCalMonth;
+window.selectFlyerDate = selectFlyerDate;
+window.selectFlyerDateToday = selectFlyerDateToday;
+window.selectFlyerSample22 = selectFlyerSample22;
+window.copyFlyerScheduleFromDate = copyFlyerScheduleFromDate;
 window.saveFlyerToFirebase = saveFlyerToFirebase;
 window.FlyerState = FlyerState;
