@@ -1238,13 +1238,13 @@ function renderFlyerScheduleTable() {
       html += `
         <tr>
           <!-- 1. STT: Đếm lại từ 1 cho từng ca y hệt ảnh mẫu -->
-          <td class="td-stt">${idx + 1}</td>
+          <td class="td-stt"><strong>${idx + 1}</strong></td>
 
           <!-- 2. NHÂN VIÊN: In hoa đậm -->
-          <td class="td-staff">${displayName}</td>
+          <td class="td-staff"><strong>${displayName}</strong></td>
 
           <!-- 3. THỜI GIAN & NGÀY: Căn giữa, in đậm -->
-          <td class="td-datetime">${timeText}</td>
+          <td class="td-datetime"><strong>${timeText}</strong></td>
       `;
 
       // 4. TUYẾN ĐƯỜNG: Ô gộp (rowspan) lớn bên phải đúng y như ảnh mẫu!
@@ -1252,7 +1252,7 @@ function renderFlyerScheduleTable() {
         html += `
           <td class="td-location" rowspan="${shiftItems.length}">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span>${shiftLocation}</span>
+              <strong>${shiftLocation}</strong>
               <button type="button" class="btn btn-secondary btn-sm no-export" style="font-size: 0.72rem; padding: 2px 6px; border: 1px solid #cbd5e1;" title="Chỉnh sửa tuyến đường cho ca này" onclick="openFlyerShiftLocationPrompt('${shiftId}', '${encodeURIComponent(shiftLocation)}')">
                 <i class="fa-solid fa-pen text-blue"></i>
               </button>
