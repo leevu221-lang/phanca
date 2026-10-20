@@ -1917,6 +1917,81 @@ function handleSyncStaffFromMain() {
 // 11. XUẤT ẢNH PNG & SAO CHÉP ZALO
 // ==========================================================================
 
+let lastFlyerCanvas = null;
+let lastFlyerBlob = null;
+let lastFlyerDataUrl = '';
+
+function closeFlyerImagePreviewModal() {
+  const modal = document.getElementById('modalFlyerImagePreview');
+  if (modal) modal.classList.add('hidden');
+}
+
+function updateFlyerCopyStatus(isSuccess) {
+  const banner = document.getElementById('flyerCopyStatusBanner');
+  const icon = document.getElementById('flyerCopyStatusIcon');
+  const text = document.getElementById('flyerCopyStatusText');
+  if (!banner || !icon || !text) return;
+
+  if (isSuccess) {
+    banner.style.background = '#ecfdf5';
+    banner.style.borderColor = '#10b981';
+    banner.style.color = '#065f46';
+    icon.className = 'fa-solid fa-circle-check';
+    icon.style.color = '#10b981';
+    text.innerHTML = 'ĐÃ TỰ ĐỘNG SAO CHÉP ẢNH VÀO CLIPBOARD! Mở Zalo và nhấn <strong>Ctrl + V</strong> (hoặc Cmd + V) để gửi ngay.';
+  } else {
+    banner.style.background = '#fffbeb';
+    banner.style.borderColor = '#f59e0b';
+    banner.style.color = '#92400e';
+    icon.className = 'fa-solid fa-triangle-exclamation';
+    icon.style.color = '#f59e0b';
+    text.innerHTML = 'Trình duyệt chưa cấp quyền tự copy. Bạn hãy <strong>nhấp chuột phải vào ảnh chọn "Sao chép hình ảnh"</strong> hoặc bấm "Sao chép lại".';
+  }
+}
+
+async function copyFlyerImageToClipboard() {
+  if (!lastFlyerBlob && lastFlyerCanvas) {
+    await new Promise((resolve) => {
+      lastFlyerCanvas.toBlob(blob => {
+        lastFlyerBlob = blob;
+        resolve();
+      }, 'image/png');
+    });
+  }
+
+  if (lastFlyerBlob && navigator.clipboard && navigator.clipboard.write) {
+    try {
+      const item = new ClipboardItem({ 'image/png': lastFlyerBlob });
+      await navigator.clipboard.write([item]);
+      updateFlyerCopyStatus(true);
+      if (typeof showToast === 'function') {
+        showToast('📋 Đã sao chép ảnh vào bộ nhớ tạm! Nhấn Ctrl+V để dán.', 'success');
+      }
+      return true;
+    } catch (err) {
+      console.warn('Clipboard write error:', err);
+    }
+  }
+
+  updateFlyerCopyStatus(false);
+  if (typeof showToast === 'function') {
+    showToast('⚠️ Không thể tự động sao chép. Vui lòng nhấp chuột phải vào ảnh chọn "Sao chép hình ảnh"!', 'warning');
+  }
+  return false;
+}
+
+function downloadFlyerImageManual() {
+  if (!lastFlyerDataUrl) return;
+  const link = document.createElement('a');
+  const safeDate = (FlyerState.tableDateTitle || '22-10').replace(/[\/\\]/g, '-');
+  link.download = `Bang_Phan_Lich_To_Roi_Ngay_${safeDate}.png`;
+  link.href = lastFlyerDataUrl;
+  link.click();
+  if (typeof showToast === 'function') {
+    showToast('💾 Đã tải file ảnh về máy!', 'success');
+  }
+}
+
 async function exportFlyerScheduleImage() {
   if (typeof html2canvas === 'undefined') {
     if (typeof showToast === 'function') showToast('Không tìm thấy thư viện html2canvas!', 'error');
@@ -1929,7 +2004,7 @@ async function exportFlyerScheduleImage() {
   exportElement.classList.add('is-exporting');
 
   if (typeof showToast === 'function') {
-    showToast('📸 Đang tạo ảnh bảng theo mẫu chuẩn (vàng chữ đỏ, dòng xanh)...', 'info');
+    showToast('📸 Đang tạo ảnh và tự động sao chép...', 'info');
   }
 
   try {
@@ -1942,15 +2017,40 @@ async function exportFlyerScheduleImage() {
 
     exportElement.classList.remove('is-exporting');
 
-    const link = document.createElement('a');
-    const safeDate = (FlyerState.tableDateTitle || '22-10').replace(/[\/\\]/g, '-');
-    link.download = `Bang_Phan_Lich_To_Roi_Ngay_${safeDate}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    lastFlyerCanvas = canvas;
+    lastFlyerDataUrl = canvas.toDataURL('image/png');
 
-    if (typeof showToast === 'function') {
-      showToast('✅ Đã xuất ảnh bảng chuẩn mẫu thành công!', 'success');
+    // Hiển thị ảnh vào modal preview
+    const previewImg = document.getElementById('flyerPreviewImg');
+    if (previewImg) {
+      previewImg.src = lastFlyerDataUrl;
     }
+
+    const modal = document.getElementById('modalFlyerImagePreview');
+    if (modal) {
+      modal.classList.remove('hidden');
+    }
+
+    // Tự động sao chép ảnh vào clipboard (KHÔNG lưu tải về máy)
+    canvas.toBlob(async (blob) => {
+      lastFlyerBlob = blob;
+      if (blob && navigator.clipboard && navigator.clipboard.write) {
+        try {
+          const item = new ClipboardItem({ 'image/png': blob });
+          await navigator.clipboard.write([item]);
+          updateFlyerCopyStatus(true);
+          if (typeof showToast === 'function') {
+            showToast('📋 Đã tự động sao chép ảnh! Bạn có thể dán (Ctrl+V) vào Zalo ngay.', 'success');
+          }
+        } catch (clipErr) {
+          console.warn('Auto clipboard write prevented:', clipErr);
+          updateFlyerCopyStatus(false);
+        }
+      } else {
+        updateFlyerCopyStatus(false);
+      }
+    }, 'image/png');
+
   } catch (err) {
     exportElement.classList.remove('is-exporting');
     console.error('Lỗi xuất ảnh:', err);
@@ -2063,5 +2163,8 @@ window.openFlyerStaffModal = openFlyerStaffModal;
 window.closeFlyerStaffModal = closeFlyerStaffModal;
 window.openFlyerAutoScheduleModal = openFlyerAutoScheduleModal;
 window.exportFlyerScheduleImage = exportFlyerScheduleImage;
+window.closeFlyerImagePreviewModal = closeFlyerImagePreviewModal;
+window.copyFlyerImageToClipboard = copyFlyerImageToClipboard;
+window.downloadFlyerImageManual = downloadFlyerImageManual;
 window.saveFlyerToFirebase = saveFlyerToFirebase;
 window.FlyerState = FlyerState;

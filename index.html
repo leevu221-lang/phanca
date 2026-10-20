@@ -1669,6 +1669,49 @@
     </div>
   </div>
 
+  <!-- Modal: Xem Trước & Tự Động Sao Chép Ảnh Bảng Lịch Tờ Rơi -->
+  <div class="modal-backdrop hidden" id="modalFlyerImagePreview" onclick="if(event.target === this) closeFlyerImagePreviewModal()">
+    <div class="modal-card modal-lg" style="max-width: 920px; width: 95%;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="fa-solid fa-image text-blue" style="font-size: 1.3rem;"></i>
+          <div>
+            <h3>Ảnh Bảng Phân Lịch Tờ Rơi</h3>
+            <span style="font-size: 0.8rem; color: #64748b;">Xem trước ảnh bảng chuẩn mẫu và tự động sao chép để dán (Ctrl+V) vào Zalo</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeFlyerImagePreviewModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 18px 20px;">
+        <!-- Banner thông báo trạng thái tự động sao chép -->
+        <div id="flyerCopyStatusBanner" style="background: #ecfdf5; border: 1.5px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 14px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-circle-check" id="flyerCopyStatusIcon" style="color: #10b981; font-size: 1.3rem;"></i>
+            <span id="flyerCopyStatusText">ĐÃ TỰ ĐỘNG SAO CHÉP ẢNH VÀO CLIPBOARD! Mở Zalo và nhấn <strong>Ctrl + V</strong> (hoặc Cmd + V) để gửi.</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" onclick="copyFlyerImageToClipboard()" style="background: #059669; border-color: #059669; font-weight: 700; font-size: 0.8rem; white-space: nowrap;">
+            <i class="fa-solid fa-copy"></i> Sao chép lại
+          </button>
+        </div>
+
+        <div style="max-height: 65vh; overflow-y: auto; text-align: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+          <img id="flyerPreviewImg" src="" alt="Ảnh Bảng Lịch Tờ Rơi" style="max-width: 100%; height: auto; border: 1.5px solid #000000; box-shadow: 0 4px 14px rgba(0,0,0,0.12); border-radius: 2px;">
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button class="btn btn-secondary" onclick="closeFlyerImagePreviewModal()" type="button">Đóng</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" type="button" onclick="downloadFlyerImageManual()" title="Tải file ảnh PNG về máy nếu cần">
+            <i class="fa-solid fa-download"></i> Tải về máy
+          </button>
+          <button class="btn btn-primary" type="button" onclick="copyFlyerImageToClipboard()" style="background: #16a34a; border-color: #16a34a; font-weight: 700;">
+            <i class="fa-solid fa-clipboard-check"></i> Sao Chép Ảnh (Ctrl+V)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal 5: Thêm / Chỉnh Sửa Ca Phân Lịch Tờ Rơi -->
   <div class="modal-backdrop hidden" id="modalFlyerAssignmentForm">
     <div class="modal-card" style="max-width: 520px;">
