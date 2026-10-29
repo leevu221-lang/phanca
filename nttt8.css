@@ -552,11 +552,12 @@
    -------------------------------------------------------------------------- */
 .tab-8nttt .accessory-zone {
   display: grid;
-  grid-template-columns: 1.24fr 0.66fr 1.28fr;
+  grid-template-columns: 1.06fr 0.54fr 1.68fr;
   gap: 5px;
   width: 100%;
   padding-top: 2px;
   border-top: 1px solid #e2e8f0;
+  align-items: start;
 }
 
 .tab-8nttt .accessory-group-left {
@@ -568,16 +569,22 @@
 
 .tab-8nttt .accessory-group-laptop {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(4, minmax(27px, auto));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(27px, auto));
   gap: 3px;
+  align-self: start;
 }
 
 .tab-8nttt .accessory-group-phone {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: repeat(4, minmax(27px, auto));
   gap: 3px;
+}
+
+.tab-8nttt .accessory-group-laptop .nttt8-cell,
+.tab-8nttt .accessory-group-phone .nttt8-cell {
+  padding: 2px 4px;
 }
 
 /* ==========================================================================

@@ -1134,7 +1134,8 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '3 / 4',
     bgClass: 'bg-nttt-lavender',
-    icon: 'laptop'
+    icon: 'laptop',
+    hiddenOnMap: true
   },
   {
     id: 'd_laptop_6',
@@ -1146,10 +1147,11 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 3',
     row: '3 / 4',
     bgClass: 'bg-nttt-lavender',
-    icon: 'laptop'
+    icon: 'laptop',
+    hiddenOnMap: true
   },
 
-  // --- Nhóm 3 (Phải): Smartphone & Bàn trải nghiệm BTN (3 cột x 4 hàng) ---
+  // --- Nhóm 3 (Phải): Smartphone & Bàn trải nghiệm BTN (4 cột x 4 hàng) ---
   {
     id: 'd_smartphone',
     zone: 'D',
@@ -1185,6 +1187,18 @@ const DEFAULT_NTTT8_CELLS = [
     row: '1 / 2',
     bgClass: 'bg-nttt-peach-strong',
     icon: 'brand-realme'
+  },
+  {
+    id: 'd_vivo',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'VIVO',
+    staff: 'VY',
+    col: '4 / 5',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-peach-strong',
+    icon: 'brand-vivo'
   },
   {
     id: 'd_btn_xiaomi_1',
@@ -1223,6 +1237,18 @@ const DEFAULT_NTTT8_CELLS = [
     icon: 'brand-motorola'
   },
   {
+    id: 'd_btn_table',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN TABLE',
+    staff: 'TRÂM',
+    col: '4 / 5',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'tablet'
+  },
+  {
     id: 'd_btn_oppo_1',
     zone: 'D',
     section: 'acc_phone',
@@ -1259,6 +1285,18 @@ const DEFAULT_NTTT8_CELLS = [
     icon: 'brand-vivo'
   },
   {
+    id: 'd_btn_realme',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN REALME',
+    staff: 'TRÂM',
+    col: '4 / 5',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-blue-vivo',
+    icon: 'brand-realme'
+  },
+  {
     id: 'd_btn_samsung_1',
     zone: 'D',
     section: 'acc_phone',
@@ -1293,6 +1331,18 @@ const DEFAULT_NTTT8_CELLS = [
     row: '4 / 5',
     bgClass: 'bg-nttt-cream-soft',
     icon: 'brand-honor'
+  },
+  {
+    id: 'd_btn_apple',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN APPLE',
+    staff: 'THANH',
+    col: '4 / 5',
+    row: '4 / 5',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'brand-apple'
   }
 ];
 
@@ -2070,6 +2120,16 @@ function getNTTT8CellSvgIcon(iconKey) {
       return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M6 5v14M17 5l-6.5 7L17 19" fill="none" stroke="#111827" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>`;
+    case 'tablet':
+      return `<svg class="nttt8-svg-icon icon-phone" viewBox="0 0 20 24" aria-hidden="true">
+        <rect x="2.5" y="1.5" width="15" height="21" rx="2.2" fill="#111827"/>
+        <rect x="4.3" y="3.8" width="11.4" height="15.4" rx="1" fill="#38bdf8"/>
+        <circle cx="10" cy="20.7" r="0.9" fill="#ffffff"/>
+      </svg>`;
+    case 'brand-apple':
+      return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M16.4 12.6c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.7-1.3-.1-2.5.8-3.1.8-.6 0-1.6-.8-2.7-.7-1.4 0-2.7.8-3.4 2.1-1.5 2.5-.4 6.2 1 8.3.7 1 1.5 2.1 2.6 2.1 1 0 1.4-.7 2.7-.7 1.2 0 1.6.7 2.7.7 1.1 0 1.8-1 2.5-2 .8-1.1 1.1-2.2 1.1-2.3-.1 0-2.2-.8-2.2-3.4zM14.3 6.5c.6-.7 1-1.7.9-2.7-.9 0-1.9.6-2.5 1.3-.5.6-1 1.6-.9 2.6 1 .1 1.9-.5 2.5-1.2z" fill="#111827"/>
+      </svg>`;
     default:
       return '';
   }
@@ -2260,6 +2320,7 @@ function renderNTTT8AssignmentGrid() {
   const accPhoneCells = [];
 
   NTTT8State.cells.forEach(cell => {
+    if (cell.hiddenOnMap) return;
     const hl = computeCellHighlightStateNTTT8(cell, query, staffFilter, hasFilter);
     const html = createAssignmentCellHTML(cell, hl);
     if (cell.section === 'acc_left') {
