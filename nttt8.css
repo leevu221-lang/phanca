@@ -563,9 +563,8 @@
 .tab-8nttt .accessory-group-left {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(3, minmax(27px, auto));
+  grid-template-rows: repeat(4, minmax(27px, auto));
   gap: 3px;
-  align-self: start;
 }
 
 .tab-8nttt .accessory-group-laptop {
