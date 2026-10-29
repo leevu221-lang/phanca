@@ -1388,12 +1388,25 @@ const NTTT8State = {
   quickPreviewList: [],
   pendingReassignAction: null,
   lastSyncedFingerprint: '',
+  unsubscribeFirestore: null,
+  syncDebounceTimer: null,
+  isSavingFirestore: false,
+  pendingSaveAfterInFlight: false,
+  isInitialSnapshot: true,
   isExportingImage: false,
   isCopyingImage: false,
   previewBlob: null,
   previewObjectUrl: '',
   previewDisplayMode: 'fit'
 };
+
+const NTTT8_CLIENT_ID = 'nttt8_client_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+
+function recordNTTT8Quota(type, count = 1) {
+  if (typeof window !== 'undefined' && typeof window.recordQuotaUsage === 'function') {
+    window.recordQuotaUsage(type, count);
+  }
+}
 
 // ==========================================================================
 // 1. QUẢN LÝ DỮ LIỆU QUAN HỆ (NHÂN VIÊN, PG, PHÂN CÔNG) & ĐỒNG BỘ FIREBASE
@@ -1608,6 +1621,7 @@ function loadNTTT8Data() {
   NTTT8State.pgList = loadedPg;
   NTTT8State.areaAssignments = loadedAssignments;
   syncNTTT8RelationalState();
+  NTTT8State.lastSyncedFingerprint = getNTTT8DataFingerprint();
 }
 
 function buildNTTT8OverridesMap() {
@@ -1621,6 +1635,18 @@ function buildNTTT8OverridesMap() {
     };
   });
   return map;
+}
+
+function getNTTT8DataFingerprint(overridesMap = null, rulesObj = null) {
+  const map = overridesMap || buildNTTT8OverridesMap();
+  const rules = rulesObj || NTTT8State.rules;
+  return JSON.stringify({
+    cells: map,
+    rules: rules,
+    staffList: NTTT8State.staffList,
+    pgList: NTTT8State.pgList,
+    areaAssignments: NTTT8State.areaAssignments
+  });
 }
 
 function setNTTT8ManagerSyncBadge(status, text) {
@@ -1662,13 +1688,16 @@ function saveNTTT8DataToStorage(syncToCloud = true) {
   }
 }
 
-async function syncNTTT8ToFirestore(overridesMap, rulesObj) {
+async function executeNTTT8FirestoreWrite() {
   try {
     if (typeof firebase === 'undefined' || !firebase.firestore) {
       setNTTT8ManagerSyncBadge('saved', 'Đã lưu trên trình duyệt');
-      return;
+      return false;
     }
-    const db = firebase.firestore();
+
+    syncNTTT8RelationalState();
+    const overridesMap = buildNTTT8OverridesMap();
+    const rulesObj = NTTT8State.rules;
     const payloadObj = {
       cells: overridesMap,
       rules: rulesObj,
@@ -1677,42 +1706,115 @@ async function syncNTTT8ToFirestore(overridesMap, rulesObj) {
       areaAssignments: NTTT8State.areaAssignments
     };
     const payloadStr = JSON.stringify(payloadObj);
+
     if (payloadStr === NTTT8State.lastSyncedFingerprint) {
+      recordNTTT8Quota('avoided', 1);
       setNTTT8ManagerSyncBadge('saved', 'Đã lưu & đồng bộ');
-      return;
+      return false;
     }
 
-    NTTT8State.lastSyncedFingerprint = payloadStr;
+    if (NTTT8State.isSavingFirestore) {
+      NTTT8State.pendingSaveAfterInFlight = true;
+      return false;
+    }
+
+    NTTT8State.isSavingFirestore = true;
+    const db = firebase.firestore();
     await db.collection(NTTT8_FIRESTORE_COLLECTION).doc(NTTT8_FIRESTORE_DOC).set({
       ...payloadObj,
+      updatedBy: NTTT8_CLIENT_ID,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+
+    NTTT8State.lastSyncedFingerprint = payloadStr;
+    recordNTTT8Quota('write', 1);
     setNTTT8ManagerSyncBadge('saved', 'Đã lưu & đồng bộ Cloud');
+    return true;
   } catch (e) {
     console.warn('[8NTTT] Đồng bộ Firestore tạm hoãn:', e);
     setNTTT8ManagerSyncBadge('saved', 'Đã lưu cục bộ (Chờ mạng)');
+    return false;
+  } finally {
+    NTTT8State.isSavingFirestore = false;
+    if (NTTT8State.pendingSaveAfterInFlight) {
+      NTTT8State.pendingSaveAfterInFlight = false;
+      if (getNTTT8DataFingerprint() !== NTTT8State.lastSyncedFingerprint) {
+        executeNTTT8FirestoreWrite();
+      }
+    }
+  }
+}
+
+async function syncNTTT8ToFirestore(overridesMap, rulesObj) {
+  if (typeof firebase === 'undefined' || !firebase.firestore) {
+    setNTTT8ManagerSyncBadge('saved', 'Đã lưu trên trình duyệt');
+    return false;
+  }
+
+  const payloadStr = getNTTT8DataFingerprint(overridesMap, rulesObj);
+  if (payloadStr === NTTT8State.lastSyncedFingerprint) {
+    if (NTTT8State.syncDebounceTimer) {
+      clearTimeout(NTTT8State.syncDebounceTimer);
+      NTTT8State.syncDebounceTimer = null;
+    }
+    recordNTTT8Quota('avoided', 1);
+    setNTTT8ManagerSyncBadge('saved', 'Đã lưu & đồng bộ');
+    return false;
+  }
+
+  if (NTTT8State.syncDebounceTimer) {
+    clearTimeout(NTTT8State.syncDebounceTimer);
+  }
+
+  return new Promise((resolve) => {
+    NTTT8State.syncDebounceTimer = setTimeout(async () => {
+      NTTT8State.syncDebounceTimer = null;
+      const res = await executeNTTT8FirestoreWrite();
+      resolve(res);
+    }, 350);
+  });
+}
+
+function flushPendingNTTT8FirestoreWrite() {
+  if (NTTT8State.syncDebounceTimer) {
+    clearTimeout(NTTT8State.syncDebounceTimer);
+    NTTT8State.syncDebounceTimer = null;
+    executeNTTT8FirestoreWrite();
   }
 }
 
 function listenNTTT8FirestoreChanges() {
   try {
     if (typeof firebase === 'undefined' || !firebase.firestore) return;
+
+    if (NTTT8State.unsubscribeFirestore) {
+      NTTT8State.unsubscribeFirestore();
+      NTTT8State.unsubscribeFirestore = null;
+    }
+
+    NTTT8State.isInitialSnapshot = true;
     const db = firebase.firestore();
-    db.collection(NTTT8_FIRESTORE_COLLECTION).doc(NTTT8_FIRESTORE_DOC)
+    NTTT8State.unsubscribeFirestore = db.collection(NTTT8_FIRESTORE_COLLECTION).doc(NTTT8_FIRESTORE_DOC)
       .onSnapshot(doc => {
-        if (!doc.exists) return;
+        if (doc.metadata && doc.metadata.hasPendingWrites) return;
+        if (NTTT8State.syncDebounceTimer || NTTT8State.isSavingFirestore) return;
+
+        const wasInitial = NTTT8State.isInitialSnapshot;
+        NTTT8State.isInitialSnapshot = false;
+
+        if (!doc.exists) {
+          if (wasInitial) recordNTTT8Quota('read', 1);
+          return;
+        }
         const data = doc.data();
         if (!data) return;
 
-        const incomingStr = JSON.stringify({
-          cells: data.cells || {},
-          rules: data.rules || DEFAULT_NTTT8_OPERATION_RULES,
-          staffList: data.staffList || NTTT8State.staffList,
-          pgList: data.pgList || NTTT8State.pgList,
-          areaAssignments: data.areaAssignments || NTTT8State.areaAssignments
-        });
-        if (incomingStr === NTTT8State.lastSyncedFingerprint) return;
-        NTTT8State.lastSyncedFingerprint = incomingStr;
+        if (!wasInitial && data.updatedBy === NTTT8_CLIENT_ID) {
+          return;
+        }
+
+        recordNTTT8Quota('read', 1);
+        const prevFingerprint = NTTT8State.lastSyncedFingerprint;
 
         if (Array.isArray(data.staffList) && data.staffList.length > 0) {
           NTTT8State.staffList = data.staffList;
@@ -1748,9 +1850,14 @@ function listenNTTT8FirestoreChanges() {
         }
 
         syncNTTT8RelationalState();
-        renderNTTT8AssignmentGrid();
-        populateNTTT8StaffFilter();
-        refreshOpenNTTT8ManagerViews();
+        const newFingerprint = getNTTT8DataFingerprint();
+        NTTT8State.lastSyncedFingerprint = newFingerprint;
+
+        if (wasInitial || newFingerprint !== prevFingerprint) {
+          renderNTTT8AssignmentGrid();
+          populateNTTT8StaffFilter();
+          refreshOpenNTTT8ManagerViews();
+        }
       }, err => {
         console.warn('[8NTTT] Lắng nghe Firestore:', err);
       });
@@ -5037,4 +5144,12 @@ function initNTTT8Module() {
 document.addEventListener('DOMContentLoaded', () => {
   initNTTT8Module();
 });
+
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    flushPendingNTTT8FirestoreWrite();
+  }
+});
+window.addEventListener('pagehide', flushPendingNTTT8FirestoreWrite);
+window.flushPendingNTTT8FirestoreWrite = flushPendingNTTT8FirestoreWrite;
 

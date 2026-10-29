@@ -497,6 +497,7 @@ function initScheduleData() {
         AppState.schedule[AppState.currentMonth] = JSON.parse(JSON.stringify(generateBalanced4WeeksSchedule(AppState.currentMonth)));
         saveLocalCache();
       }
+      lastSavedDataSignature = getDataSignature();
       return;
     } catch (e) {
       console.warn('Lỗi đọc cache local:', e);
@@ -528,6 +529,7 @@ function initScheduleData() {
 
   AppState.schedule = newSchedule;
   saveLocalCache();
+  lastSavedDataSignature = getDataSignature();
 }
 
 function saveLocalCache() {
@@ -1419,6 +1421,7 @@ function recordQuotaUsage(type, count = 1) {
   } catch (e) {}
   updateQuotaUI();
 }
+window.recordQuotaUsage = recordQuotaUsage;
 
 function updateQuotaUI() {
   const stats = getQuotaStats();
@@ -1454,7 +1457,14 @@ function updateQuotaUI() {
 /**
  * Tạo chữ ký dữ liệu (Signature Hash) phục vụ Dirty Checking chống ghi thừa
  */
-function getDataSignature() {
+function getDataSignature(customData = null) {
+  if (customData && customData.schedule) {
+    return JSON.stringify({
+      schedule: customData.schedule,
+      staffGroup1: Array.isArray(customData.staffGroup1) ? customData.staffGroup1 : STAFF_GROUP_1,
+      staffGroup2: Array.isArray(customData.staffGroup2) ? customData.staffGroup2 : STAFF_GROUP_2
+    });
+  }
   return JSON.stringify({
     schedule: AppState.schedule,
     staffGroup1: STAFF_GROUP_1,
@@ -1558,6 +1568,9 @@ function setupFirebaseSync() {
 }
 
 let autoSaveTimer = null;
+let isSavingSchedule = false;
+let pendingScheduleSaveAfterInFlight = null;
+let isInitialScheduleSnapshot = true;
 
 /**
  * TỰ ĐỘNG LƯU LÊN FIREBASE HOÀN TOÀN NGẦM (SILENT AUTO-SAVE)
@@ -1568,6 +1581,14 @@ let autoSaveTimer = null;
 function triggerAutoSaveToFirebase(delay = 1000) {
   if (autoSaveTimer) {
     clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+
+  // Dirty-check sớm: nếu dữ liệu quay về đúng bản đã lưu thì hủy timer và không ghi
+  const currentSignature = getDataSignature();
+  if (lastSavedDataSignature && currentSignature === lastSavedDataSignature) {
+    recordQuotaUsage('avoided', 1);
+    return;
   }
 
   const syncStatusText = document.getElementById('syncStatusText');
@@ -1580,6 +1601,7 @@ function triggerAutoSaveToFirebase(delay = 1000) {
   }
 
   autoSaveTimer = setTimeout(async () => {
+    autoSaveTimer = null;
     try {
       await saveToFirebase(false, false);
       if (syncStatusText) syncStatusText.textContent = 'Firebase đã tự lưu';
@@ -1593,11 +1615,24 @@ function triggerAutoSaveToFirebase(delay = 1000) {
   }, delay);
 }
 
+function flushPendingScheduleSave() {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+    saveToFirebase(false, false);
+  }
+}
+
 /**
  * LƯU TOÀN BỘ PHÂN CA LÊN FIREBASE (CHỈ TỐN ĐÚNG 1 LƯỢT GHI!)
  * Có dirty-check: Nếu không có thay đổi mới -> 0 lượt ghi!
  */
 async function saveToFirebase(showFeedback = true, force = false) {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+  }
+
   if (!isFirebaseReady && !initFirebase()) {
     if (showFeedback) {
       showToast('Không thể kết nối Firebase! Vui lòng kiểm tra mạng hoặc cấu hình.', 'error');
@@ -1634,6 +1669,16 @@ async function saveToFirebase(showFeedback = true, force = false) {
     return true;
   }
 
+  // Chặn gọi song song nếu đang có 1 yêu cầu ghi chạy trên mạng
+  if (isSavingSchedule) {
+    pendingScheduleSaveAfterInFlight = {
+      showFeedback: Boolean(pendingScheduleSaveAfterInFlight?.showFeedback || showFeedback),
+      force: Boolean(pendingScheduleSaveAfterInFlight?.force || force)
+    };
+    return false;
+  }
+
+  isSavingSchedule = true;
   saveBtns.forEach(b => {
     b.disabled = true;
     b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
@@ -1655,7 +1700,7 @@ async function saveToFirebase(showFeedback = true, force = false) {
     // Ghi đúng 1 document duy nhất chứa toàn bộ lịch cả năm & nhân viên
     await db.collection(colName).doc(docName).set(payload);
 
-    // Ghi nhận 1 lượt ghi vào Quota Tracker
+    // Ghi nhận 1 lượt ghi vào Quota Tracker (chỉ sau khi .set() thành công)
     recordQuotaUsage('write', 1);
 
     lastSavedDataSignature = currentSignature;
@@ -1679,8 +1724,8 @@ async function saveToFirebase(showFeedback = true, force = false) {
     const lastSavedEl = document.getElementById('statLastSavedTime');
     if (lastSavedEl) lastSavedEl.textContent = `Tự lưu lúc ${timeStr}`;
 
-    // Tự động ghi lại điểm lưu lịch sử (Revision Snapshot)
-    saveRevisionSnapshot('save_firebase', 'Lưu dữ liệu lên Firebase Firestore', `Đồng bộ thành công phân ca lúc ${timeStr}`, true);
+    // Tự động ghi lại điểm lưu lịch sử ở localStorage (syncToCloud = false để tránh ghi nhân đôi sang phanca_backups)
+    saveRevisionSnapshot('save_firebase', 'Lưu dữ liệu lên Firebase Firestore', `Đồng bộ thành công phân ca lúc ${timeStr}`, false);
 
     const statusEl = document.getElementById('syncStatusText');
     if (statusEl) statusEl.textContent = 'Firebase đã tự lưu';
@@ -1703,7 +1748,15 @@ async function saveToFirebase(showFeedback = true, force = false) {
     }
     return false;
   } finally {
+    isSavingSchedule = false;
     resetSaveButtons();
+    if (pendingScheduleSaveAfterInFlight) {
+      const nextReq = pendingScheduleSaveAfterInFlight;
+      pendingScheduleSaveAfterInFlight = null;
+      if (nextReq.force || getDataSignature() !== lastSavedDataSignature) {
+        saveToFirebase(nextReq.showFeedback, nextReq.force);
+      }
+    }
   }
 }
 
@@ -1777,7 +1830,7 @@ async function syncFromFirebase(showFeedback = true) {
 
 /**
  * Lắng nghe thay đổi thời gian thực (Realtime Listener) từ Firebase
- * Lọc bỏ sự kiện của chính máy này để tránh vòng lặp đọc ghi
+ * Gộp cả lần tải đầu tiên (1 read) và các cập nhật từ thiết bị khác để không phải gọi thêm .get() khi mở trang
  */
 function setupFirestoreRealtimeListener() {
   if (!isFirebaseReady && !initFirebase()) return;
@@ -1788,24 +1841,42 @@ function setupFirestoreRealtimeListener() {
       unsubscribeFirestoreListener = null;
     }
 
+    isInitialScheduleSnapshot = true;
     const colName = window.FIRESTORE_COLLECTION || 'phanca_system';
     const docName = window.FIRESTORE_DOC_MASTER || 'schedule_master';
 
     unsubscribeFirestoreListener = db.collection(colName).doc(docName).onSnapshot(
-      { includeMetadataChanges: true },
       (snap) => {
-        // Bỏ qua nếu là sự kiện ghi local của chính tab này
-        if (snap.metadata.hasPendingWrites) return;
-        if (!snap.exists) return;
+        // Bỏ qua nếu là sự kiện ghi local của chính tab này hoặc đang có thay đổi chờ lưu
+        if (snap.metadata && snap.metadata.hasPendingWrites) return;
+        if (autoSaveTimer || isSavingSchedule) return;
+
+        const wasInitial = isInitialScheduleSnapshot;
+        isInitialScheduleSnapshot = false;
+
+        if (!snap.exists) {
+          if (wasInitial && (!snap.metadata || !snap.metadata.fromCache)) {
+            recordQuotaUsage('read', 1);
+            console.log('Document schedule_master chưa tồn tại, khởi tạo dữ liệu ban đầu...');
+            saveToFirebase(false, true);
+          }
+          return;
+        }
 
         const data = snap.data();
-        // Bỏ qua nếu chính client này vừa ghi lên server
-        if (data.updatedBy === CLIENT_ID) return;
+        // Bỏ qua nếu chính client này vừa ghi lên server (sau lần tải đầu tiên)
+        if (!wasInitial && data && data.updatedBy === CLIENT_ID) return;
 
-        // Đây là thay đổi từ thiết bị khác / quản lý khác
         recordQuotaUsage('read', 1);
-        applyRemoteData(data, false);
-        showToast('🔄 Dữ liệu phân ca vừa được cập nhật từ thiết bị khác!', 'info');
+        const incomingSig = getDataSignature(data);
+        if (!wasInitial && incomingSig && incomingSig === lastSavedDataSignature) {
+          return;
+        }
+
+        applyRemoteData(data, true);
+        if (!wasInitial) {
+          showToast('🔄 Dữ liệu phân ca vừa được cập nhật từ thiết bị khác!', 'info');
+        }
       },
       (err) => {
         console.warn('Realtime listener thông báo:', err);
@@ -2007,13 +2078,15 @@ function saveRevisionSnapshot(type, title, customNote = '', syncToCloud = false)
       renderHistoryTimeline();
     }
 
-    // Nếu cần đồng bộ lên Firestore phanca_backups (khi lưu Firebase hoặc tạo mốc quan trọng)
+    // Nếu cần đồng bộ lên Firestore phanca_backups (chỉ khi tạo bản sao lưu đám mây chủ động)
     if (syncToCloud && isFirebaseReady && db) {
       try {
         const backupCol = window.FIRESTORE_BACKUP_COLLECTION || 'phanca_backups';
         db.collection(backupCol).doc(snapshot.id).set({
           ...snapshot,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          recordQuotaUsage('write', 1);
         }).catch(e => console.warn('Lỗi lưu backup Firestore (không ảnh hưởng local):', e));
       } catch (err) {
         console.warn('Lỗi ghi backup cloud:', err);
@@ -2360,11 +2433,11 @@ function setupHistoryModal() {
   if (btnClosePreview) btnClosePreview.addEventListener('click', closePreviewModal);
   if (btnCancelPreview) btnCancelPreview.addEventListener('click', closePreviewModal);
 
-  // Tạo điểm lưu nhanh thủ công
+  // Tạo điểm lưu nhanh thủ công (lưu cục bộ ở localStorage, không tự phát sinh lượt ghi Firestore)
   if (btnCreateManual && inputManualNote) {
     btnCreateManual.addEventListener('click', () => {
       const note = inputManualNote.value.trim();
-      saveRevisionSnapshot('manual', 'Sao lưu thủ công', note || 'Bản sao lưu người dùng tự tạo', true);
+      saveRevisionSnapshot('manual', 'Sao lưu thủ công', note || 'Bản sao lưu người dùng tự tạo', false);
       inputManualNote.value = '';
       renderHistoryTimeline();
       showToast('📸 Đã tạo điểm lưu lịch sử thành công!', 'success');
@@ -2802,10 +2875,16 @@ document.addEventListener('DOMContentLoaded', () => {
     saveRevisionSnapshot('manual', 'Khởi tạo hệ thống ban đầu', 'Mốc phân ca ban đầu bảo vệ dữ liệu', false);
   }
 
-  // Khởi tạo Firebase Firestore và đồng bộ dữ liệu (ĐÚNG 1 LƯỢT ĐỌC DUY NHẤT CHO CẢ NĂM)
+  // Khởi tạo Firebase Firestore và lắng nghe đồng bộ thời gian thực (ĐÚNG 1 LƯỢT ĐỌC DUY NHẤT CHO CẢ NĂM)
+  // Không gọi đồng thời syncFromFirebase() + setupFirestoreRealtimeListener() để tránh đọc trùng 2 lần khi mở trang
   initFirebase();
-  syncFromFirebase(false);
-
-  // Lắng nghe cập nhật realtime từ các thiết bị khác
   setupFirestoreRealtimeListener();
 });
+
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    flushPendingScheduleSave();
+  }
+});
+window.addEventListener('pagehide', flushPendingScheduleSave);
+window.flushPendingScheduleSave = flushPendingScheduleSave;

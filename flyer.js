@@ -93,9 +93,22 @@ const FlyerState = {
 let flyerDb = null;
 let isFlyerFirebaseReady = false;
 let flyerSaveDebounce = null;
+let isFlyerSaving = false;
+let pendingFlyerForce = false;
+let pendingFlyerSilent = true;
+let pendingFlyerSaveAfterInFlight = null;
+let unsubscribeFlyerListener = null;
+let isInitialFlyerSnapshot = true;
+const FLYER_CLIENT_ID = 'flyer_client_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+
+function recordFlyerQuota(type, count = 1) {
+  if (typeof window !== 'undefined' && typeof window.recordQuotaUsage === 'function') {
+    window.recordQuotaUsage(type, count);
+  }
+}
 
 // ==========================================================================
-// 1. KHỞI TẠO FIREBASE FIRESTORE ĐỘC LẬP & TỰ ĐỘNG LƯU NGAY LẬP TỨC
+// 1. KHỞI TẠO FIREBASE FIRESTORE ĐỘC LẬP & ĐỒNG BỘ TỐI ƯU QUOTA
 // ==========================================================================
 
 function initFlyerFirebase() {
@@ -110,10 +123,8 @@ function initFlyerFirebase() {
       isFlyerFirebaseReady = true;
       console.log('✅ Firebase Cloud Firestore cho Tờ Rơi đã khởi tạo');
 
-      // Tự động đồng bộ bản ghi Tờ Rơi từ Firestore
-      syncFlyerFromFirebase();
-
-      // Thiết lập listener realtime lắng nghe thay đổi từ các máy khác
+      // Chỉ đăng ký 1 listener realtime duy nhất (vừa nhận snapshot đầu tiên = 1 read, vừa lắng nghe thay đổi)
+      // Không gọi đồng thời .get() + .onSnapshot() để tránh nhân đôi lượt đọc khi tải trang
       setupFlyerRealtimeListener();
     }
   } catch (err) {
@@ -145,8 +156,17 @@ let lastSavedFlyerSignature = null;
  * Lấy chữ ký băm (hash signature) đại diện cho toàn bộ dữ liệu Tờ Rơi hiện tại
  * Dùng để Dirty Check: chỉ khi nào dữ liệu thực sự thay đổi mới cho phép ghi lên Firebase
  */
-function getFlyerDataSignature() {
+function getFlyerDataSignature(customData = null) {
   try {
+    if (customData) {
+      return JSON.stringify({
+        staff: Array.isArray(customData.staffList) ? customData.staffList : (FlyerState.staffList || []),
+        groups: Array.isArray(customData.groupList) ? customData.groupList : (FlyerState.groupList || []),
+        sched: customData.scheduleData || FlyerState.scheduleData || {},
+        assign: Array.isArray(customData.assignmentsList) ? customData.assignmentsList : (FlyerState.assignmentsList || []),
+        title: customData.customTableTitle || FlyerState.customTableTitle || localStorage.getItem('flyer_custom_table_title') || ''
+      });
+    }
     return JSON.stringify({
       staff: FlyerState.staffList || [],
       groups: FlyerState.groupList || [],
@@ -160,146 +180,211 @@ function getFlyerDataSignature() {
 }
 
 /**
+ * Thực thi ghi dữ liệu Tờ Rơi lên Firestore (tuần tự, chỉ cập nhật signature sau khi ghi thành công)
+ */
+async function executeFlyerSaveToFirebase() {
+  if (!flyerDb || !isFlyerFirebaseReady) return false;
+
+  const force = pendingFlyerForce;
+  const silent = pendingFlyerSilent;
+  pendingFlyerForce = false;
+  pendingFlyerSilent = true;
+
+  const nowSig = getFlyerDataSignature();
+  if (!force && lastSavedFlyerSignature && nowSig === lastSavedFlyerSignature) {
+    recordFlyerQuota('avoided', 1);
+    updateFlyerSyncStatus('synced');
+    return false;
+  }
+
+  if (isFlyerSaving) {
+    pendingFlyerSaveAfterInFlight = {
+      force: (pendingFlyerSaveAfterInFlight && pendingFlyerSaveAfterInFlight.force) || force,
+      silent: (pendingFlyerSaveAfterInFlight ? pendingFlyerSaveAfterInFlight.silent : true) && silent
+    };
+    return false;
+  }
+
+  isFlyerSaving = true;
+  try {
+    const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
+    const payload = {
+      staffList: FlyerState.staffList || [],
+      groupList: FlyerState.groupList || [],
+      scheduleData: FlyerState.scheduleData || {},
+      assignmentsList: FlyerState.assignmentsList || [],
+      customTableTitle: FlyerState.customTableTitle || localStorage.getItem('flyer_custom_table_title') || 'BẢNG PHÂN LỊCH TỜ RƠI',
+      updatedBy: FLYER_CLIENT_ID,
+      lastUpdated: new Date().toISOString()
+    };
+
+    await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).set(payload, { merge: true });
+    lastSavedFlyerSignature = nowSig;
+    recordFlyerQuota('write', 1);
+    updateFlyerSyncStatus('synced');
+
+    if (!silent && typeof showToast === 'function') {
+      showToast('☁️ Đã lưu dữ liệu lên Firebase Cloud!', 'success');
+    }
+    return true;
+  } catch (e) {
+    console.error('Lỗi lưu Firebase Tờ Rơi:', e);
+    updateFlyerSyncStatus('error');
+    return false;
+  } finally {
+    isFlyerSaving = false;
+    if (pendingFlyerSaveAfterInFlight) {
+      const nextReq = pendingFlyerSaveAfterInFlight;
+      pendingFlyerSaveAfterInFlight = null;
+      if (nextReq.force || getFlyerDataSignature() !== lastSavedFlyerSignature) {
+        saveFlyerToFirebase(nextReq.force, nextReq.silent);
+      }
+    }
+  }
+}
+
+/**
  * LƯU DỮ LIỆU TỜ RƠI LÊN FIREBASE CLOUD FIRESTORE
- * Có Dirty Check: CHỈ LƯU KHI THAY ĐỔI DỮ LIỆU ĐỂ TRÁNH VƯỢT GÓI QUOTA FIREBASE
+ * Có Dirty Check + Debounce 400ms: CHỈ LƯU KHI THAY ĐỔI DỮ LIỆU ĐỂ TRÁNH VƯỢT GÓI QUOTA FIREBASE
  * Mặc định silent = true (không hiện toast gây phiền khi tự động lưu)
  */
 async function saveFlyerToFirebase(force = false, silent = true) {
-  if (!flyerDb || !isFlyerFirebaseReady) return;
+  if (!flyerDb || !isFlyerFirebaseReady) return false;
 
-  // 1. DIRTY CHECK: Nếu dữ liệu không thay đổi thì BỎ QUA lệnh ghi, không tốn Quota Firebase!
   const currentSig = getFlyerDataSignature();
   if (!force && lastSavedFlyerSignature && currentSig === lastSavedFlyerSignature) {
-    return;
+    if (flyerSaveDebounce) {
+      clearTimeout(flyerSaveDebounce);
+      flyerSaveDebounce = null;
+      pendingFlyerForce = false;
+      pendingFlyerSilent = true;
+      updateFlyerSyncStatus('synced');
+    }
+    recordFlyerQuota('avoided', 1);
+    return false;
   }
 
+  pendingFlyerForce = pendingFlyerForce || force;
+  pendingFlyerSilent = pendingFlyerSilent && silent;
   updateFlyerSyncStatus('saving');
+
   if (flyerSaveDebounce) clearTimeout(flyerSaveDebounce);
 
-  flyerSaveDebounce = setTimeout(async () => {
-    try {
-      const nowSig = getFlyerDataSignature();
-      if (!force && lastSavedFlyerSignature && nowSig === lastSavedFlyerSignature) {
-        updateFlyerSyncStatus('synced');
-        return;
-      }
+  return new Promise((resolve) => {
+    flyerSaveDebounce = setTimeout(async () => {
+      flyerSaveDebounce = null;
+      const res = await executeFlyerSaveToFirebase();
+      resolve(res);
+    }, 400);
+  });
+}
 
-      const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
-      const payload = {
-        staffList: FlyerState.staffList || [],
-        groupList: FlyerState.groupList || [],
-        scheduleData: FlyerState.scheduleData || {},
-        assignmentsList: FlyerState.assignmentsList || [],
-        customTableTitle: FlyerState.customTableTitle || localStorage.getItem('flyer_custom_table_title') || 'BẢNG PHÂN LỊCH TỜ RƠI',
-        lastUpdated: new Date().toISOString()
-      };
+function flushPendingFlyerSave() {
+  if (flyerSaveDebounce) {
+    clearTimeout(flyerSaveDebounce);
+    flyerSaveDebounce = null;
+    executeFlyerSaveToFirebase();
+  }
+}
 
-      await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).set(payload, { merge: true });
-      lastSavedFlyerSignature = nowSig;
-      updateFlyerSyncStatus('synced');
+function applyFlyerRemoteData(data) {
+  if (!data) return false;
+  let changed = false;
 
-      // Tắt hoàn toàn thông báo popup tự động lưu để tránh làm phiền người dùng
-      if (!silent && typeof showToast === 'function') {
-        showToast('☁️ Đã lưu dữ liệu lên Firebase Cloud!', 'success');
-      }
-    } catch (e) {
-      console.error('Lỗi lưu Firebase Tờ Rơi:', e);
-      updateFlyerSyncStatus('error');
-    }
-  }, 400);
+  if (Array.isArray(data.staffList) && data.staffList.length > 0) {
+    FlyerState.staffList = data.staffList;
+    saveFlyerStaff(true);
+    changed = true;
+  }
+  if (Array.isArray(data.groupList) && data.groupList.length > 0) {
+    FlyerState.groupList = data.groupList;
+    saveFlyerGroups(true);
+    changed = true;
+  }
+  if (data.scheduleData) {
+    FlyerState.scheduleData = data.scheduleData;
+    saveFlyerSchedule(true);
+    changed = true;
+  }
+  if (Array.isArray(data.assignmentsList)) {
+    FlyerState.assignmentsList = data.assignmentsList;
+    saveFlyerAssignments(true);
+    changed = true;
+  }
+  if (data.customTableTitle) {
+    FlyerState.customTableTitle = data.customTableTitle;
+    try { localStorage.setItem('flyer_custom_table_title', data.customTableTitle); } catch (e) {}
+    changed = true;
+  }
+
+  lastSavedFlyerSignature = getFlyerDataSignature();
+  if (changed) {
+    renderFlyerStats();
+    renderFlyerTable();
+  }
+  updateFlyerSyncStatus('synced');
+  return changed;
 }
 
 /**
- * Tải dữ liệu Tờ Rơi từ Firebase Firestore
+ * Tải dữ liệu Tờ Rơi thủ công từ Firebase Firestore (Chỉ gọi khi người dùng yêu cầu làm mới thủ công)
  */
 async function syncFlyerFromFirebase() {
-  if (!flyerDb || !isFlyerFirebaseReady) return;
+  if (!flyerDb || !isFlyerFirebaseReady) return false;
   try {
     const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
     const docSnap = await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).get();
+    recordFlyerQuota('read', 1);
     if (docSnap.exists) {
-      const data = docSnap.data();
-      if (Array.isArray(data.staffList) && data.staffList.length > 0) {
-        FlyerState.staffList = data.staffList;
-        saveFlyerStaff(true);
-      }
-      if (Array.isArray(data.groupList) && data.groupList.length > 0) {
-        FlyerState.groupList = data.groupList;
-        saveFlyerGroups(true);
-      }
-      if (data.scheduleData) {
-        FlyerState.scheduleData = data.scheduleData;
-        saveFlyerSchedule(true);
-      }
-      if (Array.isArray(data.assignmentsList)) {
-        FlyerState.assignmentsList = data.assignmentsList;
-        saveFlyerAssignments(true);
-      }
-      if (data.customTableTitle) {
-        FlyerState.customTableTitle = data.customTableTitle;
-        try { localStorage.setItem('flyer_custom_table_title', data.customTableTitle); } catch (e) {}
-      }
-
-      // Ghi nhận signature ban đầu từ Firebase để dirty check không bị kích hoạt ghi đè
-      lastSavedFlyerSignature = getFlyerDataSignature();
-      renderFlyerStats();
-      renderFlyerTable();
-      updateFlyerSyncStatus('synced');
+      applyFlyerRemoteData(docSnap.data());
     } else {
-      // Khởi tạo bản ghi ban đầu trên Firebase nếu chưa có
-      saveFlyerToFirebase(true, true);
+      await saveFlyerToFirebase(true, true);
     }
+    return true;
   } catch (err) {
     console.warn('Lỗi đọc Firebase Tờ Rơi:', err);
     updateFlyerSyncStatus('error');
+    return false;
   }
 }
 
 /**
- * Lắng nghe cập nhật realtime cho Tờ Rơi
+ * Lắng nghe cập nhật realtime cho Tờ Rơi (Quản lý lifecycle chặt chẽ, chống đăng ký trùng lặp)
  */
 function setupFlyerRealtimeListener() {
   if (!flyerDb || !isFlyerFirebaseReady) return;
   try {
+    if (unsubscribeFlyerListener) {
+      unsubscribeFlyerListener();
+      unsubscribeFlyerListener = null;
+    }
+
+    isInitialFlyerSnapshot = true;
     const colName = window.FIRESTORE_COLLECTION || FLYER_FIRESTORE_COLLECTION;
-    flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).onSnapshot((doc) => {
-      if (doc.metadata && doc.metadata.hasPendingWrites) return; // Bỏ qua cập nhật từ chính máy này
+    unsubscribeFlyerListener = flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).onSnapshot((doc) => {
+      if (doc.metadata && doc.metadata.hasPendingWrites) return; // Bỏ qua cập nhật local của chính máy này
+      if (flyerSaveDebounce || isFlyerSaving) return; // Không ghi đè khi người dùng đang có thao tác lưu chờ
+
+      const wasInitial = isInitialFlyerSnapshot;
+      isInitialFlyerSnapshot = false;
+
       if (doc.exists) {
         const data = doc.data();
-        let changed = false;
-
-        if (Array.isArray(data.staffList)) {
-          FlyerState.staffList = data.staffList;
-          saveFlyerStaff(true);
-          changed = true;
-        }
-        if (Array.isArray(data.groupList)) {
-          FlyerState.groupList = data.groupList;
-          saveFlyerGroups(true);
-          changed = true;
-        }
-        if (data.scheduleData) {
-          FlyerState.scheduleData = data.scheduleData;
-          saveFlyerSchedule(true);
-          changed = true;
-        }
-        if (Array.isArray(data.assignmentsList)) {
-          FlyerState.assignmentsList = data.assignmentsList;
-          saveFlyerAssignments(true);
-          changed = true;
+        if (!wasInitial && data && data.updatedBy === FLYER_CLIENT_ID) {
+          return; // Bỏ qua phản hồi từ chính lần ghi của trình duyệt này
         }
 
-        if (data.customTableTitle) {
-          FlyerState.customTableTitle = data.customTableTitle;
-          try { localStorage.setItem('flyer_custom_table_title', data.customTableTitle); } catch (e) {}
+        recordFlyerQuota('read', 1);
+        const incomingSig = getFlyerDataSignature(data);
+        if (!wasInitial && incomingSig && incomingSig === lastSavedFlyerSignature) {
+          return; // Dữ liệu không đổi so với bản hiện tại -> bỏ qua render lại
         }
 
-        if (changed) {
-          lastSavedFlyerSignature = getFlyerDataSignature();
-          renderFlyerStats();
-          renderFlyerTable();
-          updateFlyerSyncStatus('synced');
-        }
+        applyFlyerRemoteData(data);
+      } else if (wasInitial && (!doc.metadata || !doc.metadata.fromCache)) {
+        recordFlyerQuota('read', 1);
+        // Khởi tạo bản ghi ban đầu trên Firebase nếu trên server thực sự chưa có
+        saveFlyerToFirebase(true, true);
       }
     }, err => {
       console.warn('Lỗi realtime listener Tờ Rơi:', err);
@@ -318,6 +403,9 @@ function initFlyerModule() {
   loadFlyerGroups();
   loadFlyerSchedule();
   loadFlyerAssignments();
+
+  // Ghi nhận chữ ký dữ liệu cục bộ ban đầu để chống ghi thừa khi dữ liệu chưa thay đổi
+  lastSavedFlyerSignature = getFlyerDataSignature();
 
   // Đồng bộ tháng hiện tại từ selectMonth nếu có
   const selectMonth = document.getElementById('selectMonth');
@@ -452,7 +540,7 @@ function loadFlyerAssignments() {
     const raw = localStorage.getItem(FLYER_STORAGE_ASSIGNMENTS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(it => it.staffName && it.staffName.includes('NGUYỄN THÚY HOA'))) {
+      if (Array.isArray(parsed)) {
         FlyerState.assignmentsList = parsed;
       } else {
         FlyerState.assignmentsList = [];
@@ -2600,7 +2688,7 @@ function confirmClearFlyerWeek() {
   FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.weekKey !== weekKey && as.weekKey);
   FlyerState.scheduleData[weekKey] = {};
 
-  saveFlyerAssignments(false);
+  saveFlyerAssignments(true);
   saveFlyerSchedule(false);
 
   renderFlyerStats();
@@ -2783,7 +2871,7 @@ function handleSaveStaffForm() {
     if (typeof showToast === 'function') showToast(`Đã thêm thành công "${name}" & lưu Firebase!`, 'success');
   }
 
-  saveFlyerStaff(false);
+  saveFlyerStaff(true);
   saveFlyerAssignments(false);
   resetStaffForm();
   renderFlyerStaffTableModal();
@@ -2831,7 +2919,7 @@ function deleteFlyerStaff(staffId) {
   FlyerState.staffList = FlyerState.staffList.filter(s => s.id !== staffId);
   FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.staffId !== staffId);
 
-  saveFlyerStaff(false);
+  saveFlyerStaff(true);
   saveFlyerAssignments(false);
   renderFlyerStaffTableModal();
 
@@ -3160,7 +3248,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
 });
 
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    flushPendingFlyerSave();
+  }
+});
+window.addEventListener('pagehide', flushPendingFlyerSave);
+
 // Cho phép gọi các hàm toàn cục từ HTML onclick
+window.flushPendingFlyerSave = flushPendingFlyerSave;
+window.syncFlyerFromFirebase = syncFlyerFromFirebase;
 window.openFlyerAssignmentModal = openFlyerAssignmentModal;
 window.closeFlyerAssignmentModal = closeFlyerAssignmentModal;
 window.saveFlyerAssignmentFromModal = saveFlyerAssignmentFromModal;
@@ -3171,7 +3268,9 @@ window.promptEditCurrentGroupName = promptEditCurrentGroupName;
 window.promptEditGroupName = promptEditGroupName;
 window.openEditGroupTitleModal = openEditGroupTitleModal;
 window.closeEditGroupTitleModal = closeEditGroupTitleModal;
-window.selectRenameGroupTab = selectRenameGroupTab;
+if (typeof selectRenameGroupTab === 'function') {
+  window.selectRenameGroupTab = selectRenameGroupTab;
+}
 window.setQuickGroupName = setQuickGroupName;
 window.confirmSaveGroupTitleModal = confirmSaveGroupTitleModal;
 window.copyFlyerScheduleFromGroup = copyFlyerScheduleFromGroup;
