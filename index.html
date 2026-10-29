@@ -28,7 +28,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="flyer.css?v=20261020_dirty_check">
-  <link rel="stylesheet" href="nttt8.css?v=20261029_8nttt">
+  <link rel="stylesheet" href="nttt8.css?v=20261029_popup_copy">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -1007,9 +1007,9 @@
           <button type="button" class="nttt8-btn" id="btn8NTTTZoomIn" style="padding: 4px 8px;">+</button>
         </div>
 
-        <button type="button" class="nttt8-btn nttt8-btn-primary" id="btn8NTTTExportImage" onclick="exportNTTT8DiagramImage()" title="Tải ảnh sơ đồ 8NTTT chất lượng cao">
+        <button type="button" class="nttt8-btn nttt8-btn-primary" id="btn8NTTTExportImage" onclick="exportNTTT8DiagramImage()" title="Xuất ảnh sơ đồ phân công 8NTTT để xem trước và sao chép">
           <i class="fa-solid fa-camera"></i>
-          <span>Xuất Ảnh Sơ Đồ</span>
+          <span>XUẤT ẢNH</span>
         </button>
 
         <button type="button" class="nttt8-btn" onclick="resetNTTT8ToDefaultData()" title="Khôi phục dữ liệu phân công mặc định">
@@ -1133,6 +1133,62 @@
           <button type="button" class="btn btn-primary" onclick="confirmSaveNTTT8RulesEdit()">
             <i class="fa-solid fa-check"></i> Lưu Quy Định
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL XEM TRƯỚC & SAO CHÉP ẢNH SƠ ĐỒ PHÂN CÔNG 8NTTT -->
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTImagePreview" onclick="if(event.target === this) closeNTTT8ImagePreviewModal()">
+      <div class="nttt8-modal-card nttt8-preview-modal-card">
+        <div class="nttt8-modal-header">
+          <div class="nttt8-preview-header-titles">
+            <h3><i class="fa-solid fa-image" style="color: #0284c7; margin-right: 6px;"></i>XUẤT ẢNH SƠ ĐỒ PHÂN CÔNG</h3>
+            <p class="nttt8-preview-subtitle">Ảnh đã được tạo thành công. Bạn có thể sao chép để sử dụng trực tiếp.</p>
+          </div>
+          <button type="button" class="nttt8-modal-close" onclick="closeNTTT8ImagePreviewModal()" title="Đóng">&times;</button>
+        </div>
+
+        <div class="nttt8-modal-body nttt8-preview-modal-body">
+          <!-- Thông báo trạng thái sao chép (thành công / lỗi) -->
+          <div id="nttt8PreviewStatusBanner" class="nttt8-preview-status-banner hidden" role="status" aria-live="polite">
+            <i id="nttt8PreviewStatusIcon" class="fa-solid fa-circle-check"></i>
+            <span id="nttt8PreviewStatusText">Đã sao chép ảnh! Bạn có thể dán trực tiếp vào ứng dụng cần sử dụng.</span>
+          </div>
+
+          <!-- Thanh điều chỉnh chế độ xem trước ảnh trong popup (chỉ co giãn CSS hiển thị, giữ nguyên độ phân giải ảnh gốc) -->
+          <div class="nttt8-preview-controls-bar">
+            <span class="nttt8-preview-resolution-info" id="nttt8PreviewResolutionInfo">Độ phân giải gốc PNG sắc nét</span>
+            <div class="nttt8-preview-zoom-btns">
+              <button type="button" class="nttt8-btn active" id="btn8NTTTPreviewFit" onclick="setNTTT8PreviewDisplayMode('fit')" title="Thu nhỏ vừa khung popup để nhìn tổng thể">
+                <i class="fa-solid fa-compress"></i> Vừa khung
+              </button>
+              <button type="button" class="nttt8-btn" id="btn8NTTTPreviewActual" onclick="setNTTT8PreviewDisplayMode('actual')" title="Xem kích thước 100% chi tiết (cuộn để xem)">
+                <i class="fa-solid fa-magnifying-glass-plus"></i> Phóng to 100%
+              </button>
+            </div>
+          </div>
+
+          <!-- Khu vực hiển thị ảnh xem trước căn giữa -->
+          <div class="nttt8-preview-img-viewport" id="nttt8PreviewImgViewport">
+            <img id="nttt8PreviewImg" class="nttt8-preview-img fit-mode" src="" alt="Ảnh sơ đồ phân công 8NTTT">
+          </div>
+        </div>
+
+        <div class="nttt8-modal-footer nttt8-preview-modal-footer">
+          <button type="button" class="nttt8-btn" id="btn8NTTTClosePreview" onclick="closeNTTT8ImagePreviewModal()">
+            <i class="fa-solid fa-xmark"></i>
+            <span>ĐÓNG</span>
+          </button>
+          <div class="nttt8-preview-footer-actions">
+            <button type="button" class="nttt8-btn" id="btn8NTTTDownloadImage" onclick="downloadNTTT8PreviewImage()" title="Tải file ảnh PNG về máy tính / điện thoại">
+              <i class="fa-solid fa-download"></i>
+              <span>TẢI ẢNH XUỐNG</span>
+            </button>
+            <button type="button" class="nttt8-btn nttt8-btn-primary nttt8-btn-copy-main" id="btn8NTTTCopyImage" onclick="copyNTTT8ImageToClipboard()" title="Sao chép ảnh PNG vào bộ nhớ tạm để dán trực tiếp">
+              <i class="fa-solid fa-copy"></i>
+              <span>SAO CHÉP ẢNH</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2223,6 +2279,6 @@
   <script src="flyer.js?v=20261029_8nttt"></script>
 
   <!-- 8NTTT Floorplan Module Script -->
-  <script src="nttt8.js?v=20261029_8nttt"></script>
+  <script src="nttt8.js?v=20261029_popup_copy"></script>
 </body>
 </html>

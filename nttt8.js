@@ -1331,7 +1331,12 @@ const NTTT8State = {
   editingCellId: null,
   zoomMode: 'actual', // 'actual' (100% cuộn ngang rõ chữ) hoặc 'fit' (Toàn sơ đồ)
   zoomScale: 1,
-  lastSyncedFingerprint: ''
+  lastSyncedFingerprint: '',
+  isExportingImage: false,
+  isCopyingImage: false,
+  previewBlob: null,
+  previewObjectUrl: '',
+  previewDisplayMode: 'fit'
 };
 
 // ==========================================================================
@@ -1884,59 +1889,271 @@ function resetNTTT8ToDefaultData() {
 }
 
 // ==========================================================================
-// 5. XUẤT ẢNH PNG SƠ ĐỒ 8NTTT ĐỘ PHÂN GIẢI CAO
+// 5. XUẤT ẢNH PNG SƠ ĐỒ 8NTTT – HIỂN THỊ POPUP XEM TRƯỚC & SAO CHÉP CLIPBOARD
 // ==========================================================================
 
+/**
+ * Giải phóng tài nguyên ảnh tạm trong bộ nhớ trình duyệt khi đóng popup hoặc tạo ảnh mới
+ */
+function releaseNTTT8PreviewResources() {
+  if (NTTT8State.previewObjectUrl) {
+    try {
+      URL.revokeObjectURL(NTTT8State.previewObjectUrl);
+    } catch (e) {
+      // Ignore revoke error
+    }
+    NTTT8State.previewObjectUrl = '';
+  }
+  NTTT8State.previewBlob = null;
+
+  const previewImg = document.getElementById('nttt8PreviewImg');
+  if (previewImg) {
+    previewImg.removeAttribute('src');
+  }
+}
+
+/**
+ * Cập nhật thông báo trạng thái trong popup xem trước ảnh
+ */
+function setNTTT8PreviewStatus(type, message) {
+  const banner = document.getElementById('nttt8PreviewStatusBanner');
+  const icon = document.getElementById('nttt8PreviewStatusIcon');
+  const text = document.getElementById('nttt8PreviewStatusText');
+  if (!banner || !text) return;
+
+  if (!type || !message) {
+    banner.classList.add('hidden');
+    banner.classList.remove('status-success', 'status-error');
+    return;
+  }
+
+  banner.classList.remove('hidden', 'status-success', 'status-error');
+  if (type === 'success') {
+    banner.classList.add('status-success');
+    if (icon) icon.className = 'fa-solid fa-circle-check';
+  } else if (type === 'error') {
+    banner.classList.add('status-error');
+    if (icon) icon.className = 'fa-solid fa-triangle-exclamation';
+  }
+  text.textContent = message;
+}
+
+/**
+ * Chuyển đổi chế độ hiển thị ảnh trong popup (chỉ co giãn bằng CSS, giữ nguyên độ phân giải gốc của Blob)
+ */
+function setNTTT8PreviewDisplayMode(mode) {
+  NTTT8State.previewDisplayMode = mode === 'actual' ? 'actual' : 'fit';
+  const previewImg = document.getElementById('nttt8PreviewImg');
+  const btnFit = document.getElementById('btn8NTTTPreviewFit');
+  const btnActual = document.getElementById('btn8NTTTPreviewActual');
+
+  if (previewImg) {
+    previewImg.classList.toggle('fit-mode', NTTT8State.previewDisplayMode === 'fit');
+    previewImg.classList.toggle('actual-mode', NTTT8State.previewDisplayMode === 'actual');
+  }
+  if (btnFit) btnFit.classList.toggle('active', NTTT8State.previewDisplayMode === 'fit');
+  if (btnActual) btnActual.classList.toggle('active', NTTT8State.previewDisplayMode === 'actual');
+}
+
+/**
+ * Đóng popup xem trước ảnh và thu hồi bộ nhớ ảnh tạm
+ */
+function closeNTTT8ImagePreviewModal() {
+  const modal = document.getElementById('modal8NTTTImagePreview');
+  if (modal) modal.classList.add('hidden');
+  setNTTT8PreviewStatus(null, '');
+  releaseNTTT8PreviewResources();
+}
+
+/**
+ * Chuyển canvas thành Blob PNG trong bộ nhớ trình duyệt (Không dùng chuỗi Base64 dài)
+ */
+function canvasToPngBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    if (!canvas || typeof canvas.toBlob !== 'function') {
+      reject(new Error('Canvas không hỗ trợ tạo Blob PNG.'));
+      return;
+    }
+    canvas.toBlob(blob => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error('Không thể tạo Blob PNG từ sơ đồ.'));
+      }
+    }, 'image/png');
+  });
+}
+
+/**
+ * Sao chép trực tiếp Blob PNG vào Clipboard qua Clipboard API
+ */
+async function copyImageToClipboard(blob) {
+  if (!blob) {
+    throw new Error('Không có dữ liệu ảnh để sao chép.');
+  }
+  if (!navigator.clipboard || typeof window.ClipboardItem === 'undefined') {
+    throw new Error('Trình duyệt không hỗ trợ sao chép ảnh trực tiếp.');
+  }
+
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      'image/png': blob
+    })
+  ]);
+}
+
+/**
+ * Xử lý khi người dùng nhấn nút "SAO CHÉP ẢNH" trong popup
+ */
+async function copyNTTT8ImageToClipboard() {
+  if (NTTT8State.isCopyingImage) return;
+  if (!NTTT8State.previewBlob) {
+    setNTTT8PreviewStatus(
+      'error',
+      'Không thể sao chép ảnh trên trình duyệt này. Vui lòng thử lại hoặc tải ảnh xuống.'
+    );
+    return;
+  }
+
+  NTTT8State.isCopyingImage = true;
+  const btnCopy = document.getElementById('btn8NTTTCopyImage');
+  const origHtml = btnCopy ? btnCopy.innerHTML : '';
+  if (btnCopy) {
+    btnCopy.disabled = true;
+    btnCopy.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang sao chép...</span>';
+  }
+
+  try {
+    await copyImageToClipboard(NTTT8State.previewBlob);
+    const successMsg = 'Đã sao chép ảnh! Bạn có thể dán trực tiếp vào ứng dụng cần sử dụng.';
+    setNTTT8PreviewStatus('success', successMsg);
+    if (typeof showToast === 'function') {
+      showToast(successMsg);
+    }
+  } catch (err) {
+    console.warn('[8NTTT] Không thể sao chép ảnh vào clipboard:', err);
+    const errorMsg = 'Không thể sao chép ảnh trên trình duyệt này. Vui lòng thử lại hoặc tải ảnh xuống.';
+    setNTTT8PreviewStatus('error', errorMsg);
+  } finally {
+    NTTT8State.isCopyingImage = false;
+    if (btnCopy) {
+      btnCopy.disabled = false;
+      btnCopy.innerHTML = origHtml || '<i class="fa-solid fa-copy"></i> <span>SAO CHÉP ẢNH</span>';
+    }
+  }
+}
+
+/**
+ * Tải ảnh xuống máy khi người dùng chủ động nhấn nút "TẢI ẢNH XUỐNG"
+ */
+function downloadNTTT8PreviewImage() {
+  if (!NTTT8State.previewBlob && !NTTT8State.previewObjectUrl) {
+    alert('Chưa có ảnh được tạo để tải xuống.');
+    return;
+  }
+
+  const downloadUrl = NTTT8State.previewObjectUrl || URL.createObjectURL(NTTT8State.previewBlob);
+  const link = document.createElement('a');
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+  link.download = `So-Do-Phan-Cong-8NTTT-${dateStr}.png`;
+  link.href = downloadUrl;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  if (!NTTT8State.previewObjectUrl && downloadUrl) {
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  }
+
+  if (typeof showToast === 'function') {
+    showToast('Đã tải ảnh sơ đồ phân công 8NTTT xuống máy.');
+  }
+}
+
+/**
+ * Tạo ảnh PNG sơ đồ 8NTTT trong bộ nhớ và mở Popup Xem Trước (Không tự động tải về, không lưu DB)
+ */
 async function exportNTTT8DiagramImage() {
+  if (NTTT8State.isExportingImage) return;
+
   const gridEl = document.getElementById('nttt8AssignmentGrid');
   if (!gridEl || typeof html2canvas === 'undefined') {
     alert('Không tìm thấy thư viện xuất ảnh html2canvas.');
     return;
   }
 
+  NTTT8State.isExportingImage = true;
   const btn = document.getElementById('btn8NTTTExportImage');
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xuất ảnh...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo ảnh...</span>';
   }
 
   try {
+    // Giải phóng ảnh tạm cũ (nếu có) trước khi tạo ảnh mới
+    releaseNTTT8PreviewResources();
+    setNTTT8PreviewStatus(null, '');
+
+    // Đợi font chữ và layout ổn định trước khi chụp toàn bộ chiều rộng thực tế của sơ đồ
+    if (document.fonts && document.fonts.ready) {
+      try {
+        await document.fonts.ready;
+      } catch (e) {
+        // Ignore font readiness warning
+      }
+    }
+
     document.body.classList.add('exporting-8nttt-map');
     await new Promise(r => setTimeout(r, 120));
+
+    const fullWidth = Math.max(1680, gridEl.scrollWidth || 1680);
+    const fullHeight = Math.max(600, gridEl.scrollHeight || 820);
 
     const canvas = await html2canvas(gridEl, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
-      width: gridEl.scrollWidth,
-      height: gridEl.scrollHeight,
-      windowWidth: Math.max(1720, gridEl.scrollWidth + 60)
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: Math.max(1760, fullWidth + 60)
     });
 
-    const dataUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    const now = new Date();
-    const dateStr = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
-    link.download = `So-Do-Phan-Cong-8NTTT-${dateStr}.png`;
-    link.href = dataUrl;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    const blob = await canvasToPngBlob(canvas);
+    const objectUrl = URL.createObjectURL(blob);
 
-    if (typeof showToast === 'function') {
-      showToast('Đã tải xuống ảnh sơ đồ 8NTTT độ phân giải cao!');
+    NTTT8State.previewBlob = blob;
+    NTTT8State.previewObjectUrl = objectUrl;
+
+    const previewImg = document.getElementById('nttt8PreviewImg');
+    if (previewImg) {
+      previewImg.src = objectUrl;
+    }
+
+    const resInfo = document.getElementById('nttt8PreviewResolutionInfo');
+    if (resInfo) {
+      const sizeKb = Math.max(1, Math.round(blob.size / 1024));
+      resInfo.textContent = `Ảnh PNG gốc sắc nét (${canvas.width} × ${canvas.height} px • ${sizeKb} KB)`;
+    }
+
+    setNTTT8PreviewDisplayMode('fit');
+
+    const modal = document.getElementById('modal8NTTTImagePreview');
+    if (modal) {
+      modal.classList.remove('hidden');
     }
   } catch (e) {
-    console.error('[8NTTT] Lỗi xuất ảnh:', e);
-    alert('Có lỗi khi xuất ảnh sơ đồ 8NTTT.');
+    console.error('[8NTTT] Lỗi tạo ảnh sơ đồ:', e);
+    alert('Có lỗi khi tạo ảnh sơ đồ 8NTTT. Vui lòng thử lại.');
   } finally {
     document.body.classList.remove('exporting-8nttt-map');
     applyNTTT8ZoomTransform();
+    NTTT8State.isExportingImage = false;
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = origHtml;
+      btn.innerHTML = origHtml || '<i class="fa-solid fa-camera"></i> <span>XUẤT ẢNH</span>';
     }
   }
 }
@@ -1997,8 +2214,19 @@ function initNTTT8Module() {
       applyNTTT8ZoomTransform();
     }
   });
+
+  // Đóng popup xem trước ảnh khi nhấn phím Escape và giải phóng tài nguyên tạm
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const previewModal = document.getElementById('modal8NTTTImagePreview');
+      if (previewModal && !previewModal.classList.contains('hidden')) {
+        closeNTTT8ImagePreviewModal();
+      }
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initNTTT8Module();
 });
+
