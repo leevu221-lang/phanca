@@ -563,8 +563,9 @@
 .tab-8nttt .accessory-group-left {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(4, minmax(27px, auto));
+  grid-template-rows: repeat(3, minmax(27px, auto));
   gap: 3px;
+  align-self: start;
 }
 
 .tab-8nttt .accessory-group-laptop {
@@ -741,6 +742,11 @@
 .tab-8nttt .nttt8-svg-icon.icon-acc {
   width: 16px;
   height: 16px;
+}
+
+.tab-8nttt .layout-stack-top .nttt8-svg-icon.icon-acc {
+  width: 22px;
+  height: 22px;
 }
 
 .tab-8nttt .nttt8-svg-icon.icon-laptop {

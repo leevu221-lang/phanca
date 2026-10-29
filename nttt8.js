@@ -947,33 +947,37 @@ const DEFAULT_NTTT8_CELLS = [
     icon: 'speaker-tall',
     iconLayout: 'stack-top'
   },
-
-  // ================= J. KHU VỰC PHỤ KIỆN, LAPTOP, SMARTPHONE & BTV =================
-  // --- Nhóm 1 (Trái): Phụ kiện, Đồng hồ thời trang & BTV 1..4 (12 cột x 4 hàng) ---
   {
     id: 'd_vach_pk_1',
-    zone: 'D',
-    section: 'acc_left',
+    zone: 'C',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH PHỤ KIỆN',
     staff: 'N.ANH',
-    col: '1 / 7',
-    row: '1 / 2',
+    col: '25 / 28',
+    row: '15 / 18',
     bgClass: 'bg-nttt-lavender',
-    icon: 'headphone'
+    orientation: 'vertical',
+    icon: 'headphone',
+    iconLayout: 'stack-top'
   },
   {
     id: 'd_vach_pk_2',
-    zone: 'D',
-    section: 'acc_left',
+    zone: 'C',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH PHỤ KIỆN',
     staff: 'N.ANH',
-    col: '7 / 13',
-    row: '1 / 2',
+    col: '25 / 28',
+    row: '18 / 21',
     bgClass: 'bg-nttt-lavender',
-    icon: 'usb-hub'
+    orientation: 'vertical',
+    icon: 'usb-hub',
+    iconLayout: 'stack-top'
   },
+
+  // ================= J. KHU VỰC PHỤ KIỆN, LAPTOP, SMARTPHONE & BTV =================
+  // --- Nhóm 1 (Trái): Phụ kiện, Đồng hồ thời trang & BTV 1..4 (12 cột x 3 hàng) ---
   {
     id: 'd_pk_basus',
     zone: 'D',
@@ -982,7 +986,7 @@ const DEFAULT_NTTT8_CELLS = [
     area: 'PHỤ KIỆN BASUS',
     staff: 'MỸ',
     col: '1 / 5',
-    row: '2 / 3',
+    row: '1 / 2',
     bgClass: 'bg-nttt-yellow',
     icon: 'powerbank'
   },
@@ -994,7 +998,7 @@ const DEFAULT_NTTT8_CELLS = [
     area: 'PHỤ KIỆN ANKER',
     staff: 'MỸ',
     col: '5 / 9',
-    row: '2 / 3',
+    row: '1 / 2',
     bgClass: 'bg-nttt-yellow',
     icon: 'charger'
   },
@@ -1006,7 +1010,7 @@ const DEFAULT_NTTT8_CELLS = [
     area: 'CAMERA',
     staff: 'MỸ',
     col: '9 / 13',
-    row: '2 / 3',
+    row: '1 / 2',
     bgClass: 'bg-nttt-yellow',
     icon: 'camera'
   },
@@ -1018,7 +1022,7 @@ const DEFAULT_NTTT8_CELLS = [
     area: 'ĐỒNG HỒ THỜI TRANG',
     staff: 'MỸ',
     col: '1 / 13',
-    row: '3 / 4',
+    row: '2 / 3',
     bgClass: 'bg-nttt-yellow',
     icon: 'smartwatch'
   },
@@ -1031,7 +1035,7 @@ const DEFAULT_NTTT8_CELLS = [
     staff: '',
     displayOverride: 'BTV 1',
     col: '1 / 4',
-    row: '4 / 5',
+    row: '3 / 4',
     bgClass: 'bg-nttt-yellow',
     icon: 'btv-phone'
   },
@@ -1044,7 +1048,7 @@ const DEFAULT_NTTT8_CELLS = [
     staff: '',
     displayOverride: 'BTV 2',
     col: '4 / 7',
-    row: '4 / 5',
+    row: '3 / 4',
     bgClass: 'bg-nttt-yellow',
     icon: 'btv-watch'
   },
@@ -1057,7 +1061,7 @@ const DEFAULT_NTTT8_CELLS = [
     staff: '',
     displayOverride: 'BTV 3',
     col: '7 / 10',
-    row: '4 / 5',
+    row: '3 / 4',
     bgClass: 'bg-nttt-yellow',
     icon: 'btv-cam'
   },
@@ -1070,7 +1074,7 @@ const DEFAULT_NTTT8_CELLS = [
     staff: '',
     displayOverride: 'BTV 4',
     col: '10 / 13',
-    row: '4 / 5',
+    row: '3 / 4',
     bgClass: 'bg-nttt-yellow',
     icon: 'btv-cam'
   },
