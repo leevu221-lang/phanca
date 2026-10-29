@@ -685,25 +685,43 @@ function initDemoAssignments() {
 function setupFlyerNavTabs() {
   const tabSchedule = document.getElementById('tabNavSchedule');
   const tabFlyer = document.getElementById('tabNavFlyer');
+  const tab8NTTT = document.getElementById('tabNav8NTTT');
   const sectionSchedule = document.getElementById('sectionSchedule');
   const sectionFlyer = document.getElementById('sectionFlyer');
+  const section8NTTT = document.getElementById('section8NTTT');
+  const navFlyerQuickActions = document.getElementById('navFlyerQuickActions');
 
   function switchTab(tabName) {
+    if (tabSchedule) tabSchedule.classList.remove('active');
+    if (tabFlyer) tabFlyer.classList.remove('active');
+    if (tab8NTTT) tab8NTTT.classList.remove('active');
+
+    if (sectionSchedule) sectionSchedule.style.display = 'none';
+    if (sectionFlyer) sectionFlyer.style.display = 'none';
+    if (section8NTTT) section8NTTT.style.display = 'none';
+
     if (tabName === 'flyer') {
-      if (tabSchedule) tabSchedule.classList.remove('active');
       if (tabFlyer) tabFlyer.classList.add('active');
-      if (sectionSchedule) sectionSchedule.style.display = 'none';
       if (sectionFlyer) sectionFlyer.style.display = 'block';
+      if (navFlyerQuickActions) navFlyerQuickActions.style.display = 'flex';
 
       renderFlyerStats();
       renderFlyerTable();
       updateFlyerMonthLabel();
       localStorage.setItem(FLYER_STORAGE_ACTIVE_TAB, 'flyer');
+    } else if (tabName === '8nttt') {
+      if (tab8NTTT) tab8NTTT.classList.add('active');
+      if (section8NTTT) section8NTTT.style.display = 'block';
+      if (navFlyerQuickActions) navFlyerQuickActions.style.display = 'none';
+
+      if (typeof renderNTTT8AssignmentGrid === 'function') {
+        renderNTTT8AssignmentGrid();
+      }
+      localStorage.setItem(FLYER_STORAGE_ACTIVE_TAB, '8nttt');
     } else {
-      if (tabFlyer) tabFlyer.classList.remove('active');
       if (tabSchedule) tabSchedule.classList.add('active');
-      if (sectionFlyer) sectionFlyer.style.display = 'none';
       if (sectionSchedule) sectionSchedule.style.display = 'block';
+      if (navFlyerQuickActions) navFlyerQuickActions.style.display = 'flex';
       localStorage.setItem(FLYER_STORAGE_ACTIVE_TAB, 'schedule');
     }
   }
@@ -714,10 +732,15 @@ function setupFlyerNavTabs() {
   if (tabFlyer) {
     tabFlyer.addEventListener('click', () => switchTab('flyer'));
   }
+  if (tab8NTTT) {
+    tab8NTTT.addEventListener('click', () => switchTab('8nttt'));
+  }
 
   const savedTab = localStorage.getItem(FLYER_STORAGE_ACTIVE_TAB);
-  const isHashToroi = (typeof window !== 'undefined' && window.location && window.location.hash === '#toroi');
-  if (isHashToroi || savedTab === 'flyer') {
+  const hashVal = (typeof window !== 'undefined' && window.location && window.location.hash) ? window.location.hash.toLowerCase() : '';
+  if (hashVal === '#8nttt' || savedTab === '8nttt') {
+    switchTab('8nttt');
+  } else if (hashVal === '#toroi' || savedTab === 'flyer') {
     switchTab('flyer');
   }
 

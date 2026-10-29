@@ -1,0 +1,733 @@
+/* ==========================================================================
+   MODULE: TAB 8NTTT - SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH NGÀNH HÀNG
+   Phạm vi CSS cô lập hoàn toàn trong .tab-8nttt (Không ảnh hưởng tab khác)
+   Thiết kế chuẩn bố cục bảng phân công siêu thị theo hình mẫu
+   ========================================================================== */
+
+.tab-8nttt {
+  font-family: Arial, 'Inter', 'Plus Jakarta Sans', sans-serif;
+  color: #000000;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px 36px;
+}
+
+.tab-8nttt * {
+  box-sizing: border-box;
+}
+
+/* Thanh công cụ điều khiển phía trên sơ đồ */
+.tab-8nttt .nttt8-toolbar-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab-8nttt .nttt8-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab-8nttt .nttt8-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-8nttt .nttt8-title-badge {
+  background: #FFFF00;
+  color: #000000;
+  font-weight: 900;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1.5px solid #000000;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tab-8nttt .nttt8-title-text {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.tab-8nttt .nttt8-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Ô tìm kiếm & lọc nhân viên */
+.tab-8nttt .nttt8-search-wrap {
+  position: relative;
+  min-width: 210px;
+}
+
+.tab-8nttt .nttt8-search-wrap i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #475569;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.tab-8nttt .nttt8-search-input {
+  width: 100%;
+  padding: 6px 10px 6px 30px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+}
+
+.tab-8nttt .nttt8-search-input:focus {
+  border-color: #0284c7;
+}
+
+.tab-8nttt .nttt8-staff-select {
+  padding: 6px 10px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Nút điều khiển trên thanh công cụ */
+.tab-8nttt .nttt8-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #64748b;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab-8nttt .nttt8-btn:hover {
+  background: #f1f5f9;
+  border-color: #334155;
+}
+
+.tab-8nttt .nttt8-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0369a1;
+}
+
+.tab-8nttt .nttt8-btn-primary {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0369a1;
+}
+
+.tab-8nttt .nttt8-btn-primary:hover {
+  background: #0369a1;
+}
+
+.tab-8nttt .nttt8-zoom-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.tab-8nttt .nttt8-zoom-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #0f172a;
+  min-width: 44px;
+  text-align: center;
+}
+
+/* Chú thích nhóm màu ngành hàng */
+.tab-8nttt .nttt8-legend-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.tab-8nttt .nttt8-legend-items {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tab-8nttt .nttt8-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tab-8nttt .nttt8-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #475569;
+  display: inline-block;
+}
+
+.tab-8nttt .nttt8-hint-text {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+/* Gợi ý cuộn ngang trên điện thoại */
+.tab-8nttt .nttt8-mobile-tip {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  color: #78350f;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   VÙNG CHỨA SƠ ĐỒ CUỘN NGANG (CHỈ CUỘN TRONG SƠ ĐỒ, KHÔNG TRÀN TOÀN TRANG)
+   ========================================================================== */
+.tab-8nttt .nttt8-board-wrapper {
+  background: #ffffff;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.tab-8nttt .nttt8-scroll-viewport {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+  padding: 6px;
+}
+
+.tab-8nttt .nttt8-zoom-stage {
+  transform-origin: 0 0;
+  display: inline-block;
+  vertical-align: top;
+  min-width: 100%;
+}
+
+/* ==========================================================================
+   LƯỚI SƠ ĐỒ PHÂN CÔNG 8NTTT (CSS GRID CHUẨN HÌNH MẪU 35 CỘT x 39 HÀNG)
+   ========================================================================== */
+.tab-8nttt .nttt8-assignment-grid {
+  display: grid;
+  /*
+    Cột 1: Cột phân loại ngành hàng dọc bên trái (52px)
+    Cột 2..9: Khối ngành hàng bên trái (8 cột con)
+    Cột 10: Cột ĐƯỜNG ĐI (28px)
+    Cột 11..16: Khối ngành hàng trung tâm (6 cột con)
+    Cột 17: Cột CỬA KHO & Vách phân cách dọc (58px)
+    Cột 18..35: Khối Phụ kiện, Laptop, Điện thoại, BTV & Bảng VẬN HÀNH (18 cột con)
+  */
+  grid-template-columns:
+    52px
+    repeat(8, minmax(46px, 1fr))
+    28px
+    repeat(6, minmax(52px, 1.08fr))
+    58px
+    repeat(16, minmax(38px, 0.88fr))
+    repeat(2, minmax(34px, 0.78fr));
+  grid-auto-rows: minmax(10px, auto);
+  width: 100%;
+  min-width: 1560px;
+  background: #ffffff;
+  border: 1px solid #333333;
+  position: relative;
+}
+
+/* ==========================================================================
+   QUY TẮC THIẾT KẾ Ô PHÂN CÔNG (AssignmentCell)
+   ========================================================================== */
+.tab-8nttt .nttt8-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3px 4px;
+  font-family: Arial, 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #000000;
+  text-transform: uppercase;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  border: 0.5px solid rgba(0, 0, 0, 0.18);
+  transition: outline 0.12s ease, opacity 0.15s ease;
+}
+
+.tab-8nttt .nttt8-cell:hover {
+  outline: 2px solid #0284c7;
+  z-index: 6;
+}
+
+.tab-8nttt .nttt8-cell.nttt8-static {
+  cursor: default;
+}
+
+.tab-8nttt .nttt8-cell.nttt8-static:hover {
+  outline: none;
+}
+
+/* Nhãn hiển thị theo chiều dọc (Cột ngoài cùng bên trái, Đường đi, Cột cửa kho) */
+.tab-8nttt .nttt8-vertical-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.22;
+  padding: 6px 2px;
+  letter-spacing: 0.2px;
+}
+
+/* Nhãn nghiêng nhẹ ở góc dưới trái (Vách hãng Toshiba/LG/Samsung) và WC */
+.tab-8nttt .nttt8-tilted-label {
+  display: inline-block;
+  transform: rotate(-55deg);
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.15;
+  font-size: 9.5px;
+}
+
+/* ==========================================================================
+   NHÓM MÀU NỀN CHUẨN THEO HÌNH MẪU (PHẲNG, KHÔNG GRADIENT, KHÔNG ĐỔ BÓNG)
+   ========================================================================== */
+
+/* Tím nhạt (#D9D2E9): Cột phân loại ngành hàng bên trái & Tủ lạnh Samsung / Tủ đông 02-03 */
+.tab-8nttt .bg-nttt-purple {
+  background-color: #D9D2E9;
+  color: #000000;
+}
+
+/* Xanh lá nhạt (#D9EAD3 / #B6D7A8): Vách tủ lạnh đỉnh, Bục tủ lạnh, Gia dụng Kangaroo/Toshiba/Sunhouse, Robot, MLN */
+.tab-8nttt .bg-nttt-green-light {
+  background-color: #D9EAD3;
+  color: #000000;
+}
+
+/* Xanh lá đậm hơn (#B6D7A8): Bục hãng Samsung dưới cùng */
+.tab-8nttt .bg-nttt-green {
+  background-color: #B6D7A8;
+  color: #000000;
+}
+
+/* Xanh ngọc (#42BBC2) nếu được chọn cho nhóm đặc biệt */
+.tab-8nttt .bg-nttt-teal {
+  background-color: #42BBC2;
+  color: #000000;
+}
+
+/* Vàng kem (#FFF0C2): Gia dụng 07 -> Gia dụng 01 */
+.tab-8nttt .bg-nttt-cream {
+  background-color: #FFF0C2;
+  color: #000000;
+}
+
+/* Vàng đậm nhạt (#FFE599): Nhóm kệ và robot tùy chọn */
+.tab-8nttt .bg-nttt-amber-light {
+  background-color: #FFE599;
+  color: #000000;
+}
+
+/* Xanh dương nhạt (#CFE2F3 / #A8C8E8): Nhóm Máy giặt, Bục hãng trung tâm & Vách hãng góc dưới trái */
+.tab-8nttt .bg-nttt-blue {
+  background-color: #CFE2F3;
+  color: #000000;
+}
+
+.tab-8nttt .bg-nttt-blue-strong {
+  background-color: #A8C8E8;
+  color: #000000;
+}
+
+/* Cam nhạt (#FCE4CD): Khu vực cửa kho (Mạnh) & Kệ loa Karaoke, Bục hãng Haier/Aqua/Xiaomi */
+.tab-8nttt .bg-nttt-orange {
+  background-color: #FCE4CD;
+  color: #000000;
+}
+
+/* Vàng sáng (#FFFF00): Vách loa, Vách phụ kiện, Toàn bộ khối ICT/Laptop/Smartphone/BTV & Tiêu đề VẬN HÀNH */
+.tab-8nttt .bg-nttt-yellow {
+  background-color: #FFFF00;
+  color: #000000;
+}
+
+/* Hồng phấn (#F4CCCC): Khu vực giá sốc/mùa vụ, Bàn giao hàng, HTKT, Trang trí, Thu ngân */
+.tab-8nttt .bg-nttt-pink {
+  background-color: #F4CCCC;
+  color: #000000;
+}
+
+/* Hồng đỏ nhạt (#EA9999) / Chữ đỏ cho WC & CỬA KHO */
+.tab-8nttt .bg-nttt-red-soft {
+  background-color: #EA9999;
+  color: #000000;
+}
+
+.tab-8nttt .bg-nttt-white {
+  background-color: #FFFFFF;
+  color: #000000;
+}
+
+.tab-8nttt .text-nttt-red {
+  color: #DC2626 !important;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   ĐƯỜNG KẺ VIỀN PHÂN VÙNG RÕ NÉT THEO HÌNH MẪU
+   ========================================================================== */
+.tab-8nttt .b-top { border-top: 1px solid #333333 !important; }
+.tab-8nttt .b-bottom { border-bottom: 1px solid #333333 !important; }
+.tab-8nttt .b-left { border-left: 1px solid #333333 !important; }
+.tab-8nttt .b-right { border-right: 1px solid #333333 !important; }
+.tab-8nttt .b-box { border: 1px solid #333333 !important; }
+.tab-8nttt .b-none { border-color: transparent !important; }
+.tab-8nttt .b-no-inner-left { border-left: none !important; }
+.tab-8nttt .b-no-inner-right { border-right: none !important; }
+
+/* Hàng khe hở có vạch chia cột (tick marks) giữa các kệ hàng như hình mẫu */
+.tab-8nttt .nttt8-tick-row {
+  display: grid;
+  height: 11px;
+  min-height: 11px;
+  background: #ffffff;
+  border-top: 1px solid #333333;
+  border-bottom: 1px solid #333333;
+  pointer-events: none;
+}
+
+.tab-8nttt .nttt8-tick-row.cols-8 {
+  grid-template-columns: repeat(8, 1fr);
+}
+
+.tab-8nttt .nttt8-tick-row.cols-6-left1 {
+  grid-template-columns: 1fr 5fr;
+}
+
+.tab-8nttt .nttt8-tick-row.cols-8-sparse {
+  grid-template-columns: 4fr 2fr 2fr;
+}
+
+.tab-8nttt .nttt8-tick-cell {
+  border-right: 1px solid #333333;
+  height: 100%;
+}
+
+.tab-8nttt .nttt8-tick-cell:last-child {
+  border-right: none;
+}
+
+/* ==========================================================================
+   BẢNG QUY ĐỊNH VẬN HÀNH (OperationRules) Ở PHÍA TRÊN BÊN PHẢI
+   ========================================================================== */
+.tab-8nttt .nttt8-operation-box {
+  background: #ffffff;
+  border: 1px solid #333333;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  z-index: 4;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-operation-box:hover {
+  outline: 2px solid #0284c7;
+}
+
+.tab-8nttt .nttt8-operation-header {
+  background-color: #FFFF00;
+  color: #000000;
+  font-family: 'Times New Roman', Arial, serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 5px 10px;
+  border-bottom: 1px solid #333333;
+  letter-spacing: 0.6px;
+  line-height: 1.15;
+}
+
+.tab-8nttt .nttt8-operation-body {
+  background-color: #FFFFFF;
+  color: #000000;
+  text-align: left;
+  padding: 6px 10px 10px;
+  font-family: Arial, 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.42;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.tab-8nttt .nttt8-operation-body p {
+  margin: 0 0 3px 0;
+}
+
+.tab-8nttt .nttt8-operation-body .vh-sublist {
+  margin: 2px 0 0 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.tab-8nttt .nttt8-operation-body .vh-sublist li {
+  margin-bottom: 2px;
+}
+
+.tab-8nttt .nttt8-operation-body .vh-highlight-red {
+  color: #FF0000;
+  font-weight: 900;
+}
+
+/* ==========================================================================
+   HIỆU ỨNG TÌM KIẾM & LỌC NHÂN VIÊN TRÊN SƠ ĐỒ
+   ========================================================================== */
+.tab-8nttt .nttt8-cell.nttt8-highlighted {
+  outline: 2.5px solid #dc2626 !important;
+  z-index: 15 !important;
+}
+
+.tab-8nttt .nttt8-cell.nttt8-dimmed {
+  opacity: 0.25;
+}
+
+/* ==========================================================================
+   MODAL CHỈNH SỬA PHÂN CÔNG Ô 8NTTT (XÁC NHẬN TRƯỚC KHI LƯU)
+   ========================================================================== */
+.tab-8nttt .nttt8-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+}
+
+.tab-8nttt .nttt8-modal-backdrop.hidden {
+  display: none !important;
+}
+
+.tab-8nttt .nttt8-modal-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+}
+
+.tab-8nttt .nttt8-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-8nttt .nttt8-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.tab-8nttt .nttt8-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-modal-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tab-8nttt .nttt8-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tab-8nttt .nttt8-form-group label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.tab-8nttt .nttt8-form-input,
+.tab-8nttt .nttt8-form-select,
+.tab-8nttt .nttt8-form-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: inherit;
+  outline: none;
+}
+
+.tab-8nttt .nttt8-form-input:focus,
+.tab-8nttt .nttt8-form-select:focus,
+.tab-8nttt .nttt8-form-textarea:focus {
+  border-color: #0284c7;
+}
+
+.tab-8nttt .nttt8-quick-staff-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 130px;
+  overflow-y: auto;
+  padding: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.tab-8nttt .nttt8-staff-chip {
+  padding: 4px 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-staff-chip:hover,
+.tab-8nttt .nttt8-staff-chip.selected {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0369a1;
+}
+
+.tab-8nttt .nttt8-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* ==========================================================================
+   RESPONSIVE CHO ĐIỆN THOẠI & MÀN HÌNH NHỎ
+   ========================================================================== */
+@media (max-width: 768px) {
+  .tab-8nttt {
+    padding: 8px 8px 28px;
+  }
+
+  .tab-8nttt .nttt8-toolbar-card {
+    padding: 8px 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-8nttt .nttt8-toolbar-left,
+  .tab-8nttt .nttt8-toolbar-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tab-8nttt .nttt8-search-wrap {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .tab-8nttt .nttt8-mobile-tip {
+    display: flex;
+  }
+
+  .tab-8nttt .nttt8-legend-bar {
+    padding: 6px 8px;
+    font-size: 10.5px;
+  }
+}
+
+/* Chế độ xuất ảnh HD toàn sơ đồ */
+body.exporting-8nttt-map .tab-8nttt .nttt8-scroll-viewport {
+  overflow: visible !important;
+}
+
+body.exporting-8nttt-map .tab-8nttt .nttt8-zoom-stage {
+  transform: none !important;
+  width: 1680px !important;
+}

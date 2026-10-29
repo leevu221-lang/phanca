@@ -28,6 +28,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="flyer.css?v=20261020_dirty_check">
+  <link rel="stylesheet" href="nttt8.css?v=20261029_8nttt">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -91,6 +92,10 @@
           <i class="fa-solid fa-bullhorn"></i>
           <span>TỜ RƠI</span>
           <span class="tab-pill-badge badge-new">MỚI</span>
+        </button>
+        <button type="button" class="main-tab-btn" id="tabNav8NTTT">
+          <i class="fa-solid fa-table-cells-large"></i>
+          <span>8NTTT</span>
         </button>
       </div>
       <div class="nav-actions-quick" id="navFlyerQuickActions">
@@ -961,6 +966,175 @@
         </section>
       </div>
 
+    </div>
+  </main>
+
+  <!-- ========================================================================== -->
+  <!-- TAB 3: 8NTTT - SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH NGÀNH HÀNG -->
+  <!-- ========================================================================== -->
+  <main class="main-content tab-8nttt" id="section8NTTT" style="display: none;">
+    <!-- Thanh công cụ tìm kiếm, lọc nhân viên, thu phóng & xuất ảnh -->
+    <div class="nttt8-toolbar-card">
+      <div class="nttt8-toolbar-left">
+        <div class="nttt8-title-group">
+          <span class="nttt8-title-badge">8NTTT</span>
+          <h2 class="nttt8-title-text">SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH KHU VỰC &amp; NGÀNH HÀNG</h2>
+        </div>
+
+        <div class="nttt8-search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="nttt8SearchInput" class="nttt8-search-input" placeholder="Tìm ngành hàng, thương hiệu, nhân viên...">
+        </div>
+
+        <select id="nttt8StaffFilterSelect" class="nttt8-staff-select" title="Lọc theo nhân viên phụ trách">
+          <option value="">👤 Tất cả nhân viên</option>
+        </select>
+      </div>
+
+      <div class="nttt8-toolbar-right">
+        <button type="button" class="nttt8-btn" id="btn8NTTTZoomFit" title="Thu nhỏ vừa màn hình để xem toàn bộ sơ đồ">
+          <i class="fa-solid fa-compress"></i>
+          <span>Toàn sơ đồ</span>
+        </button>
+        <button type="button" class="nttt8-btn active" id="btn8NTTTZoomActual" title="Hiển thị kích thước chuẩn 100% rõ chữ">
+          <i class="fa-solid fa-magnifying-glass-plus"></i>
+          <span>Phóng to</span>
+        </button>
+
+        <div class="nttt8-zoom-group" title="Điều chỉnh tỷ lệ hiển thị sơ đồ">
+          <button type="button" class="nttt8-btn" id="btn8NTTTZoomOut" style="padding: 4px 8px;">-</button>
+          <span class="nttt8-zoom-label" id="nttt8ZoomLevelText">100%</span>
+          <button type="button" class="nttt8-btn" id="btn8NTTTZoomIn" style="padding: 4px 8px;">+</button>
+        </div>
+
+        <button type="button" class="nttt8-btn nttt8-btn-primary" id="btn8NTTTExportImage" onclick="exportNTTT8DiagramImage()" title="Tải ảnh sơ đồ 8NTTT chất lượng cao">
+          <i class="fa-solid fa-camera"></i>
+          <span>Xuất Ảnh Sơ Đồ</span>
+        </button>
+
+        <button type="button" class="nttt8-btn" onclick="resetNTTT8ToDefaultData()" title="Khôi phục dữ liệu phân công mặc định">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Mặc định</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chú thích nhóm màu ngành hàng -->
+    <div class="nttt8-legend-bar">
+      <div class="nttt8-legend-items">
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#D9D2E9;"></span> Cột phân loại / Tủ đông</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#D9EAD3;"></span> Tủ lạnh / MLN / Kệ GD</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FFF0C2;"></span> Nhóm Gia dụng (01-07)</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#CFE2F3;"></span> Máy giặt / Bục hãng</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FCE4CD;"></span> Cửa kho / Bục hãng</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FFFF00;"></span> Phụ kiện / Laptop / ĐT / Vận hành</span>
+        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#F4CCCC;"></span> Bán hàng / Trang trí / Thu ngân</span>
+      </div>
+      <span class="nttt8-hint-text"><i class="fa-solid fa-hand-pointer"></i> Nhấp vào ô bất kỳ để chỉnh sửa phân công</span>
+    </div>
+
+    <!-- Gợi ý cuộn ngang trên điện thoại -->
+    <div class="nttt8-mobile-tip">
+      <span><i class="fa-solid fa-arrows-left-right"></i> Vuốt ngang bên trong vùng sơ đồ để xem toàn bộ các khu vực</span>
+      <span>Dùng nút <strong>Toàn sơ đồ</strong> / <strong>Phóng to</strong> ở trên</span>
+    </div>
+
+    <!-- Vùng chứa sơ đồ phân công 8NTTT ngang -->
+    <div class="nttt8-board-wrapper">
+      <div class="nttt8-scroll-viewport" id="nttt8ScrollViewport">
+        <div class="nttt8-zoom-stage" id="nttt8ZoomStage">
+          <div class="nttt8-assignment-grid" id="nttt8AssignmentGrid">
+            <!-- Sơ đồ 8NTTT được render bởi nttt8.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALS CHO TAB 8NTTT (CHỈNH SỬA PHÂN CÔNG Ô & BẢNG VẬN HÀNH) -->
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTEditCell" onclick="if(event.target === this) closeNTTT8CellEditModal()">
+      <div class="nttt8-modal-card">
+        <div class="nttt8-modal-header">
+          <h3>Chỉnh Sửa Ô Phân Công 8NTTT</h3>
+          <button type="button" class="nttt8-modal-close" onclick="closeNTTT8CellEditModal()">&times;</button>
+        </div>
+        <div class="nttt8-modal-body">
+          <div class="nttt8-form-group">
+            <label for="nttt8EditAreaInput">Tên ngành hàng / Khu vực:</label>
+            <input type="text" id="nttt8EditAreaInput" class="nttt8-form-input" placeholder="VD: TỦ LẠNH AQUA">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8EditStaffInput">Nhân viên phụ trách:</label>
+            <input type="text" id="nttt8EditStaffInput" class="nttt8-form-input" placeholder="VD: XUYÊN" onkeydown="if(event.key === 'Enter') confirmSaveNTTT8CellEdit()">
+          </div>
+          <div class="nttt8-form-group">
+            <label>Chọn nhanh nhân viên hiện có:</label>
+            <div class="nttt8-quick-staff-pills" id="nttt8QuickStaffPills"></div>
+          </div>
+        </div>
+        <div class="nttt8-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeNTTT8CellEditModal()">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="confirmSaveNTTT8CellEdit()">
+            <i class="fa-solid fa-check"></i> Lưu Thay Đổi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTEditRules" onclick="if(event.target === this) closeNTTT8RulesEditModal()">
+      <div class="nttt8-modal-card" style="max-width: 620px;">
+        <div class="nttt8-modal-header">
+          <h3>Quy Định Bảng VẬN HÀNH (8NTTT)</h3>
+          <button type="button" class="nttt8-modal-close" onclick="closeNTTT8RulesEditModal()">&times;</button>
+        </div>
+        <div class="nttt8-modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <div class="nttt8-form-group">
+            <label for="nttt8RuleTitleInput">Tiêu đề bảng:</label>
+            <input type="text" id="nttt8RuleTitleInput" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule1PrefixInput">Mục 1 (Phần đầu):</label>
+            <input type="text" id="nttt8Rule1PrefixInput" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule1RedInput">Mục 1 (Cụm chữ đỏ nhấn mạnh):</label>
+            <input type="text" id="nttt8Rule1RedInput" class="nttt8-form-input" style="color: #dc2626;">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule1SuffixInput">Mục 1 (Phần cuối):</label>
+            <input type="text" id="nttt8Rule1SuffixInput" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule2Input">Mục 2:</label>
+            <input type="text" id="nttt8Rule2Input" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule3Input">Mục 3:</label>
+            <input type="text" id="nttt8Rule3Input" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8Rule4Input">Mục 4:</label>
+            <input type="text" id="nttt8Rule4Input" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8RuleSub1Input">Chi tiết 4.1:</label>
+            <input type="text" id="nttt8RuleSub1Input" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8RuleSub2Input">Chi tiết 4.2:</label>
+            <input type="text" id="nttt8RuleSub2Input" class="nttt8-form-input">
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8RuleSub3Input">Chi tiết 4.3:</label>
+            <input type="text" id="nttt8RuleSub3Input" class="nttt8-form-input">
+          </div>
+        </div>
+        <div class="nttt8-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeNTTT8RulesEditModal()">Đóng</button>
+          <button type="button" class="btn btn-primary" onclick="confirmSaveNTTT8RulesEdit()">
+            <i class="fa-solid fa-check"></i> Lưu Quy Định
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -2046,6 +2220,9 @@
   <script src="app.js?v=20261007_fb"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261020_dirty_check"></script>
+  <script src="flyer.js?v=20261029_8nttt"></script>
+
+  <!-- 8NTTT Floorplan Module Script -->
+  <script src="nttt8.js?v=20261029_8nttt"></script>
 </body>
 </html>
