@@ -261,32 +261,45 @@
 }
 
 /* ==========================================================================
-   LƯỚI SƠ ĐỒ PHÂN CÔNG 8NTTT (CSS GRID CHUẨN HÌNH MẪU 35 CỘT x 39 HÀNG)
+   LƯỚI SƠ ĐỒ PHÂN CÔNG 8NTTT (CSS GRID CHUẨN HÌNH MẪU 35 CỘT x 40 HÀNG)
+   Sử dụng kích thước cột pixel nguyên để chống làm tròn subpixel khi xuất ảnh
    ========================================================================== */
 .tab-8nttt .nttt8-assignment-grid {
   display: grid;
   /*
-    Cột 1: Cột phân loại ngành hàng dọc bên trái (52px)
-    Cột 2..9: Khối ngành hàng bên trái (8 cột con)
-    Cột 10: Cột ĐƯỜNG ĐI (28px)
-    Cột 11..16: Khối ngành hàng trung tâm (6 cột con)
-    Cột 17: Cột CỬA KHO & Vách phân cách dọc (58px)
-    Cột 18..35: Khối Phụ kiện, Laptop, Điện thoại, BTV & Bảng VẬN HÀNH (18 cột con)
+    Cột 1: Cột phân loại ngành hàng dọc bên trái (86px)
+    Cột 2..9: Khối ngành hàng bên trái (8 cột x 48px = 384px)
+    Cột 10: Cột ĐƯỜNG ĐI (30px)
+    Cột 11..16: Khối ngành hàng trung tâm (6 cột x 58px = 348px)
+    Cột 17: Cột CỬA KHO & Vách phân cách dọc (86px)
+    Cột 18..33: Khối Phụ kiện, Laptop, Điện thoại, BTV & Bảng VẬN HÀNH (16 cột x 44px = 704px)
+    Cột 34..35: Cột vách hãng bên phải Xiaomi/Oppo/Samsung/Apple (2 cột x 36px = 72px)
+    Tổng chiều rộng chuẩn: 1710px
   */
   grid-template-columns:
-    52px
-    repeat(8, minmax(46px, 1fr))
-    28px
-    repeat(6, minmax(52px, 1.08fr))
-    58px
-    repeat(16, minmax(38px, 0.88fr))
-    repeat(2, minmax(34px, 0.78fr));
-  grid-auto-rows: minmax(10px, auto);
+    86px
+    repeat(8, minmax(48px, 1fr))
+    30px
+    repeat(6, minmax(58px, 1.15fr))
+    86px
+    repeat(16, minmax(44px, 0.92fr))
+    repeat(2, minmax(36px, 0.76fr));
+  grid-auto-rows: minmax(11px, auto);
   width: 100%;
-  min-width: 1560px;
+  min-width: 1710px;
   background: #ffffff;
-  border: 1px solid #333333;
+  border: 1.5px solid #222222;
   position: relative;
+}
+
+/* Ô lưới trống trên nền bảng tính (hiển thị đường kẻ lưới mảnh đồng đều) */
+.tab-8nttt .nttt8-empty-grid-cell {
+  background-color: #ffffff;
+  border-right: 1px solid #d4d4d8;
+  border-bottom: 1px solid #d4d4d8;
+  min-height: 11px;
+  pointer-events: none;
+  box-sizing: border-box;
 }
 
 /* ==========================================================================
@@ -298,21 +311,29 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 3px 4px;
+  padding: 4px 5px;
   font-family: Arial, 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.22;
   color: #000000;
   text-transform: uppercase;
   word-break: break-word;
-  overflow-wrap: anywhere;
-  overflow: hidden;
+  overflow-wrap: break-word;
   position: relative;
   user-select: none;
   cursor: pointer;
-  border: 0.5px solid rgba(0, 0, 0, 0.18);
+  border: 1px solid #333333;
+  box-sizing: border-box;
+  z-index: 2;
   transition: outline 0.12s ease, opacity 0.15s ease;
+}
+
+.tab-8nttt .nttt8-cell > span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: pre-line;
 }
 
 .tab-8nttt .nttt8-cell:hover {
@@ -328,25 +349,39 @@
   outline: none;
 }
 
-/* Nhãn hiển thị theo chiều dọc (Cột ngoài cùng bên trái, Đường đi, Cột cửa kho) */
+/* Nhãn hiển thị ở các cột dọc (Cột 1, Cột 17) - Căn giữa nhiều dòng rõ nét, tương thích 100% html2canvas */
 .tab-8nttt .nttt8-vertical-label {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.24;
+  padding: 2px 1px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Nhãn cột ĐƯỜNG ĐI ở giữa */
+.tab-8nttt .nttt8-walkway-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.35;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+/* Nhãn ở góc dưới trái (Vách hãng Toshiba/LG/Samsung) và WC */
+.tab-8nttt .nttt8-tilted-label {
+  display: block;
+  width: 100%;
   text-align: center;
   white-space: pre-line;
   line-height: 1.22;
-  padding: 6px 2px;
-  letter-spacing: 0.2px;
-}
-
-/* Nhãn nghiêng nhẹ ở góc dưới trái (Vách hãng Toshiba/LG/Samsung) và WC */
-.tab-8nttt .nttt8-tilted-label {
-  display: inline-block;
-  transform: rotate(-55deg);
-  text-align: center;
-  white-space: pre-line;
-  line-height: 1.15;
-  font-size: 9.5px;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -435,7 +470,7 @@
 }
 
 /* ==========================================================================
-   ĐƯỜNG KẺ VIỀN PHÂN VÙNG RÕ NÉT THEO HÌNH MẪU
+   ĐƯỜNG KẺ VIỀN PHÂN VÙNG RÕ NÉT THEO HÌNH MẪU (1PX NGUYÊN, KHÔNG BỊ MẤT NÉT)
    ========================================================================== */
 .tab-8nttt .b-top { border-top: 1px solid #333333 !important; }
 .tab-8nttt .b-bottom { border-bottom: 1px solid #333333 !important; }
@@ -443,8 +478,8 @@
 .tab-8nttt .b-right { border-right: 1px solid #333333 !important; }
 .tab-8nttt .b-box { border: 1px solid #333333 !important; }
 .tab-8nttt .b-none { border-color: transparent !important; }
-.tab-8nttt .b-no-inner-left { border-left: none !important; }
-.tab-8nttt .b-no-inner-right { border-right: none !important; }
+.tab-8nttt .b-no-inner-left { border-left: 1px solid #333333 !important; }
+.tab-8nttt .b-no-inner-right { border-right: 1px solid #333333 !important; }
 
 /* Hàng khe hở có vạch chia cột (tick marks) giữa các kệ hàng như hình mẫu */
 .tab-8nttt .nttt8-tick-row {
@@ -452,9 +487,10 @@
   height: 11px;
   min-height: 11px;
   background: #ffffff;
-  border-top: 1px solid #333333;
-  border-bottom: 1px solid #333333;
+  border: 1px solid #333333;
+  box-sizing: border-box;
   pointer-events: none;
+  z-index: 2;
 }
 
 .tab-8nttt .nttt8-tick-row.cols-8 {
@@ -861,12 +897,34 @@
   }
 }
 
-/* Chế độ xuất ảnh HD toàn sơ đồ */
+/* Chế độ xuất ảnh HD toàn sơ đồ: mở khóa toàn bộ khung cuộn, cố định pixel nguyên 100% */
+body.exporting-8nttt-map .tab-8nttt .nttt8-board-wrapper,
 body.exporting-8nttt-map .tab-8nttt .nttt8-scroll-viewport {
   overflow: visible !important;
+  max-width: none !important;
+  max-height: none !important;
 }
 
 body.exporting-8nttt-map .tab-8nttt .nttt8-zoom-stage {
   transform: none !important;
-  width: 1680px !important;
+  width: 1713px !important;
+  min-width: 1713px !important;
+}
+
+body.exporting-8nttt-map .tab-8nttt .nttt8-assignment-grid {
+  width: 1713px !important;
+  min-width: 1713px !important;
+  grid-template-columns:
+    86px
+    repeat(8, 48px)
+    30px
+    repeat(6, 58px)
+    86px
+    repeat(16, 44px)
+    repeat(2, 36px) !important;
+}
+
+body.exporting-8nttt-map .tab-8nttt .nttt8-cell:hover,
+body.exporting-8nttt-map .tab-8nttt .nttt8-operation-box:hover {
+  outline: none !important;
 }

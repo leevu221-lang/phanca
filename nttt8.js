@@ -53,7 +53,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '1 / 2',
     bgClass: 'bg-nttt-white text-nttt-red',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'tilted'
   },
   {
@@ -65,7 +65,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 7',
     row: '1 / 2',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'top_vach_aqua',
@@ -76,7 +76,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '7 / 12',
     row: '1 / 2',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'top_vach_lg',
@@ -87,7 +87,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '12 / 17',
     row: '1 / 2',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'top_cua_kho',
@@ -99,7 +99,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '17 / 18',
     row: '1 / 2',
     bgClass: 'bg-nttt-white text-nttt-red',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
 
   // ================= KHU VỰC A1: CỘT PHÂN LOẠI NGÀNH HÀNG DỌC BÊN TRÁI (CỘT 1) =================
@@ -113,7 +113,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '2 / 3',
     bgClass: 'bg-nttt-white',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'left_vach_sharp',
@@ -124,7 +124,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '3 / 7',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
@@ -136,7 +136,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '7 / 11',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
@@ -148,7 +148,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '11 / 15',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
@@ -160,7 +160,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '15 / 19',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
@@ -172,7 +172,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '19 / 31',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
@@ -184,7 +184,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '31 / 34',
     bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'tilted'
   },
   {
@@ -196,7 +196,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '34 / 37',
     bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-right',
+    borderClass: 'b-box',
     orientation: 'tilted'
   },
   {
@@ -208,7 +208,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '1 / 2',
     row: '37 / 40',
     bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-bottom b-right',
+    borderClass: 'b-box',
     orientation: 'tilted'
   },
 
@@ -223,7 +223,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '3 / 4',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_tl_aqua',
@@ -234,7 +234,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '3 / 4',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng kệ 2 (Row 5)
   {
@@ -246,7 +246,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '5 / 6',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_tl_toshiba',
@@ -257,7 +257,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '5 / 6',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng kệ 3 (Row 7)
   {
@@ -269,7 +269,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '7 / 8',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_tl_haier',
@@ -280,7 +280,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '7 / 8',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Nhóm Gia dụng 07 -> 01 (Rows 9, 11, 13, 15, 17, 19, 21)
   {
@@ -292,7 +292,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '9 / 10',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_06',
@@ -303,7 +303,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '11 / 12',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_05',
@@ -314,7 +314,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '13 / 14',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_04',
@@ -325,7 +325,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '15 / 16',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_03',
@@ -336,7 +336,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '17 / 18',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_02',
@@ -347,7 +347,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '19 / 20',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_01',
@@ -358,7 +358,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '21 / 22',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   // Hàng kệ 11 (Row 23): Gia dụng Kangaroo & Toshiba
   {
@@ -370,7 +370,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '23 / 24',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_toshiba',
@@ -381,7 +381,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '23 / 24',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng kệ 12 (Row 25): Kệ gia dụng & Gia dụng Sunhouse
   {
@@ -393,7 +393,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '25 / 26',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_gd_sunhouse',
@@ -404,7 +404,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '25 / 26',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng kệ 13 (Row 27): Robot & MLN Sunhouse
   {
@@ -416,7 +416,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 6',
     row: '27 / 28',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_mln_sunhouse',
@@ -427,7 +427,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '6 / 10',
     row: '27 / 28',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng kệ 14 (Row 29): MLN Mutoshi, MLN Toshiba, MLN Hoà Phát
   {
@@ -439,7 +439,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 5',
     row: '29 / 30',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_mln_toshiba',
@@ -450,7 +450,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '5 / 8',
     row: '29 / 30',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   {
     id: 'a_mln_hoaphat',
@@ -461,7 +461,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '8 / 10',
     row: '29 / 30',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   // Hàng kệ 15..18 (Rows 31, 33, 35, 37): Kệ loa Karaoke, Bục hãng Haier, Aqua, Xiaomi
   {
@@ -473,7 +473,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '31 / 32',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_buc_haier',
@@ -484,7 +484,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '33 / 34',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_buc_aqua',
@@ -495,7 +495,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '35 / 36',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'a_buc_xiaomi',
@@ -506,7 +506,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 10',
     row: '37 / 38',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-top b-bottom b-right'
+    borderClass: 'b-box'
   },
   // Hàng kệ 19 (Row 39): Bục hãng Samsung gộp ngang qua Cột 2..16
   {
@@ -518,7 +518,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '2 / 17',
     row: '39 / 40',
     bgClass: 'bg-nttt-green',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
 
   // ================= LỐI ĐI GIỮA (CỘT 10) =================
@@ -528,12 +528,12 @@ const DEFAULT_NTTT8_CELLS = [
     type: 'static',
     area: 'ĐƯỜNG ĐI',
     staff: '',
-    displayOverride: 'ĐƯỜNG ĐI',
+    displayOverride: 'Đ\nƯ\nỜ\nN\nG\n\nĐ\nI',
     col: '10 / 11',
     row: '2 / 39',
     bgClass: 'bg-nttt-white',
-    borderClass: 'b-none',
-    orientation: 'vertical'
+    borderClass: 'b-box',
+    orientation: 'walkway'
   },
 
   // ================= KHU VỰC B: KHỐI NGÀNH HÀNG TRUNG TÂM (CỘT 11..16) =================
@@ -546,7 +546,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '3 / 4',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_tu_dong_02',
@@ -557,7 +557,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '5 / 6',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_tu_dong_03',
@@ -568,7 +568,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '7 / 8',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_buc_may_giat',
@@ -579,7 +579,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '9 / 10',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   // Hàng Máy giặt Electrolux & Hisense (Row 11)
   {
@@ -591,7 +591,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 14',
     row: '11 / 12',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'b_mg_hisense',
@@ -602,7 +602,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '14 / 17',
     row: '11 / 12',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng Máy giặt Samsung & Panasonic (Row 13)
   {
@@ -614,7 +614,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 14',
     row: '13 / 14',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'b_mg_panasonic',
@@ -625,7 +625,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '14 / 17',
     row: '13 / 14',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Hàng Máy giặt Aqua & Haier (Row 15)
   {
@@ -638,7 +638,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 14',
     row: '15 / 16',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'b_mg_haier',
@@ -649,7 +649,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '14 / 17',
     row: '15 / 16',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Máy giặt Toshiba (Row 17) & Máy giặt LG (Row 19)
   {
@@ -661,7 +661,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '17 / 18',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_mg_lg',
@@ -672,7 +672,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '19 / 20',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   // Khối Bán hàng, Giao hàng, HTKT, Trang trí, Thu ngân (Hồng phấn #F4CCCC, Rows 21..26)
   {
@@ -685,7 +685,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 13',
     row: '21 / 26',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-none'
+    borderClass: 'b-box'
   },
   {
     id: 'b_ban_giaohang',
@@ -697,7 +697,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '13 / 14',
     row: '21 / 26',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-none'
+    borderClass: 'b-box'
   },
   {
     id: 'b_htkt',
@@ -709,7 +709,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '14 / 15',
     row: '21 / 26',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-none'
+    borderClass: 'b-box'
   },
   {
     id: 'b_trang_tri',
@@ -721,7 +721,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '15 / 16',
     row: '21 / 26',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-none'
+    borderClass: 'b-box'
   },
   {
     id: 'b_thu_ngan',
@@ -733,7 +733,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '16 / 17',
     row: '21 / 26',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-right'
+    borderClass: 'b-box'
   },
   // Hàng MLN Karofi & Kangaroo (Row 29)
   {
@@ -745,7 +745,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 14',
     row: '29 / 30',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'b_mln_kangaroo',
@@ -756,7 +756,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '14 / 17',
     row: '29 / 30',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-top b-bottom b-no-inner-left'
+    borderClass: 'b-box'
   },
   // Các Bục hãng trung tâm dưới (Rows 31, 33, 35, 37)
   {
@@ -768,7 +768,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '31 / 32',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_buc_toshiba',
@@ -779,7 +779,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '33 / 34',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_buc_tcl',
@@ -790,7 +790,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '35 / 36',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
   {
     id: 'b_buc_lg',
@@ -801,7 +801,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '11 / 17',
     row: '37 / 38',
     bgClass: 'bg-nttt-blue',
-    borderClass: 'b-top b-bottom'
+    borderClass: 'b-box'
   },
 
   // ================= KHU VỰC C: CỘT CỬA KHO & VÁCH PHỤ TRÁCH DỌC (CỘT 17) =================
@@ -861,7 +861,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '17 / 18',
     row: '28 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-left b-right',
+    borderClass: 'b-box',
     orientation: 'vertical'
   },
 
@@ -876,7 +876,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '18 / 20',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_vach_pk_2',
@@ -887,7 +887,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '20 / 22',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_1',
@@ -898,7 +898,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '22 / 24',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_2',
@@ -909,7 +909,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '24 / 26',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_smartphone',
@@ -920,7 +920,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '26 / 28',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   {
     id: 'd_motorola',
@@ -931,7 +931,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '28 / 30',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_realme',
@@ -942,7 +942,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '30 / 32',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_vivo',
@@ -953,7 +953,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '32 / 34',
     row: '31 / 32',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_xiaomi_wall',
@@ -964,7 +964,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '34 / 36',
     row: '31 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-right b-bottom b-no-inner-left'
+    borderClass: 'b-box'
   },
 
   // Dãy 2 (Row 33): Phụ kiện Basus, Anker, Camera, Laptop 3-4, BTN Xiaomi, BTN Motorola, BTN Table
@@ -977,7 +977,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '17 / 19',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_pk_anker',
@@ -988,7 +988,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '19 / 21',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_camera',
@@ -999,7 +999,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '21 / 22',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_3',
@@ -1010,7 +1010,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '22 / 24',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_4',
@@ -1021,7 +1021,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '24 / 26',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_xiaomi_1',
@@ -1032,7 +1032,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '26 / 28',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_xiaomi_2',
@@ -1043,7 +1043,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '28 / 30',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_motorola',
@@ -1054,7 +1054,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '30 / 32',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_table',
@@ -1065,7 +1065,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '32 / 34',
     row: '33 / 34',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
 
   // Dãy 3 (Row 35): Đồng hồ thời trang, Laptop 5-6, BTN Oppo, BTN Vivo, BTN Realme, Oppo
@@ -1078,7 +1078,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '17 / 22',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_5',
@@ -1089,7 +1089,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '22 / 24',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_laptop_6',
@@ -1100,7 +1100,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '24 / 26',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_oppo_1',
@@ -1111,7 +1111,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '26 / 28',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-bottom b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_oppo_2',
@@ -1122,7 +1122,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '28 / 30',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_vivo',
@@ -1133,7 +1133,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '30 / 32',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-bottom b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_realme',
@@ -1144,7 +1144,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '32 / 34',
     row: '35 / 36',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-bottom b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_oppo_wall',
@@ -1155,7 +1155,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '34 / 36',
     row: '34 / 37',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-top b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
 
   // Dãy 4 (Row 37): BTV 1, BTV 2, BTN Samsung, BTN Honor, BTN Apple, Samsung
@@ -1192,7 +1192,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '26 / 28',
     row: '37 / 38',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_samsung_2',
@@ -1203,7 +1203,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '28 / 30',
     row: '37 / 38',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_honor',
@@ -1214,7 +1214,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '30 / 32',
     row: '37 / 38',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_btn_apple',
@@ -1225,7 +1225,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '32 / 34',
     row: '37 / 38',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-no-inner-left b-no-inner-right'
+    borderClass: 'b-box'
   },
   {
     id: 'd_samsung_wall',
@@ -1236,7 +1236,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '34 / 36',
     row: '37 / 39',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-right b-no-inner-left'
+    borderClass: 'b-box'
   },
 
   // Dãy 5 (Row 39): BTV 3, BTV 4, Apple
@@ -1273,7 +1273,7 @@ const DEFAULT_NTTT8_CELLS = [
     col: '34 / 36',
     row: '39 / 41',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-bottom b-left b-right'
+    borderClass: 'b-box'
   }
 ];
 
@@ -1303,6 +1303,7 @@ const NTTT8_TICK_ROWS = [
   { col: '2 / 10', row: '38 / 39', kind: 'cols-8', count: 8 },
 
   // Khu vực B (Cột 11..16)
+  { col: '11 / 17', row: '2 / 3', kind: 'cols-6-left1', count: 2 },
   { col: '11 / 17', row: '4 / 5', kind: 'cols-6-left1', count: 2 },
   { col: '11 / 17', row: '6 / 7', kind: 'cols-6-left1', count: 2 },
   { col: '11 / 17', row: '8 / 9', kind: 'cols-6-left1', count: 2 },
@@ -1353,7 +1354,7 @@ function loadNTTT8Data() {
       const savedMap = JSON.parse(savedRaw);
       if (savedMap && typeof savedMap === 'object') {
         baseCells.forEach(cell => {
-          if (savedMap[cell.id]) {
+          if (cell.type !== 'static' && savedMap[cell.id]) {
             if (typeof savedMap[cell.id].area === 'string') cell.area = savedMap[cell.id].area;
             if (typeof savedMap[cell.id].staff === 'string') cell.staff = savedMap[cell.id].staff;
             if (typeof savedMap[cell.id].displayOverride === 'string') {
@@ -1385,6 +1386,7 @@ function loadNTTT8Data() {
 function buildNTTT8OverridesMap() {
   const map = {};
   NTTT8State.cells.forEach(cell => {
+    if (cell.type === 'static') return;
     map[cell.id] = {
       area: cell.area,
       staff: cell.staff,
@@ -1446,7 +1448,7 @@ function listenNTTT8FirestoreChanges() {
         if (data.cells && typeof data.cells === 'object') {
           localStorage.setItem(NTTT8_STORAGE_CELLS_KEY, JSON.stringify(data.cells));
           NTTT8State.cells.forEach(cell => {
-            if (data.cells[cell.id]) {
+            if (cell.type !== 'static' && data.cells[cell.id]) {
               if (typeof data.cells[cell.id].area === 'string') cell.area = data.cells[cell.id].area;
               if (typeof data.cells[cell.id].staff === 'string') cell.staff = data.cells[cell.id].staff;
               if (typeof data.cells[cell.id].displayOverride === 'string') {
@@ -1482,16 +1484,10 @@ function formatCellDisplayLabel(cell) {
   const area = (cell.area || '').trim();
   const staff = (cell.staff || '').trim();
   if (area && staff) {
-    // Đối với các ô dọc hoặc ô hẹp cần xuống dòng tự nhiên như hình mẫu
+    // Đối với các ô dọc (Cột 1, Cột 17) hoặc ô hẹp cần xuống dòng rõ ràng để không tràn ô khi xuất ảnh
     if (
-      cell.id === 'left_vach_sharp' ||
-      cell.id === 'left_vach_toshiba' ||
-      cell.id === 'left_vach_hang_toshiba' ||
-      cell.id === 'c_vach_tl_samsung'
-    ) {
-      return `${area} -\n${staff}`;
-    }
-    if (
+      cell.orientation === 'vertical' ||
+      cell.orientation === 'tilted' ||
       cell.id === 'c_vach_loa_my' ||
       cell.id === 'd_camera' ||
       cell.id === 'd_xiaomi_wall' ||
@@ -1522,13 +1518,15 @@ function createAssignmentCellHTML(cell, highlightState) {
   const labelText = formatCellDisplayLabel(cell);
   const safeHtmlLabel = escapeHtmlNTTT8(labelText).replace(/\n/g, '<br>');
 
-  let extraClasses = `${cell.bgClass || 'bg-nttt-white'} ${cell.borderClass || ''}`;
+  let extraClasses = `${cell.bgClass || 'bg-nttt-white'} ${cell.borderClass || 'b-box'}`;
   if (isStatic) extraClasses += ' nttt8-static';
   if (highlightState === 'highlighted') extraClasses += ' nttt8-highlighted';
   if (highlightState === 'dimmed') extraClasses += ' nttt8-dimmed';
 
   let innerContent = `<span>${safeHtmlLabel}</span>`;
-  if (cell.orientation === 'vertical') {
+  if (cell.orientation === 'walkway') {
+    innerContent = `<span class="nttt8-walkway-label">${safeHtmlLabel}</span>`;
+  } else if (cell.orientation === 'vertical') {
     innerContent = `<span class="nttt8-vertical-label">${safeHtmlLabel}</span>`;
   } else if (cell.orientation === 'tilted') {
     innerContent = `<span class="nttt8-tilted-label">${safeHtmlLabel}</span>`;
@@ -1536,7 +1534,7 @@ function createAssignmentCellHTML(cell, highlightState) {
 
   const clickAttr = isStatic ? '' : `onclick="openNTTT8CellEditModal('${cell.id}')"`;
   const titleAttr = isStatic
-    ? escapeHtmlNTTT8(labelText)
+    ? escapeHtmlNTTT8(labelText.replace(/\n+/g, ' '))
     : escapeHtmlNTTT8(`${cell.area}${cell.staff ? ' - Phụ trách: ' + cell.staff : ''} (Nhấn để chỉnh sửa)`);
 
   return `
@@ -1589,7 +1587,7 @@ function createOperationRulesHTML() {
 function createTickRowsHTML() {
   return NTTT8_TICK_ROWS.map(t => {
     if (t.kind === 'btv-connector') {
-      return `<div style="grid-column: ${t.col}; grid-row: ${t.row}; border-left: 1px solid #333; border-right: 1px solid #333; background: #fff; height: 11px;"></div>`;
+      return `<div class="nttt8-btv-connector" style="grid-column: ${t.col}; grid-row: ${t.row}; border: 1px solid #333333; background: #ffffff; height: 11px; box-sizing: border-box;"></div>`;
     }
     const cells = Array.from({ length: t.count }, () => `<div class="nttt8-tick-cell"></div>`).join('');
     return `
@@ -1598,6 +1596,49 @@ function createTickRowsHTML() {
       </div>
     `;
   }).join('');
+}
+
+/**
+ * Tạo các ô lưới trống (.nttt8-empty-grid-cell) cho toàn bộ vùng chưa có phần tử
+ * (bên dưới VẬN HÀNH, bên dưới khối hồng phấn, xung quanh BTV 1..4...)
+ * để giữ nguyên 100% đường kẻ lưới bảng tính trên giao diện web và khi xuất ảnh.
+ */
+function parseGridSpanNTTT8(spanStr) {
+  const parts = String(spanStr || '').split('/').map(s => parseInt(s.trim(), 10));
+  return [parts[0] || 1, parts[1] || 2];
+}
+
+function createEmptyGridCellsHTML() {
+  const totalRows = 40;
+  const totalCols = 35;
+  const occupied = Array.from({ length: totalRows + 1 }, () => Array(totalCols + 1).fill(false));
+
+  const markOccupied = (colSpanStr, rowSpanStr) => {
+    const [c1, c2] = parseGridSpanNTTT8(colSpanStr);
+    const [r1, r2] = parseGridSpanNTTT8(rowSpanStr);
+    for (let r = Math.max(1, r1); r < Math.min(totalRows + 1, r2); r++) {
+      for (let c = Math.max(1, c1); c < Math.min(totalCols + 1, c2); c++) {
+        occupied[r][c] = true;
+      }
+    }
+  };
+
+  NTTT8State.cells.forEach(cell => markOccupied(cell.col, cell.row));
+  NTTT8_TICK_ROWS.forEach(tick => markOccupied(tick.col, tick.row));
+  // Khung VẬN HÀNH (Cột 19..33, Hàng 1..13)
+  markOccupied('19 / 33', '1 / 13');
+
+  const emptyHtml = [];
+  for (let r = 1; r <= totalRows; r++) {
+    for (let c = 1; c <= totalCols; c++) {
+      if (!occupied[r][c]) {
+        emptyHtml.push(
+          `<div class="nttt8-empty-grid-cell" style="grid-column: ${c} / ${c + 1}; grid-row: ${r} / ${r + 1};"></div>`
+        );
+      }
+    }
+  }
+  return emptyHtml.join('');
 }
 
 /**
@@ -1610,6 +1651,8 @@ function renderNTTT8AssignmentGrid() {
   const query = (NTTT8State.searchQuery || '').trim().toUpperCase();
   const staffFilter = (NTTT8State.selectedStaff || '').trim().toUpperCase();
   const hasFilter = Boolean(query || staffFilter);
+
+  const emptyCellsHtml = createEmptyGridCellsHTML();
 
   const cellsHtml = NTTT8State.cells.map(cell => {
     let highlightState = 'normal';
@@ -1632,7 +1675,7 @@ function renderNTTT8AssignmentGrid() {
   const ticksHtml = createTickRowsHTML();
   const rulesHtml = createOperationRulesHTML();
 
-  gridEl.innerHTML = cellsHtml + ticksHtml + rulesHtml;
+  gridEl.innerHTML = emptyCellsHtml + cellsHtml + ticksHtml + rulesHtml;
   applyNTTT8ZoomTransform();
 }
 
@@ -1689,7 +1732,7 @@ function applyNTTT8ZoomTransform() {
 
   if (NTTT8State.zoomMode === 'fit') {
     const availWidth = Math.max(280, viewport.clientWidth - 12);
-    const naturalWidth = Math.max(1560, grid.scrollWidth || 1560);
+    const naturalWidth = Math.max(1713, grid.scrollWidth || 1713);
     const scale = Math.min(1, Math.max(0.22, availWidth / naturalWidth));
     NTTT8State.zoomScale = scale;
   }
@@ -1700,7 +1743,7 @@ function applyNTTT8ZoomTransform() {
     stage.style.width = '100%';
     stage.style.height = 'auto';
   } else {
-    const naturalW = Math.max(1560, grid.offsetWidth || 1560);
+    const naturalW = Math.max(1713, grid.offsetWidth || 1713);
     const naturalH = grid.offsetHeight || 820;
     stage.style.transform = `scale(${scale})`;
     stage.style.width = `${Math.ceil(naturalW * scale)}px`;
@@ -2072,14 +2115,167 @@ function downloadNTTT8PreviewImage() {
 }
 
 /**
+ * Vẽ tăng cường 100% đường kẻ ngang, đường kẻ dọc, ô lưới trống và khung viền ngoài
+ * trực tiếp từ tọa độ DOM thực tế (getBoundingClientRect) lên Canvas sau khi html2canvas chụp.
+ * Khắc phục triệt để lỗi html2canvas làm mờ/mất đường kẻ 1px hoặc mất lưới vùng trống.
+ */
+function reinforceNTTT8CanvasBorders(canvas, gridEl, scale) {
+  if (!canvas || !gridEl) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const gridRect = gridEl.getBoundingClientRect();
+  if (!gridRect.width || !gridRect.height) return;
+
+  ctx.save();
+
+  const snap = val => Math.round(val * scale);
+  const strokeBox = (rect, color, lineWidth) => {
+    const x1 = snap(rect.left - gridRect.left);
+    const y1 = snap(rect.top - gridRect.top);
+    const x2 = snap(rect.right - gridRect.left);
+    const y2 = snap(rect.bottom - gridRect.top);
+    const w = Math.max(1, x2 - x1);
+    const h = Math.max(1, y2 - y1);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.strokeRect(x1 + 0.5, y1 + 0.5, w - 1, h - 1);
+  };
+
+  // 1. Vẽ lưới bảng tính (#d4d4d8) cho toàn bộ các ô trống (.nttt8-empty-grid-cell)
+  const emptyLineW = Math.max(1, Math.round(scale * 0.75));
+  const emptyCells = gridEl.querySelectorAll('.nttt8-empty-grid-cell');
+  emptyCells.forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      strokeBox(r, '#d4d4d8', emptyLineW);
+    }
+  });
+
+  // 2. Vẽ đường kẻ các hàng vạch chia kệ (.nttt8-tick-row, .nttt8-btv-connector, .nttt8-tick-cell)
+  const cellLineW = Math.max(1, Math.round(scale));
+  const tickRows = gridEl.querySelectorAll('.nttt8-tick-row, .nttt8-btv-connector');
+  tickRows.forEach(rowEl => {
+    const r = rowEl.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      strokeBox(r, '#333333', cellLineW);
+    }
+    const tickCells = rowEl.querySelectorAll('.nttt8-tick-cell');
+    tickCells.forEach((tc, idx) => {
+      if (idx < tickCells.length - 1) {
+        const tr = tc.getBoundingClientRect();
+        const x = snap(tr.right - gridRect.left) + 0.5;
+        const y1 = snap(tr.top - gridRect.top);
+        const y2 = snap(tr.bottom - gridRect.top);
+        ctx.beginPath();
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = cellLineW;
+        ctx.moveTo(x, y1);
+        ctx.lineTo(x, y2);
+        ctx.stroke();
+      }
+    });
+  });
+
+  // 3. Vẽ đầy đủ 4 cạnh đường viền (#333333) cho tất cả các ô phân công & danh mục (.nttt8-cell)
+  const cells = gridEl.querySelectorAll('.nttt8-cell');
+  cells.forEach(cellEl => {
+    const r = cellEl.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      strokeBox(r, '#333333', cellLineW);
+    }
+  });
+
+  // 4. Vẽ khung viền bảng quy định VẬN HÀNH (.nttt8-operation-box & .nttt8-operation-header)
+  const opBox = gridEl.querySelector('.nttt8-operation-box');
+  if (opBox) {
+    const r = opBox.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      strokeBox(r, '#333333', Math.max(2, Math.round(scale * 1.2)));
+    }
+    const opHeader = opBox.querySelector('.nttt8-operation-header');
+    if (opHeader) {
+      const hr = opHeader.getBoundingClientRect();
+      if (hr.width > 0 && hr.height > 0) {
+        strokeBox(hr, '#333333', cellLineW);
+      }
+    }
+  }
+
+  // 5. Vẽ đường viền bao ngoài cùng của toàn bộ sơ đồ (#222222)
+  const outerLineW = Math.max(2, Math.round(scale * 1.5));
+  ctx.strokeStyle = '#222222';
+  ctx.lineWidth = outerLineW;
+  const halfOuter = outerLineW / 2;
+  ctx.strokeRect(
+    halfOuter,
+    halfOuter,
+    canvas.width - outerLineW,
+    canvas.height - outerLineW
+  );
+
+  ctx.restore();
+}
+
+/**
+ * Cơ chế vẽ dự phòng trực tiếp từ DOM thực tế sang Canvas 2D nếu html2canvas gặp sự cố trên trình duyệt
+ */
+function renderNTTT8LiveDomToCanvas(gridEl, scale) {
+  const gridRect = gridEl.getBoundingClientRect();
+  const fullW = Math.max(1713, Math.ceil(gridRect.width));
+  const fullH = Math.max(700, Math.ceil(gridRect.height));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(fullW * scale);
+  canvas.height = Math.round(fullH * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, fullW, fullH);
+
+  const allBlocks = gridEl.querySelectorAll(
+    '.nttt8-empty-grid-cell, .nttt8-tick-row, .nttt8-btv-connector, .nttt8-cell, .nttt8-operation-box'
+  );
+  allBlocks.forEach(el => {
+    const r = el.getBoundingClientRect();
+    const x = r.left - gridRect.left;
+    const y = r.top - gridRect.top;
+    const cs = window.getComputedStyle(el);
+    ctx.fillStyle = cs.backgroundColor || '#ffffff';
+    ctx.fillRect(x, y, r.width, r.height);
+
+    if (el.classList.contains('nttt8-cell')) {
+      const text = (el.innerText || '').trim();
+      if (text) {
+        ctx.fillStyle = cs.color || '#000000';
+        ctx.font = `${cs.fontWeight || '800'} ${cs.fontSize || '11px'} Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const lines = text.split('\n');
+        const lineH = parseFloat(cs.lineHeight) || 13;
+        const startY = y + r.height / 2 - ((lines.length - 1) * lineH) / 2;
+        lines.forEach((line, idx) => {
+          ctx.fillText(line.trim(), x + r.width / 2, startY + idx * lineH);
+        });
+      }
+    }
+  });
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  reinforceNTTT8CanvasBorders(canvas, gridEl, scale);
+  return canvas;
+}
+
+/**
  * Tạo ảnh PNG sơ đồ 8NTTT trong bộ nhớ và mở Popup Xem Trước (Không tự động tải về, không lưu DB)
  */
 async function exportNTTT8DiagramImage() {
   if (NTTT8State.isExportingImage) return;
 
   const gridEl = document.getElementById('nttt8AssignmentGrid');
-  if (!gridEl || typeof html2canvas === 'undefined') {
-    alert('Không tìm thấy thư viện xuất ảnh html2canvas.');
+  if (!gridEl) {
+    alert('Không tìm thấy sơ đồ phân công 8NTTT để xuất ảnh.');
     return;
   }
 
@@ -2091,12 +2287,20 @@ async function exportNTTT8DiagramImage() {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo ảnh...</span>';
   }
 
+  const viewportEl = document.getElementById('nttt8ScrollViewport');
+  const stageEl = document.getElementById('nttt8ZoomStage');
+  const prevScrollLeft = viewportEl ? viewportEl.scrollLeft : 0;
+  const prevScrollTop = viewportEl ? viewportEl.scrollTop : 0;
+  const prevStageTransform = stageEl ? stageEl.style.transform : '';
+  const prevStageWidth = stageEl ? stageEl.style.width : '';
+  const prevStageHeight = stageEl ? stageEl.style.height : '';
+
   try {
     // Giải phóng ảnh tạm cũ (nếu có) trước khi tạo ảnh mới
     releaseNTTT8PreviewResources();
     setNTTT8PreviewStatus(null, '');
 
-    // Đợi font chữ và layout ổn định trước khi chụp toàn bộ chiều rộng thực tế của sơ đồ
+    // 1. Đợi toàn bộ font chữ tải xong trước khi đo kích thước và chụp DOM
     if (document.fonts && document.fonts.ready) {
       try {
         await document.fonts.ready;
@@ -2105,21 +2309,55 @@ async function exportNTTT8DiagramImage() {
       }
     }
 
+    // 2. Đưa sơ đồ về trạng thái chuẩn 100% không cắt tràn, không biến dạng do zoom/scroll
     document.body.classList.add('exporting-8nttt-map');
-    await new Promise(r => setTimeout(r, 120));
+    if (stageEl) {
+      stageEl.style.transform = 'none';
+      stageEl.style.width = '1713px';
+      stageEl.style.height = 'auto';
+    }
+    if (viewportEl) {
+      viewportEl.scrollLeft = 0;
+      viewportEl.scrollTop = 0;
+    }
 
-    const fullWidth = Math.max(1680, gridEl.scrollWidth || 1680);
-    const fullHeight = Math.max(600, gridEl.scrollHeight || 820);
+    // Đợi 2 nhịp requestAnimationFrame để trình duyệt reflow đầy đủ toàn bộ lưới CSS Grid
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await new Promise(r => setTimeout(r, 80));
 
-    const canvas = await html2canvas(gridEl, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: fullWidth,
-      height: fullHeight,
-      windowWidth: Math.max(1760, fullWidth + 60)
-    });
+    const gridRect = gridEl.getBoundingClientRect();
+    const fullWidth = Math.max(1713, Math.ceil(gridRect.width || gridEl.scrollWidth || 1713));
+    const fullHeight = Math.max(700, Math.ceil(gridRect.height || gridEl.scrollHeight || 860));
+
+    // Tính toán độ phân giải cao (ưu tiên 2.5x, đảm bảo không vượt giới hạn kích thước canvas của trình duyệt)
+    const maxCanvasSide = 8192;
+    const rawScale = Math.min(2.5, maxCanvasSide / Math.max(fullWidth, fullHeight));
+    const exportScale = Math.max(2, Math.round(rawScale * 4) / 4);
+
+    let canvas = null;
+    if (typeof html2canvas === 'function') {
+      try {
+        canvas = await html2canvas(gridEl, {
+          scale: exportScale,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: fullWidth,
+          height: fullHeight,
+          windowWidth: Math.max(1800, fullWidth + 80),
+          windowHeight: Math.max(1200, fullHeight + 120),
+          scrollX: -window.scrollX,
+          scrollY: -window.scrollY
+        });
+        // Tăng cường 100% đường kẻ ngang, dọc, ô lưới trống và viền ngoài sắc nét tuyệt đối
+        reinforceNTTT8CanvasBorders(canvas, gridEl, exportScale);
+      } catch (h2cErr) {
+        console.warn('[8NTTT] html2canvas gặp lỗi, chuyển sang vẽ trực tiếp từ DOM:', h2cErr);
+        canvas = renderNTTT8LiveDomToCanvas(gridEl, exportScale);
+      }
+    } else {
+      canvas = renderNTTT8LiveDomToCanvas(gridEl, exportScale);
+    }
 
     const blob = await canvasToPngBlob(canvas);
     const objectUrl = URL.createObjectURL(blob);
@@ -2149,7 +2387,16 @@ async function exportNTTT8DiagramImage() {
     alert('Có lỗi khi tạo ảnh sơ đồ 8NTTT. Vui lòng thử lại.');
   } finally {
     document.body.classList.remove('exporting-8nttt-map');
+    if (stageEl) {
+      stageEl.style.transform = prevStageTransform;
+      stageEl.style.width = prevStageWidth;
+      stageEl.style.height = prevStageHeight;
+    }
     applyNTTT8ZoomTransform();
+    if (viewportEl) {
+      viewportEl.scrollLeft = prevScrollLeft;
+      viewportEl.scrollTop = prevScrollTop;
+    }
     NTTT8State.isExportingImage = false;
     if (btn) {
       btn.disabled = false;
