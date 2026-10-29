@@ -1,29 +1,355 @@
 /* ==========================================================================
-   MODULE: TAB 8NTTT - SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH NGÀNH HÀNG
+   MODULE: TAB 8NTTT - SƠ ĐỒ BỐ TRÍ KHU VỰC SIÊU THỊ (ENTERPRISE RETAIL FLOOR PLAN)
    Phạm vi CSS cô lập hoàn toàn trong .tab-8nttt (Không ảnh hưởng tab khác)
-   Thiết kế chuẩn bố cục bảng phân công siêu thị theo hình mẫu
+   Thiết kế chuẩn 100% bố cục SƠ ĐỒ BỐ TRÍ KHU VỰC SIÊU THỊ - ĐIỆN MÁY XANH P.8 CÀ MAU
    ========================================================================== */
 
 .tab-8nttt {
-  font-family: Arial, 'Inter', 'Plus Jakarta Sans', sans-serif;
-  color: #000000;
+  font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
+  color: #0f172a;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 12px 16px 36px;
+  padding: 6px 8px 24px;
 }
 
 .tab-8nttt * {
   box-sizing: border-box;
 }
 
-/* Thanh công cụ điều khiển phía trên sơ đồ */
-.tab-8nttt .nttt8-toolbar-card {
+/* ==========================================================================
+   KHUNG ỨNG DỤNG TỔNG THỂ (.nttt8-app-shell): SIDEBAR TRÁI + KHỐI CHÍNH PHẢI
+   ========================================================================== */
+.tab-8nttt .nttt8-app-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 760px;
+  background: linear-gradient(180deg, #073368 0%, #041d3d 100%);
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 12px 32px rgba(4, 26, 56, 0.25);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #083b78;
+}
+
+.tab-8nttt .nttt8-sidebar-overlay,
+.tab-8nttt .nttt8-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 21, 45, 0.55);
+  z-index: 1100;
+}
+
+.tab-8nttt .nttt8-sidebar-overlay.active,
+.tab-8nttt .nttt8-sidebar-backdrop.active {
+  display: block;
+}
+
+.tab-8nttt .nttt8-sidebar-close-mobile {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* 1. SIDEBAR TRÁI (188px cố định trên Desktop) */
+.tab-8nttt .nttt8-sidebar {
+  width: 186px;
+  min-width: 186px;
+  background: linear-gradient(180deg, #072955 0%, #041733 100%);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 10px 16px;
+  border-right: 1px solid rgba(148, 163, 184, 0.16);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.tab-8nttt .nttt8-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 4px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  margin-bottom: 10px;
+}
+
+.tab-8nttt .nttt8-dmx-logo-circle,
+.tab-8nttt .nttt8-dmx-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tab-8nttt .nttt8-dmx-svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tab-8nttt .nttt8-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.22;
+  min-width: 0;
+}
+
+.tab-8nttt .nttt8-brand-title,
+.tab-8nttt .nttt8-brand-name {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.tab-8nttt .nttt8-brand-sub,
+.tab-8nttt .nttt8-brand-loc {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.tab-8nttt .nttt8-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.tab-8nttt .nttt8-sidebar-item,
+.tab-8nttt .nttt8-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #dbeafe;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  line-height: 1.25;
+}
+
+.tab-8nttt .nttt8-sidebar-item i,
+.tab-8nttt .nttt8-nav-item i {
+  width: 16px;
+  text-align: center;
+  font-size: 13.5px;
+  color: #93c5fd;
+  flex-shrink: 0;
+}
+
+.tab-8nttt .nttt8-sidebar-item:hover,
+.tab-8nttt .nttt8-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.tab-8nttt .nttt8-sidebar-item.active,
+.tab-8nttt .nttt8-nav-item.active {
+  background: linear-gradient(90deg, #0072ff 0%, #0884ff 100%);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 114, 255, 0.42);
+}
+
+.tab-8nttt .nttt8-sidebar-item.active i,
+.tab-8nttt .nttt8-nav-item.active i {
+  color: #ffffff;
+}
+
+/* 2. KHỐI NỘI DUNG CHÍNH BÊN PHẢI (.nttt8-main-area / .nttt8-main-workspace) */
+.tab-8nttt .nttt8-main-area,
+.tab-8nttt .nttt8-main-workspace {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px 2px;
+}
+
+/* Thanh Header trên cùng */
+.tab-8nttt .nttt8-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #ffffff;
+  flex-wrap: wrap;
+}
+
+.tab-8nttt .nttt8-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tab-8nttt .nttt8-mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  background: rgba(6, 33, 70, 0.75);
+  color: #ffffff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-header-title,
+.tab-8nttt .nttt8-page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+}
+
+.tab-8nttt .nttt8-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-8nttt .nttt8-header-select-pill,
+.tab-8nttt .nttt8-header-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  background: rgba(5, 29, 63, 0.78);
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-header-select-pill i,
+.tab-8nttt .nttt8-header-pill i {
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+.tab-8nttt .nttt8-pill-chevron {
+  font-size: 10px !important;
+  color: #cbd5e1 !important;
+  margin-left: 2px;
+}
+
+.tab-8nttt .nttt8-store-select,
+.tab-8nttt .nttt8-header-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding-right: 4px;
+  cursor: pointer;
+  outline: none;
+}
+
+.tab-8nttt .nttt8-store-select option,
+.tab-8nttt .nttt8-header-select option {
+  background: #072955;
+  color: #ffffff;
+}
+
+.tab-8nttt .nttt8-date-pill {
+  min-width: 132px;
+  justify-content: space-between;
+}
+
+.tab-8nttt .nttt8-date-native-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.tab-8nttt .nttt8-header-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.tab-8nttt .nttt8-btn-header-export,
+.tab-8nttt .nttt8-header-btn-export {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  border: 1px solid rgba(186, 230, 253, 0.45);
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 800;
+  border-radius: 7px;
+}
+
+.tab-8nttt .nttt8-btn-header-export:hover,
+.tab-8nttt .nttt8-header-btn-export:hover {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+}
+
+.tab-8nttt .nttt8-btn-header-tool,
+.tab-8nttt .nttt8-header-btn-expand {
+  background: rgba(5, 29, 63, 0.78);
+  color: #e2e8f0;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  padding: 5px 10px;
+  border-radius: 7px;
+}
+
+.tab-8nttt .nttt8-btn-header-tool:hover,
+.tab-8nttt .nttt8-btn-header-tool.active,
+.tab-8nttt .nttt8-header-btn-expand:hover,
+.tab-8nttt .nttt8-header-btn-expand.active {
+  background: #0072ff;
+  color: #ffffff;
+  border-color: #60a5fa;
+}
+
+/* Thanh công cụ mở rộng (.nttt8-utility-bar) */
+.tab-8nttt .nttt8-utility-bar {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
+  padding: 7px 12px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,38 +357,13 @@
   flex-wrap: wrap;
 }
 
-.tab-8nttt .nttt8-toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.tab-8nttt .nttt8-utility-bar.hidden {
+  display: none !important;
 }
 
-.tab-8nttt .nttt8-title-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.tab-8nttt .nttt8-title-badge {
-  background: #FFFF00;
-  color: #000000;
-  font-weight: 900;
-  font-size: 13px;
-  padding: 4px 10px;
-  border: 1.5px solid #000000;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.tab-8nttt .nttt8-title-text {
-  font-size: 14px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-  text-transform: uppercase;
-}
-
+.tab-8nttt .nttt8-utility-left,
+.tab-8nttt .nttt8-utility-right,
+.tab-8nttt .nttt8-toolbar-left,
 .tab-8nttt .nttt8-toolbar-right {
   display: flex;
   align-items: center;
@@ -88,10 +389,10 @@
 
 .tab-8nttt .nttt8-search-input {
   width: 100%;
-  padding: 6px 10px 6px 30px;
+  padding: 5px 10px 5px 28px;
   border: 1px solid #94a3b8;
-  border-radius: 4px;
-  font-size: 12.5px;
+  border-radius: 5px;
+  font-size: 12px;
   font-weight: 600;
   color: #0f172a;
   background: #ffffff;
@@ -103,10 +404,10 @@
 }
 
 .tab-8nttt .nttt8-staff-select {
-  padding: 6px 10px;
+  padding: 5px 9px;
   border: 1px solid #94a3b8;
-  border-radius: 4px;
-  font-size: 12.5px;
+  border-radius: 5px;
+  font-size: 12px;
   font-weight: 700;
   color: #0f172a;
   background: #ffffff;
@@ -114,18 +415,18 @@
   outline: none;
 }
 
-/* Nút điều khiển trên thanh công cụ */
+/* Nút điều khiển chung */
 .tab-8nttt .nttt8-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 5px 11px;
   border: 1px solid #64748b;
-  border-radius: 4px;
+  border-radius: 5px;
   background: #ffffff;
   color: #0f172a;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -159,59 +460,16 @@
   gap: 4px;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  border-radius: 5px;
   padding: 2px 4px;
 }
 
 .tab-8nttt .nttt8-zoom-label {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
   color: #0f172a;
-  min-width: 44px;
+  min-width: 40px;
   text-align: center;
-}
-
-/* Chú thích nhóm màu ngành hàng */
-.tab-8nttt .nttt8-legend-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 6px 12px;
-  margin-bottom: 10px;
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.tab-8nttt .nttt8-legend-items {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.tab-8nttt .nttt8-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.tab-8nttt .nttt8-legend-swatch {
-  width: 14px;
-  height: 14px;
-  border: 1px solid #475569;
-  display: inline-block;
-}
-
-.tab-8nttt .nttt8-hint-text {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: #334155;
 }
 
 /* Gợi ý cuộn ngang trên điện thoại */
@@ -223,24 +481,25 @@
   background: #fffbeb;
   border: 1px solid #f59e0b;
   color: #78350f;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 /* ==========================================================================
-   VÙNG CHỨA SƠ ĐỒ CUỘN NGANG (CHỈ CUỘN TRONG SƠ ĐỒ, KHÔNG TRÀN TOÀN TRANG)
+   KHUNG TRẮNG CHỨA SƠ ĐỒ KHU VỰC (.nttt8-board-wrapper & .floor-plan)
    ========================================================================== */
 .tab-8nttt .nttt8-board-wrapper {
   background: #ffffff;
-  border: 1px solid #94a3b8;
-  border-radius: 4px;
+  border-radius: 12px;
   width: 100%;
   max-width: 100%;
+  flex: 1;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 .tab-8nttt .nttt8-scroll-viewport {
@@ -250,60 +509,79 @@
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   background: #ffffff;
-  padding: 6px;
+  padding: 7px 9px;
 }
 
 .tab-8nttt .nttt8-zoom-stage {
   transform-origin: 0 0;
-  display: inline-block;
-  vertical-align: top;
-  min-width: 100%;
+  display: block;
+  width: 100%;
+  min-width: 1120px;
 }
 
-/* ==========================================================================
-   LƯỚI SƠ ĐỒ PHÂN CÔNG 8NTTT (CSS GRID CHUẨN HÌNH MẪU 35 CỘT x 40 HÀNG)
-   Sử dụng kích thước cột pixel nguyên để chống làm tròn subpixel khi xuất ảnh
-   ========================================================================== */
-.tab-8nttt .nttt8-assignment-grid {
-  display: grid;
-  /*
-    Cột 1: Cột phân loại ngành hàng dọc bên trái (86px)
-    Cột 2..9: Khối ngành hàng bên trái (8 cột x 48px = 384px)
-    Cột 10: Cột ĐƯỜNG ĐI (30px)
-    Cột 11..16: Khối ngành hàng trung tâm (6 cột x 58px = 348px)
-    Cột 17: Cột CỬA KHO & Vách phân cách dọc (86px)
-    Cột 18..33: Khối Phụ kiện, Laptop, Điện thoại, BTV & Bảng VẬN HÀNH (16 cột x 44px = 704px)
-    Cột 34..35: Cột vách hãng bên phải Xiaomi/Oppo/Samsung/Apple (2 cột x 36px = 72px)
-    Tổng chiều rộng chuẩn: 1710px
-  */
-  grid-template-columns:
-    86px
-    repeat(8, minmax(48px, 1fr))
-    30px
-    repeat(6, minmax(58px, 1.15fr))
-    86px
-    repeat(16, minmax(44px, 0.92fr))
-    repeat(2, minmax(36px, 0.76fr));
-  grid-auto-rows: minmax(11px, auto);
+/* Container chính của Sơ đồ bố trí khu vực (.floor-plan) */
+.tab-8nttt .nttt8-assignment-grid.floor-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   width: 100%;
-  min-width: 1710px;
+  min-width: 1120px;
   background: #ffffff;
-  border: 1.5px solid #222222;
+  padding: 2px;
   position: relative;
 }
 
-/* Ô lưới trống trên nền bảng tính (hiển thị đường kẻ lưới mảnh đồng đều) */
-.tab-8nttt .nttt8-empty-grid-cell {
-  background-color: #ffffff;
-  border-right: 1px solid #d4d4d8;
-  border-bottom: 1px solid #d4d4d8;
-  min-height: 11px;
-  pointer-events: none;
-  box-sizing: border-box;
+/* --------------------------------------------------------------------------
+   PHÂN VÙNG 1: KHU TRƯNG BÀY TRÊN (.floor-plan-upper-grid) - 27 CỘT x 20 HÀNG
+   -------------------------------------------------------------------------- */
+.tab-8nttt .floor-plan-upper-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(88px, 1.32fr)
+    repeat(12, minmax(27px, 1fr))
+    30px
+    repeat(10, minmax(31px, 1.05fr))
+    repeat(3, minmax(27px, 0.9fr));
+  grid-template-rows: 27px repeat(19, minmax(23.5px, auto));
+  gap: 3px;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   PHÂN VÙNG 2: KHU PHỤ KIỆN, LAPTOP, ĐIỆN THOẠI (.accessory-zone)
+   -------------------------------------------------------------------------- */
+.tab-8nttt .accessory-zone {
+  display: grid;
+  grid-template-columns: 1.24fr 0.66fr 1.28fr;
+  gap: 5px;
+  width: 100%;
+  padding-top: 2px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tab-8nttt .accessory-group-left {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: repeat(4, minmax(27px, auto));
+  gap: 3px;
+}
+
+.tab-8nttt .accessory-group-laptop {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(4, minmax(27px, auto));
+  gap: 3px;
+}
+
+.tab-8nttt .accessory-group-phone {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, minmax(27px, auto));
+  gap: 3px;
 }
 
 /* ==========================================================================
-   QUY TẮC THIẾT KẾ Ô PHÂN CÔNG (AssignmentCell)
+   QUY TẮC HIỂN THỊ TỪNG Ô KHU VỰC (.nttt8-cell) & ICON SẢN PHẨM
    ========================================================================== */
 .tab-8nttt .nttt8-cell {
   display: flex;
@@ -311,34 +589,28 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 4px 5px;
-  font-family: Arial, 'Inter', sans-serif;
-  font-size: 10.5px;
-  font-weight: 700;
-  line-height: 1.22;
-  color: #000000;
+  padding: 2px 5px;
+  font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
+  font-size: 9.8px;
+  font-weight: 800;
+  line-height: 1.18;
+  color: #111827;
   text-transform: uppercase;
   word-break: break-word;
   overflow-wrap: break-word;
   position: relative;
   user-select: none;
   cursor: pointer;
-  border: 1px solid #333333;
-  box-sizing: border-box;
+  border-radius: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 1.5px rgba(15, 23, 42, 0.04);
   z-index: 2;
-  transition: outline 0.12s ease, opacity 0.15s ease;
-}
-
-.tab-8nttt .nttt8-cell > span {
-  display: block;
-  width: 100%;
-  text-align: center;
-  white-space: pre-line;
+  transition: transform 0.1s ease, box-shadow 0.12s ease, opacity 0.15s ease;
 }
 
 .tab-8nttt .nttt8-cell:hover {
   outline: 2px solid #0284c7;
-  z-index: 6;
+  z-index: 8;
 }
 
 .tab-8nttt .nttt8-cell.nttt8-static {
@@ -349,232 +621,400 @@
   outline: none;
 }
 
-/* Nhãn hiển thị ở các cột dọc (Cột 1, Cột 17) - Căn giữa nhiều dòng rõ nét, tương thích 100% html2canvas */
+.tab-8nttt .nttt8-cell-label {
+  display: inline-block;
+  text-align: center;
+  white-space: pre-line;
+  line-height: 1.18;
+}
+
+/* Bố cục kết hợp Icon + Text bên trong ô */
+.tab-8nttt .nttt8-cell-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.tab-8nttt .nttt8-cell-inner.layout-inline {
+  flex-direction: row;
+  gap: 5px;
+}
+
+.tab-8nttt .nttt8-cell-inner.layout-side-left {
+  flex-direction: row;
+  justify-content: center;
+  gap: 6px;
+  padding: 3px 2px;
+}
+
+.tab-8nttt .nttt8-cell-inner.layout-stack-top {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 2px;
+}
+
+.tab-8nttt .nttt8-cell-inner.layout-stack-bottom {
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 5px 2px;
+}
+
+.tab-8nttt .nttt8-cell-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Kích thước từng nhóm SVG Icon */
+.tab-8nttt .nttt8-svg-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-wc {
+  width: 21px;
+  height: 16px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-door {
+  width: 18px;
+  height: 16px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-fridge {
+  width: 14px;
+  height: 19px;
+}
+
+.tab-8nttt .layout-side-left .nttt8-svg-icon.icon-fridge {
+  width: 22px;
+  height: 34px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-appliance {
+  width: 18px;
+  height: 17px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-ac {
+  width: 30px;
+  height: 13px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-washer {
+  width: 16px;
+  height: 19px;
+}
+
+.tab-8nttt .layout-stack-top .nttt8-svg-icon.icon-washer {
+  width: 24px;
+  height: 28px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-speaker {
+  width: 15px;
+  height: 20px;
+}
+
+.tab-8nttt .layout-stack-top .nttt8-svg-icon.icon-speaker {
+  width: 22px;
+  height: 32px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-op-symbol {
+  width: 22px;
+  height: 21px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-acc {
+  width: 16px;
+  height: 16px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-laptop {
+  width: 20px;
+  height: 15px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-phone {
+  width: 13px;
+  height: 17px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-brand-badge {
+  width: 17px;
+  height: 17px;
+}
+
+.tab-8nttt .nttt8-svg-icon.icon-brand-wide {
+  width: 32px;
+  height: 14px;
+}
+
+/* Nhãn ở cột dọc bên trái, cột kho bên phải và ĐƯỜNG ĐI */
 .tab-8nttt .nttt8-vertical-label {
   display: block;
   width: 100%;
   text-align: center;
   white-space: pre-line;
-  line-height: 1.24;
-  padding: 2px 1px;
-  font-size: 10px;
-  font-weight: 700;
+  line-height: 1.22;
+  font-size: 9.5px;
+  font-weight: 800;
 }
 
-/* Nhãn cột ĐƯỜNG ĐI ở giữa */
 .tab-8nttt .nttt8-walkway-label {
   display: block;
   width: 100%;
   text-align: center;
   white-space: pre-line;
-  line-height: 1.35;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  line-height: 1.5;
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #1e293b;
 }
 
-/* Nhãn ở góc dưới trái (Vách hãng Toshiba/LG/Samsung) và WC */
 .tab-8nttt .nttt8-tilted-label {
   display: block;
   width: 100%;
   text-align: center;
   white-space: pre-line;
-  line-height: 1.22;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* ==========================================================================
-   NHÓM MÀU NỀN CHUẨN THEO HÌNH MẪU (PHẲNG, KHÔNG GRADIENT, KHÔNG ĐỔ BÓNG)
-   ========================================================================== */
-
-/* Tím nhạt (#D9D2E9): Cột phân loại ngành hàng bên trái & Tủ lạnh Samsung / Tủ đông 02-03 */
-.tab-8nttt .bg-nttt-purple {
-  background-color: #D9D2E9;
-  color: #000000;
-}
-
-/* Xanh lá nhạt (#D9EAD3 / #B6D7A8): Vách tủ lạnh đỉnh, Bục tủ lạnh, Gia dụng Kangaroo/Toshiba/Sunhouse, Robot, MLN */
-.tab-8nttt .bg-nttt-green-light {
-  background-color: #D9EAD3;
-  color: #000000;
-}
-
-/* Xanh lá đậm hơn (#B6D7A8): Bục hãng Samsung dưới cùng */
-.tab-8nttt .bg-nttt-green {
-  background-color: #B6D7A8;
-  color: #000000;
-}
-
-/* Xanh ngọc (#42BBC2) nếu được chọn cho nhóm đặc biệt */
-.tab-8nttt .bg-nttt-teal {
-  background-color: #42BBC2;
-  color: #000000;
-}
-
-/* Vàng kem (#FFF0C2): Gia dụng 07 -> Gia dụng 01 */
-.tab-8nttt .bg-nttt-cream {
-  background-color: #FFF0C2;
-  color: #000000;
-}
-
-/* Vàng đậm nhạt (#FFE599): Nhóm kệ và robot tùy chọn */
-.tab-8nttt .bg-nttt-amber-light {
-  background-color: #FFE599;
-  color: #000000;
-}
-
-/* Xanh dương nhạt (#CFE2F3 / #A8C8E8): Nhóm Máy giặt, Bục hãng trung tâm & Vách hãng góc dưới trái */
-.tab-8nttt .bg-nttt-blue {
-  background-color: #CFE2F3;
-  color: #000000;
-}
-
-.tab-8nttt .bg-nttt-blue-strong {
-  background-color: #A8C8E8;
-  color: #000000;
-}
-
-/* Cam nhạt (#FCE4CD): Khu vực cửa kho (Mạnh) & Kệ loa Karaoke, Bục hãng Haier/Aqua/Xiaomi */
-.tab-8nttt .bg-nttt-orange {
-  background-color: #FCE4CD;
-  color: #000000;
-}
-
-/* Vàng sáng (#FFFF00): Vách loa, Vách phụ kiện, Toàn bộ khối ICT/Laptop/Smartphone/BTV & Tiêu đề VẬN HÀNH */
-.tab-8nttt .bg-nttt-yellow {
-  background-color: #FFFF00;
-  color: #000000;
-}
-
-/* Hồng phấn (#F4CCCC): Khu vực giá sốc/mùa vụ, Bàn giao hàng, HTKT, Trang trí, Thu ngân */
-.tab-8nttt .bg-nttt-pink {
-  background-color: #F4CCCC;
-  color: #000000;
-}
-
-/* Hồng đỏ nhạt (#EA9999) / Chữ đỏ cho WC & CỬA KHO */
-.tab-8nttt .bg-nttt-red-soft {
-  background-color: #EA9999;
-  color: #000000;
-}
-
-.tab-8nttt .bg-nttt-white {
-  background-color: #FFFFFF;
-  color: #000000;
-}
-
-.tab-8nttt .text-nttt-red {
-  color: #DC2626 !important;
+  line-height: 1.2;
+  font-size: 9.5px;
   font-weight: 800;
 }
 
 /* ==========================================================================
-   ĐƯỜNG KẺ VIỀN PHÂN VÙNG RÕ NÉT THEO HÌNH MẪU (1PX NGUYÊN, KHÔNG BỊ MẤT NÉT)
+   BẢNG MÀU CHUẨN 100% THEO HÌNH MẪU SƠ ĐỒ SIÊU THỊ
    ========================================================================== */
-.tab-8nttt .b-top { border-top: 1px solid #333333 !important; }
-.tab-8nttt .b-bottom { border-bottom: 1px solid #333333 !important; }
-.tab-8nttt .b-left { border-left: 1px solid #333333 !important; }
-.tab-8nttt .b-right { border-right: 1px solid #333333 !important; }
-.tab-8nttt .b-box { border: 1px solid #333333 !important; }
-.tab-8nttt .b-none { border-color: transparent !important; }
-.tab-8nttt .b-no-inner-left { border-left: 1px solid #333333 !important; }
-.tab-8nttt .b-no-inner-right { border-right: 1px solid #333333 !important; }
 
-/* Hàng khe hở có vạch chia cột (tick marks) giữa các kệ hàng như hình mẫu */
-.tab-8nttt .nttt8-tick-row {
-  display: grid;
-  height: 11px;
-  min-height: 11px;
-  background: #ffffff;
-  border: 1px solid #333333;
-  box-sizing: border-box;
-  pointer-events: none;
-  z-index: 2;
+/* Hàng 1 trên cùng: WC & CỬA KHO đỏ tươi, 3 vách tủ lạnh xanh đậm / xanh biển / xanh cổ vịt */
+.tab-8nttt .bg-nttt-top-red {
+  background-color: #f04438;
+  color: #ffffff;
+  border-color: #dc2626;
 }
 
-.tab-8nttt .nttt8-tick-row.cols-8 {
-  grid-template-columns: repeat(8, 1fr);
+.tab-8nttt .bg-nttt-top-blue-1 {
+  background-color: #0086ff;
+  color: #ffffff;
+  border-color: #0270d7;
 }
 
-.tab-8nttt .nttt8-tick-row.cols-6-left1 {
-  grid-template-columns: 1fr 5fr;
+.tab-8nttt .bg-nttt-top-blue-2 {
+  background-color: #1d68d8;
+  color: #ffffff;
+  border-color: #1754b0;
 }
 
-.tab-8nttt .nttt8-tick-row.cols-8-sparse {
-  grid-template-columns: 4fr 2fr 2fr;
+.tab-8nttt .bg-nttt-top-teal {
+  background-color: #0ba59b;
+  color: #ffffff;
+  border-color: #08877f;
 }
 
-.tab-8nttt .nttt8-tick-cell {
-  border-right: 1px solid #333333;
-  height: 100%;
+/* Tím nhạt (#DED6F2): Vách trái & Tủ lạnh Samsung / Tủ đông 02-03 */
+.tab-8nttt .bg-nttt-purple {
+  background-color: #ded6f2;
+  color: #111827;
 }
 
-.tab-8nttt .nttt8-tick-cell:last-child {
-  border-right: none;
+/* Xanh ngọc đậm (#18B7C2): Vách hãng Toshiba/LG/Samsung, Máy giặt LG, Bục hãng Hesensi/LG */
+.tab-8nttt .bg-nttt-cyan,
+.tab-8nttt .bg-nttt-teal {
+  background-color: #18b7c2;
+  color: #0f172a;
+}
+
+/* Xanh lá nhạt (#D1ECCB): Bục tủ lạnh, Tủ lạnh Panasonic, MLN Mutoshi/Hoà Phát/Karofi/Kangaroo */
+.tab-8nttt .bg-nttt-green-light {
+  background-color: #d1eccb;
+  color: #111827;
+}
+
+/* Xanh lá đậm vừa (#ACD9A3): Bục hãng Samsung */
+.tab-8nttt .bg-nttt-green {
+  background-color: #acd9a3;
+  color: #111827;
+}
+
+/* Xanh dương pastel (#B6D5F5): Tủ lạnh Aqua/Haier, Bục hãng Haier/Aqua */
+.tab-8nttt .bg-nttt-blue-pastel,
+.tab-8nttt .bg-nttt-blue-strong {
+  background-color: #b6d5f5;
+  color: #111827;
+}
+
+/* Xanh dương nhạt (#C6DEF7): Bục máy giặt, các ô Máy giặt, Bục hãng Toshiba/TCL */
+.tab-8nttt .bg-nttt-blue {
+  background-color: #c6def7;
+  color: #111827;
+}
+
+/* Hồng dâu đậm (#F699A3): Tủ lạnh Toshiba, Gia dụng Kangaroo/Toshiba, MLN Toshiba, Máy giặt Toshiba */
+.tab-8nttt .bg-nttt-rose,
+.tab-8nttt .bg-nttt-red-soft {
+  background-color: #f699a3;
+  color: #111827;
+}
+
+/* Hồng phấn (#F8D5D8): Khu vực giá sốc/mùa vụ, Bàn giao hàng, HTKT, Trang trí, Thu ngân */
+.tab-8nttt .bg-nttt-pink {
+  background-color: #f8d5d8;
+  color: #111827;
+}
+
+/* Vàng kem (#FCEBB6): Gia dụng 07 -> Gia dụng 01 */
+.tab-8nttt .bg-nttt-cream {
+  background-color: #fcebb6;
+  color: #111827;
+}
+
+/* Vàng nghệ (#F9DF8D): Kệ gia dụng, Gia dụng Sunhouse, Robot, MLN Sunhouse */
+.tab-8nttt .bg-nttt-amber-light {
+  background-color: #f9df8d;
+  color: #111827;
+}
+
+/* Cam đào nhạt (#F9DEC5): Kệ loa Karaoke, Bục hãng Xiaomi */
+.tab-8nttt .bg-nttt-orange {
+  background-color: #f9dec5;
+  color: #111827;
+}
+
+/* Cam kem (#F9E5D2): Cột kho bên phải (Vách tủ lạnh Panasonic/Samsung, Vách máy lạnh/MNN - Mạnh) */
+.tab-8nttt .bg-nttt-orange-soft {
+  background-color: #f9e5d2;
+  color: #111827;
+}
+
+/* Vàng tươi (#FDE71E): Vách loa - Mỹ, Phụ kiện Basus/Anker/Camera, Đồng hồ thời trang, BTV 1..4 */
+.tab-8nttt .bg-nttt-yellow {
+  background-color: #fde71e;
+  color: #111827;
+}
+
+/* Tím hồng nhạt (#EAE4F7): Vách phụ kiện - N.Anh, Laptop 1..6 - N.Anh */
+.tab-8nttt .bg-nttt-lavender {
+  background-color: #eae4f7;
+  color: #111827;
+}
+
+/* Cam đất nhạt (#F7C69C): Smartphone / Motorola / Realme - Trâm */
+.tab-8nttt .bg-nttt-peach-strong {
+  background-color: #f7c69c;
+  color: #111827;
+}
+
+/* Hồng cam (#F3C4C8): BTN Xiaomi - Thanh */
+.tab-8nttt .bg-nttt-pink-xiaomi {
+  background-color: #f3c4c8;
+  color: #111827;
+}
+
+/* Kem sáng (#FAF0D7): BTN Motorola - Trâm, BTN Samsung / Honor - Vy */
+.tab-8nttt .bg-nttt-cream-soft {
+  background-color: #faf0d7;
+  color: #111827;
+}
+
+/* Xanh lá Oppo (#BBE3BE): BTN Oppo - Thư */
+.tab-8nttt .bg-nttt-green-oppo {
+  background-color: #bbe3be;
+  color: #111827;
+}
+
+/* Xanh dương Vivo (#DCEBFA): BTN Vivo - Vy */
+.tab-8nttt .bg-nttt-blue-vivo {
+  background-color: #dcebfa;
+  color: #111827;
+}
+
+/* Trắng (#FFFFFF): Đường đi trung tâm */
+.tab-8nttt .bg-nttt-white {
+  background-color: #ffffff;
+  color: #1e293b;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* ==========================================================================
-   BẢNG QUY ĐỊNH VẬN HÀNH (OperationRules) Ở PHÍA TRÊN BÊN PHẢI
+   PHÂN VÙNG 3: KHỐI VẬN HÀNH DƯỚI CÙNG (.operation-footer)
    ========================================================================== */
-.tab-8nttt .nttt8-operation-box {
-  background: #ffffff;
-  border: 1px solid #333333;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
+.tab-8nttt .operation-footer {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
   align-items: stretch;
-  z-index: 4;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 8px;
   cursor: pointer;
+  transition: border-color 0.15s ease;
 }
 
-.tab-8nttt .nttt8-operation-box:hover {
-  outline: 2px solid #0284c7;
+.tab-8nttt .operation-footer:hover {
+  border-color: #0284c7;
 }
 
-.tab-8nttt .nttt8-operation-header {
-  background-color: #FFFF00;
-  color: #000000;
-  font-family: 'Times New Roman', Arial, serif;
+.tab-8nttt .operation-footer-badge {
+  background-color: #fde021;
+  color: #111827;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
   font-size: 20px;
   font-weight: 900;
   text-transform: uppercase;
-  text-align: center;
-  padding: 5px 10px;
-  border-bottom: 1px solid #333333;
-  letter-spacing: 0.6px;
-  line-height: 1.15;
+  letter-spacing: 0.4px;
 }
 
-.tab-8nttt .nttt8-operation-body {
-  background-color: #FFFFFF;
-  color: #000000;
+.tab-8nttt .operation-gear-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: #111827;
+}
+
+.tab-8nttt .operation-footer-content {
+  display: grid;
+  grid-template-columns: 1.32fr 1fr;
+  gap: 14px;
+  align-items: center;
   text-align: left;
-  padding: 6px 10px 10px;
-  font-family: Arial, 'Inter', sans-serif;
-  font-size: 10.5px;
+  font-family: 'Inter', 'Plus Jakarta Sans', Arial, sans-serif;
+  font-size: 9.8px;
   font-weight: 800;
-  line-height: 1.42;
+  line-height: 1.4;
+  color: #0f172a;
   text-transform: uppercase;
-  flex: 1;
+  padding: 2px 4px;
 }
 
-.tab-8nttt .nttt8-operation-body p {
-  margin: 0 0 3px 0;
+.tab-8nttt .operation-col p {
+  margin: 0 0 2.5px 0;
 }
 
-.tab-8nttt .nttt8-operation-body .vh-sublist {
+.tab-8nttt .operation-col .vh-sublist {
   margin: 2px 0 0 0;
-  padding-left: 16px;
+  padding-left: 12px;
   list-style: none;
 }
 
-.tab-8nttt .nttt8-operation-body .vh-sublist li {
-  margin-bottom: 2px;
+.tab-8nttt .operation-col .vh-sublist li {
+  margin-bottom: 1.5px;
 }
 
-.tab-8nttt .nttt8-operation-body .vh-highlight-red {
-  color: #FF0000;
+.tab-8nttt .operation-col .vh-highlight-red {
+  color: #dc2626;
   font-weight: 900;
 }
 
@@ -1593,21 +2033,54 @@
 }
 
 /* ==========================================================================
-   RESPONSIVE CHO ĐIỆN THOẠI & MÀN HÌNH NHỎ
+   RESPONSIVE CHO MÁY TÍNH BẢNG, ĐIỆN THOẠI & MÀN HÌNH NHỎ
    ========================================================================== */
-@media (max-width: 768px) {
-  .tab-8nttt {
-    padding: 8px 8px 28px;
+@media (max-width: 1024px) {
+  .tab-8nttt .nttt8-mobile-menu-btn {
+    display: inline-flex;
   }
 
-  .tab-8nttt .nttt8-toolbar-card {
+  .tab-8nttt .nttt8-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1200;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    box-shadow: 6px 0 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .tab-8nttt .nttt8-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .tab-8nttt .nttt8-main-area {
+    padding: 0 6px 8px 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tab-8nttt {
+    padding: 6px 6px 24px;
+  }
+
+  .tab-8nttt .nttt8-page-header {
+    padding: 8px 10px;
+  }
+
+  .tab-8nttt .nttt8-header-title {
+    font-size: 15px;
+  }
+
+  .tab-8nttt .nttt8-utility-bar {
     padding: 8px 10px;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .tab-8nttt .nttt8-toolbar-left,
-  .tab-8nttt .nttt8-toolbar-right {
+  .tab-8nttt .nttt8-utility-left,
+  .tab-8nttt .nttt8-utility-right {
     width: 100%;
     justify-content: space-between;
   }
@@ -1619,11 +2092,6 @@
 
   .tab-8nttt .nttt8-mobile-tip {
     display: flex;
-  }
-
-  .tab-8nttt .nttt8-legend-bar {
-    padding: 6px 8px;
-    font-size: 10.5px;
   }
 
   .tab-8nttt .nttt8-kpi-bar {
@@ -1674,7 +2142,7 @@
   }
 }
 
-/* Chế độ xuất ảnh HD toàn sơ đồ: mở khóa toàn bộ khung cuộn, cố định pixel nguyên 100% */
+/* Chế độ xuất ảnh HD toàn sơ đồ: mở khóa toàn bộ khung cuộn, cố định chuẩn bố cục */
 body.exporting-8nttt-map .tab-8nttt .nttt8-board-wrapper,
 body.exporting-8nttt-map .tab-8nttt .nttt8-scroll-viewport {
   overflow: visible !important;
@@ -1684,21 +2152,14 @@ body.exporting-8nttt-map .tab-8nttt .nttt8-scroll-viewport {
 
 body.exporting-8nttt-map .tab-8nttt .nttt8-zoom-stage {
   transform: none !important;
-  width: 1713px !important;
-  min-width: 1713px !important;
+  width: 1440px !important;
+  min-width: 1440px !important;
 }
 
-body.exporting-8nttt-map .tab-8nttt .nttt8-assignment-grid {
-  width: 1713px !important;
-  min-width: 1713px !important;
-  grid-template-columns:
-    86px
-    repeat(8, 48px)
-    30px
-    repeat(6, 58px)
-    86px
-    repeat(16, 44px)
-    repeat(2, 36px) !important;
+body.exporting-8nttt-map .tab-8nttt .nttt8-assignment-grid.floor-plan {
+  width: 1440px !important;
+  min-width: 1440px !important;
+  padding: 8px !important;
 }
 
 body.exporting-8nttt-map .tab-8nttt .nttt8-cell:hover,

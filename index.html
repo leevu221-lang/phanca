@@ -28,7 +28,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="flyer.css?v=20261020_dirty_check">
-  <link rel="stylesheet" href="nttt8.css?v=20261029_staff_pg_manager">
+  <link rel="stylesheet" href="nttt8.css?v=20261029_supermarket_redesign">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -970,101 +970,180 @@
   </main>
 
   <!-- ========================================================================== -->
-  <!-- TAB 3: 8NTTT - SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH NGÀNH HÀNG -->
+  <!-- TAB 3: 8NTTT - SƠ ĐỒ BỐ TRÍ KHU VỰC SIÊU THỊ (ENTERPRISE RETAIL SHELL) -->
   <!-- ========================================================================== -->
   <main class="main-content tab-8nttt" id="section8NTTT" style="display: none;">
-    <!-- Thanh công cụ tìm kiếm, lọc nhân viên, thu phóng & xuất ảnh -->
-    <div class="nttt8-toolbar-card">
-      <div class="nttt8-toolbar-left">
-        <div class="nttt8-title-group">
-          <span class="nttt8-title-badge">8NTTT</span>
-          <h2 class="nttt8-title-text">SƠ ĐỒ PHÂN CÔNG NHÂN VIÊN PHỤ TRÁCH KHU VỰC &amp; NGÀNH HÀNG</h2>
+    <div class="nttt8-app-shell app-shell" id="nttt8AppShell">
+      <!-- 1. SIDEBAR BÊN TRÁI (190px cố định trên Desktop, thu gọn trên Mobile) -->
+      <aside class="nttt8-sidebar sidebar" id="nttt8Sidebar" aria-label="Điều hướng hệ thống siêu thị">
+        <div class="nttt8-sidebar-brand">
+          <div class="nttt8-dmx-logo" aria-hidden="true">
+            <svg viewBox="0 0 44 44" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="22" r="20" fill="#041E42" stroke="#FFD400" stroke-width="3.2"/>
+              <circle cx="25.5" cy="12.5" r="3.2" fill="#FFD400"/>
+              <path d="M13 21.5L19.5 16.5L24.5 19.5L30.5 15.5" stroke="#FFD400" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 24L23.5 19.5L26 25.5L31 28.5" stroke="#FFD400" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.5 31L19.5 25L23.5 27" stroke="#00B8F1" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="nttt8-brand-text">
+            <span class="nttt8-brand-name">ĐIỆN MÁY XANH</span>
+            <span class="nttt8-brand-loc" id="nttt8SidebarStoreShort">P.8 – CÀ MAU</span>
+          </div>
+          <button type="button" class="nttt8-sidebar-close-mobile" onclick="toggleNTTT8MobileSidebar(false)" aria-label="Đóng menu">&times;</button>
         </div>
 
-        <div class="nttt8-search-wrap">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="nttt8SearchInput" class="nttt8-search-input" placeholder="Tìm ngành hàng, thương hiệu, nhân viên...">
+        <nav class="nttt8-sidebar-nav">
+          <button type="button" class="nttt8-nav-item" data-nav="overview" onclick="handleNTTT8SidebarNav('overview')">
+            <i class="fa-solid fa-house"></i>
+            <span>Tổng quan</span>
+          </button>
+          <button type="button" class="nttt8-nav-item active" data-nav="floorplan" onclick="handleNTTT8SidebarNav('floorplan')">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Sơ đồ khu vực</span>
+          </button>
+          <button type="button" class="nttt8-nav-item" data-nav="assign" onclick="handleNTTT8SidebarNav('assign')">
+            <i class="fa-regular fa-user"></i>
+            <span>Phân chia nhân viên</span>
+          </button>
+          <button type="button" class="nttt8-nav-item" data-nav="staff_pg" onclick="handleNTTT8SidebarNav('staff_pg')">
+            <i class="fa-solid fa-users-gear"></i>
+            <span>Quản lý nhân viên<br>&amp; PG</span>
+          </button>
+          <button type="button" class="nttt8-nav-item" data-nav="daily_report" onclick="handleNTTT8SidebarNav('daily_report')">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Báo cáo ngày</span>
+          </button>
+          <button type="button" class="nttt8-nav-item" data-nav="category_program" onclick="handleNTTT8SidebarNav('category_program')">
+            <i class="fa-solid fa-table-list"></i>
+            <span>CT ngành hàng</span>
+          </button>
+          <button type="button" class="nttt8-nav-item" data-nav="settings" onclick="handleNTTT8SidebarNav('settings')">
+            <i class="fa-solid fa-gear"></i>
+            <span>Thiết lập</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Lớp phủ đóng sidebar trên mobile -->
+      <div class="nttt8-sidebar-backdrop hidden" id="nttt8SidebarBackdrop" onclick="toggleNTTT8MobileSidebar(false)"></div>
+
+      <!-- 2. VÙNG NỘI DUNG CHÍNH BÊN PHẢI SIDEBAR -->
+      <div class="nttt8-main-workspace main-content" id="nttt8MainWorkspace">
+        <!-- HEADER PHÍA TRÊN -->
+        <header class="nttt8-page-header page-header" id="nttt8PageHeader">
+          <div class="nttt8-header-left">
+            <button type="button" class="nttt8-mobile-menu-btn" onclick="toggleNTTT8MobileSidebar(true)" title="Mở menu điều hướng">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+            <h2 class="nttt8-page-title">SƠ ĐỒ BỐ TRÍ KHU VỰC SIÊU THỊ</h2>
+          </div>
+
+          <div class="nttt8-header-right">
+            <!-- Dropdown chọn siêu thị -->
+            <div class="nttt8-header-pill nttt8-store-pill" title="Chọn siêu thị hiển thị sơ đồ">
+              <i class="fa-solid fa-store nttt8-pill-icon"></i>
+              <select id="nttt8StoreSelect" class="nttt8-header-select" onchange="onChangeNTTT8StoreSelect(this.value)">
+                <option value="dmx_p8_camau" data-short="P.8 – CÀ MAU">Điện Máy Xanh Phường 8 - Cà Mau</option>
+                <option value="dmx_p5_camau" data-short="P.5 – CÀ MAU">Điện Máy Xanh Phường 5 - Cà Mau</option>
+                <option value="dmx_thd_camau" data-short="TRẦN HƯNG ĐẠO">Điện Máy Xanh Trần Hưng Đạo - Cà Mau</option>
+                <option value="dmx_giarai" data-short="GIÁ RAI – BẠC LIÊU">Điện Máy Xanh Giá Rai - Bạc Liêu</option>
+              </select>
+              <i class="fa-solid fa-chevron-down nttt8-pill-chevron"></i>
+            </div>
+
+            <!-- Bộ chọn ngày động từ trạng thái ứng dụng -->
+            <label class="nttt8-header-pill nttt8-date-pill" for="nttt8HeaderDateInput" title="Chọn ngày làm việc / phân công">
+              <i class="fa-regular fa-calendar-days nttt8-pill-icon"></i>
+              <span id="nttt8HeaderDateDisplay" class="nttt8-date-display">29/10/2026</span>
+              <input type="date" id="nttt8HeaderDateInput" class="nttt8-date-native-input" onchange="onChangeNTTT8DateInput(this.value)">
+              <i class="fa-solid fa-chevron-down nttt8-pill-chevron"></i>
+            </label>
+
+            <!-- Nút XUẤT ẢNH & Nút mở rộng thanh công cụ -->
+            <button type="button" class="nttt8-header-btn nttt8-header-btn-export" id="btn8NTTTExportImage" onclick="exportNTTT8DiagramImage()" title="Xuất ảnh PNG sơ đồ phân công chất lượng cao để sao chép">
+              <i class="fa-solid fa-camera"></i>
+              <span>XUẤT ẢNH</span>
+            </button>
+
+            <button type="button" class="nttt8-header-btn nttt8-header-btn-expand" id="btn8NTTTToggleTools" onclick="toggleNTTT8UtilityBar()" title="Mở rộng thanh tìm kiếm, lọc nhân viên &amp; quản lý nhân sự">
+              <i class="fa-solid fa-sliders"></i>
+              <i class="fa-solid fa-chevron-down" id="nttt8ToolsChevron"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- THANH CÔNG CỤ MỞ RỘNG (Tìm kiếm, Lọc NV, Quản lý NV & PG, Ẩn/Hiện tên, Thu phóng, In) -->
+        <div class="nttt8-utility-bar" id="nttt8UtilityBar">
+          <div class="nttt8-toolbar-left">
+            <div class="nttt8-search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="nttt8SearchInput" class="nttt8-search-input" placeholder="Tìm ngành hàng, thương hiệu, nhân viên...">
+            </div>
+
+            <select id="nttt8StaffFilterSelect" class="nttt8-staff-select" title="Lọc theo nhân viên phụ trách">
+              <option value="">👤 Tất cả nhân viên</option>
+            </select>
+
+            <div class="nttt8-display-options-group">
+              <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên nhân viên chính trên sơ đồ">
+                <input type="checkbox" id="chk8NTTTShowStaff" checked onchange="toggleNTTT8MapDisplayOption('staff', this.checked)">
+                <span>👤 Hiện tên NV</span>
+              </label>
+              <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên PG hỗ trợ trên sơ đồ">
+                <input type="checkbox" id="chk8NTTTShowPg" checked onchange="toggleNTTT8MapDisplayOption('pg', this.checked)">
+                <span>✨ Hiện tên PG</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="nttt8-toolbar-right">
+            <button type="button" class="nttt8-btn nttt8-btn-manage-staff-pg" id="btn8NTTTManageStaffPg" onclick="openNTTT8StaffPgManagerModal('staff')" title="Quản lý danh sách Nhân viên, PG hỗ trợ và Phân công khu vực">
+              <i class="fa-solid fa-users"></i>
+              <span>👥 QUẢN LÝ NHÂN VIÊN &amp; PG</span>
+            </button>
+
+            <button type="button" class="nttt8-btn" id="btn8NTTTZoomFit" title="Thu nhỏ vừa màn hình">
+              <i class="fa-solid fa-compress"></i>
+              <span>Toàn sơ đồ</span>
+            </button>
+            <button type="button" class="nttt8-btn active" id="btn8NTTTZoomActual" title="Hiển thị chuẩn 100%">
+              <i class="fa-solid fa-magnifying-glass-plus"></i>
+              <span>100%</span>
+            </button>
+
+            <div class="nttt8-zoom-group" title="Điều chỉnh tỷ lệ hiển thị sơ đồ">
+              <button type="button" class="nttt8-btn" id="btn8NTTTZoomOut" style="padding: 3px 7px;">-</button>
+              <span class="nttt8-zoom-label" id="nttt8ZoomLevelText">100%</span>
+              <button type="button" class="nttt8-btn" id="btn8NTTTZoomIn" style="padding: 3px 7px;">+</button>
+            </div>
+
+            <button type="button" class="nttt8-btn" id="btn8NTTTPrintMap" onclick="printNTTT8Diagram()" title="In sơ đồ phân công khu vực">
+              <i class="fa-solid fa-print"></i>
+              <span>In sơ đồ</span>
+            </button>
+
+            <button type="button" class="nttt8-btn" onclick="resetNTTT8ToDefaultData()" title="Khôi phục dữ liệu phân công mặc định">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Mặc định</span>
+            </button>
+          </div>
         </div>
 
-        <select id="nttt8StaffFilterSelect" class="nttt8-staff-select" title="Lọc theo nhân viên phụ trách">
-          <option value="">👤 Tất cả nhân viên</option>
-        </select>
-      </div>
-
-      <div class="nttt8-toolbar-right">
-        <button type="button" class="nttt8-btn nttt8-btn-manage-staff-pg" id="btn8NTTTManageStaffPg" onclick="openNTTT8StaffPgManagerModal('staff')" title="Quản lý danh sách Nhân viên, PG hỗ trợ và Phân công khu vực">
-          <i class="fa-solid fa-users"></i>
-          <span>👥 QUẢN LÝ NHÂN VIÊN &amp; PG</span>
-        </button>
-
-        <button type="button" class="nttt8-btn" id="btn8NTTTZoomFit" title="Thu nhỏ vừa màn hình để xem toàn bộ sơ đồ">
-          <i class="fa-solid fa-compress"></i>
-          <span>Toàn sơ đồ</span>
-        </button>
-        <button type="button" class="nttt8-btn active" id="btn8NTTTZoomActual" title="Hiển thị kích thước chuẩn 100% rõ chữ">
-          <i class="fa-solid fa-magnifying-glass-plus"></i>
-          <span>Phóng to</span>
-        </button>
-
-        <div class="nttt8-zoom-group" title="Điều chỉnh tỷ lệ hiển thị sơ đồ">
-          <button type="button" class="nttt8-btn" id="btn8NTTTZoomOut" style="padding: 4px 8px;">-</button>
-          <span class="nttt8-zoom-label" id="nttt8ZoomLevelText">100%</span>
-          <button type="button" class="nttt8-btn" id="btn8NTTTZoomIn" style="padding: 4px 8px;">+</button>
+        <!-- Gợi ý cuộn ngang trên điện thoại -->
+        <div class="nttt8-mobile-tip">
+          <span><i class="fa-solid fa-arrows-left-right"></i> Vuốt ngang bên trong vùng sơ đồ để xem đầy đủ các khu vực</span>
+          <span>Nhấp vào ô bất kỳ để phân công NV &amp; PG</span>
         </div>
 
-        <button type="button" class="nttt8-btn nttt8-btn-primary" id="btn8NTTTExportImage" onclick="exportNTTT8DiagramImage()" title="Xuất ảnh sơ đồ phân công 8NTTT để xem trước và sao chép">
-          <i class="fa-solid fa-camera"></i>
-          <span>XUẤT ẢNH</span>
-        </button>
-
-        <button type="button" class="nttt8-btn" id="btn8NTTTPrintMap" onclick="printNTTT8Diagram()" title="In sơ đồ phân công khu vực">
-          <i class="fa-solid fa-print"></i>
-          <span>In sơ đồ</span>
-        </button>
-
-        <button type="button" class="nttt8-btn" onclick="resetNTTT8ToDefaultData()" title="Khôi phục dữ liệu phân công mặc định">
-          <i class="fa-solid fa-rotate-left"></i>
-          <span>Mặc định</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Chú thích nhóm màu ngành hàng & Tùy chọn hiển thị tên NV / PG trên sơ đồ -->
-    <div class="nttt8-legend-bar">
-      <div class="nttt8-legend-items">
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#D9D2E9;"></span> Cột phân loại / Tủ đông</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#D9EAD3;"></span> Tủ lạnh / MLN / Kệ GD</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FFF0C2;"></span> Nhóm Gia dụng (01-07)</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#CFE2F3;"></span> Máy giặt / Bục hãng</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FCE4CD;"></span> Cửa kho / Bục hãng</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FFFF00;"></span> Phụ kiện / Laptop / ĐT / Vận hành</span>
-        <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#F4CCCC;"></span> Bán hàng / Trang trí / Thu ngân</span>
-      </div>
-      <div class="nttt8-display-options-group">
-        <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên nhân viên chính trên sơ đồ">
-          <input type="checkbox" id="chk8NTTTShowStaff" checked onchange="toggleNTTT8MapDisplayOption('staff', this.checked)">
-          <span>👤 Hiện tên NV</span>
-        </label>
-        <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên PG hỗ trợ trên sơ đồ">
-          <input type="checkbox" id="chk8NTTTShowPg" checked onchange="toggleNTTT8MapDisplayOption('pg', this.checked)">
-          <span>✨ Hiện tên PG</span>
-        </label>
-        <span class="nttt8-hint-text"><i class="fa-solid fa-hand-pointer"></i> Nhấp vào ô bất kỳ để chỉnh sửa</span>
-      </div>
-    </div>
-
-    <!-- Gợi ý cuộn ngang trên điện thoại -->
-    <div class="nttt8-mobile-tip">
-      <span><i class="fa-solid fa-arrows-left-right"></i> Vuốt ngang bên trong vùng sơ đồ để xem toàn bộ các khu vực</span>
-      <span>Dùng nút <strong>Toàn sơ đồ</strong> / <strong>Phóng to</strong> ở trên</span>
-    </div>
-
-    <!-- Vùng chứa sơ đồ phân công 8NTTT ngang -->
-    <div class="nttt8-board-wrapper">
-      <div class="nttt8-scroll-viewport" id="nttt8ScrollViewport">
-        <div class="nttt8-zoom-stage" id="nttt8ZoomStage">
-          <div class="nttt8-assignment-grid" id="nttt8AssignmentGrid">
-            <!-- Sơ đồ 8NTTT được render bởi nttt8.js -->
+        <!-- 3. KHU VỰC SƠ ĐỒ CHÍNH (FLOOR PLAN) -->
+        <div class="nttt8-board-wrapper">
+          <div class="nttt8-scroll-viewport" id="nttt8ScrollViewport">
+            <div class="nttt8-zoom-stage" id="nttt8ZoomStage">
+              <div class="nttt8-assignment-grid floor-plan" id="nttt8AssignmentGrid">
+                <!-- Sơ đồ khu vực siêu thị được render bởi nttt8.js -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2885,6 +2964,6 @@
   <script src="flyer.js?v=20261029_8nttt"></script>
 
   <!-- 8NTTT Floorplan Module Script -->
-  <script src="nttt8.js?v=20261029_staff_pg_manager"></script>
+  <script src="nttt8.js?v=20261029_supermarket_redesign"></script>
 </body>
 </html>

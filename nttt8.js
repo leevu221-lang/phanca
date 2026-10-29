@@ -19,9 +19,9 @@ const NTTT8_FIRESTORE_DOC = 'nttt8_master';
  */
 const NTTT8_KNOWN_STAFF = [
   'PHÚC', 'XUYÊN', 'TRANG', 'Ý', 'MỸ', 'MY', 'MẠNH', 'THẮM',
-  'THẠCH VŨ', 'KHANG HI', 'HI', 'NHẠN', 'MI', 'ĐẠI', 'BĂNG BLUSTONE',
-  'TRINH', 'LAM', 'TÍN', 'OANH', 'ĐƯỢC', 'N.ANH', 'TRÂM', 'ÁI',
-  'THANH', 'THƯ'
+  'GIANG Ý', 'THẠCH VŨ', 'KHANG HI', 'HI', 'NHẠN', 'MI', 'ĐẠI', 'BĂNG BLUSTONE',
+  'TRINH', 'LAM', 'TÍN', 'OANH', 'ĐƯỢC', 'N.ANH', 'TRÂM', 'VY', 'ÁI',
+  'THANH', 'THƯ', 'NHƯTCL'
 ];
 
 /**
@@ -30,29 +30,29 @@ const NTTT8_KNOWN_STAFF = [
 const DEFAULT_NTTT8_STAFF_LIST = [
   { id: 'emp_01', code: 'NV001', name: 'PHÚC', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh', status: 'active', note: 'Phụ trách Tủ lạnh Samsung, Tủ đông, Bục máy giặt' },
   { id: 'emp_02', code: 'NV002', name: 'XUYÊN', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh', status: 'active', note: 'Phụ trách Tủ lạnh Hitachi, Aqua, Haier, Máy giặt Aqua/Haier' },
-  { id: 'emp_03', code: 'NV003', name: 'TRANG', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Gia dụng', status: 'active', note: 'Phụ trách Tủ lạnh Sharp/Toshiba, Máy giặt Toshiba, GD Kangaroo/Toshiba' },
+  { id: 'emp_03', code: 'NV003', name: 'TRANG', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Gia dụng', status: 'active', note: 'Phụ trách Tủ lạnh Sharp/Toshiba, Máy giặt Toshiba, GD 01, GD Kangaroo/Toshiba' },
   { id: 'emp_04', code: 'NV004', name: 'Ý', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh', status: 'active', note: 'Phụ trách Bục tủ lạnh, Tủ lạnh Panasonic' },
-  { id: 'emp_05', code: 'NV005', name: 'MỸ', phone: '', title: 'Nhân viên bán hàng', department: 'Phụ kiện & Viễn thông', status: 'active', note: 'Phụ trách Vách loa, Vách phụ kiện, Basus, Anker, Camera, Đồng hồ' },
-  { id: 'emp_06', code: 'NV006', name: 'MY', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Vách bếp điện, bếp gas, Vách hãng Junger/Hafele/Sunhouse' },
+  { id: 'emp_05', code: 'NV005', name: 'MỸ', phone: '', title: 'Nhân viên bán hàng', department: 'Phụ kiện & Viễn thông', status: 'active', note: 'Phụ trách Vách loa, Phụ kiện Basus, Anker, Camera, Đồng hồ' },
+  { id: 'emp_06', code: 'NV006', name: 'MY', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Vách bếp điện, bếp gas, Vách hãng Junger/Hafale/Sunhouse' },
   { id: 'emp_07', code: 'NV007', name: 'MẠNH', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh', status: 'active', note: 'Phụ trách Vách tủ lạnh Panasonic/Samsung, Vách máy lạnh & máy nước nóng' },
   { id: 'emp_08', code: 'NV008', name: 'THẮM', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 07' },
-  { id: 'emp_09', code: 'NV009', name: 'THẠCH VŨ', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 06' },
+  { id: 'emp_09', code: 'NV009', name: 'GIANG Ý', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 06' },
   { id: 'emp_10', code: 'NV010', name: 'KHANG HI', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 05' },
   { id: 'emp_11', code: 'NV011', name: 'HI', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách MLN Mutoshi, MLN Hoà Phát' },
   { id: 'emp_12', code: 'NV012', name: 'NHẠN', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 04' },
   { id: 'emp_13', code: 'NV013', name: 'MI', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 03' },
   { id: 'emp_14', code: 'NV014', name: 'ĐẠI', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 02' },
-  { id: 'emp_15', code: 'NV015', name: 'BĂNG BLUSTONE', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Gia dụng 01' },
+  { id: 'emp_15', code: 'NV015', name: 'NHƯTCL', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Tivi & Loa', status: 'active', note: 'Phụ trách Kệ loa Karaoke, Bục hãng Xiaomi, Samsung, Toshiba, TCL' },
   { id: 'emp_16', code: 'NV016', name: 'TRINH', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách Kệ gia dụng, GD Sunhouse, Robot, MLN Sunhouse' },
   { id: 'emp_17', code: 'NV017', name: 'LAM', phone: '', title: 'Nhân viên bán hàng', department: 'Gia dụng', status: 'active', note: 'Phụ trách MLN Karofi, MLN Kangaroo' },
-  { id: 'emp_18', code: 'NV018', name: 'TÍN', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Tivi & Loa', status: 'active', note: 'Phụ trách Vách hãng Toshiba/Samsung, Kệ loa Karaoke, Bục hãng Xiaomi/Hesensi/Toshiba/TCL' },
-  { id: 'emp_19', code: 'NV019', name: 'OANH', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh & Tivi', status: 'active', note: 'Phụ trách Vách tủ lạnh LG, Vách hãng LG, Máy giặt LG, Bục hãng LG/Samsung' },
+  { id: 'emp_18', code: 'NV018', name: 'TÍN', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Tivi & Loa', status: 'active', note: 'Phụ trách Vách tủ lạnh LG, Vách hãng Toshiba/LG/Samsung, Máy giặt LG, Bục hãng Hesensi/LG' },
+  { id: 'emp_19', code: 'NV019', name: 'OANH', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh & Tivi', status: 'active', note: 'Hỗ trợ ngành hàng LG & Điện máy' },
   { id: 'emp_20', code: 'NV020', name: 'ĐƯỢC', phone: '', title: 'Nhân viên bán hàng', department: 'Điện máy - Điện lạnh', status: 'active', note: 'Phụ trách Máy giặt Electrolux, Hisense, Samsung, Panasonic' },
   { id: 'emp_21', code: 'NV021', name: 'N.ANH', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách Vách phụ kiện, Laptop 1..6' },
-  { id: 'emp_22', code: 'NV022', name: 'TRÂM', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách Smartphone, Motorola, Realme, BTN Motorola/Table/Vivo/Realme' },
-  { id: 'emp_23', code: 'NV023', name: 'ÁI', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách Vivo' },
-  { id: 'emp_24', code: 'NV024', name: 'THANH', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách Xiaomi, BTN Xiaomi' },
-  { id: 'emp_25', code: 'NV025', name: 'THƯ', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách BTN Oppo, Oppo, BTN Samsung, BTN Honor, BTN Apple, Samsung, Apple' }
+  { id: 'emp_22', code: 'NV022', name: 'TRÂM', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách Smartphone, Motorola, Realme, BTN Motorola' },
+  { id: 'emp_23', code: 'NV023', name: 'VY', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách BTN Vivo, BTN Samsung, BTN Honor' },
+  { id: 'emp_24', code: 'NV024', name: 'THANH', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách BTN Xiaomi' },
+  { id: 'emp_25', code: 'NV025', name: 'THƯ', phone: '', title: 'Nhân viên bán hàng', department: 'ICT - Điện thoại & Laptop', status: 'active', note: 'Phụ trách BTN Oppo' }
 ];
 
 /**
@@ -75,1302 +75,1228 @@ const DEFAULT_NTTT8_PG_LIST = [
 const DEFAULT_NTTT8_OPERATION_RULES = {
   title: 'VẬN HÀNH',
   line1Prefix: '1/ KHU VỰC BẠN NÀO PHỤ TRÁCH VÀO CA VỆ SINH, KIỂM TRA ĐÚNG 8NTT, GỬI HÌNH TRỰC TIẾP LÊN ROOM 8NTT ',
-  line1Highlight: '( KO TẠO ALBUM, KO TẠO GHI CHÚ)',
+  line1Highlight: '(KO TẠO ALBUM, KO TẠO GHI CHÚ)',
   line1Suffix: '. CUỐI CA CHECK LẠI TRƯỚC KHI VỀ.',
-  line2: '2/ ƯU TIÊN SỐ 1 PHỤC VỤ HỔ TRỢ KHÁCH HÀNG, XỬ LÝ CV XONG THÌ HOÀN TẤT BÁO CÁO.',
+  line2: '2/ ƯU TIÊN SỐ 1 PHỤC VỤ HỖ TRỢ KHÁCH HÀNG, XỬ LÝ CV XONG THÌ HOÀN TẤT BÁO CÁO.',
   line3: '3/ BẮT BUỘC HOÀN TẤT BÁO CÁO MỖI NGÀY LÀM VIỆC.',
   line4: '4/ PHÁT SINH SAI PHẠM XỬ LÝ THEO TRIỂN KHAI ĐÃ THỐNG NHẤT :',
   sub1: '- LẦN 1 : NHẮC NHỞ MIỆNG.',
   sub2: '- LẦN 2 TRONG THÁNG : BB XLKL KHIỂN TRÁCH BẰNG MIỆNG.',
-  sub3: '- LẦN 3 TRONG THÁNG : BB XLKL ÚP HRM KHIỂN TRÁCH BẰNG VĂN BẢN'
+  sub3: '- LẦN 3 TRONG THÁNG : BB XLKL ÚP HRM KHIỂN TRÁCH BẰNG VĂN BẢN.'
 };
 
 /**
- * Cấu trúc dữ liệu gốc của toàn bộ các ô phân công trên sơ đồ 8NTTT
- * Tọa độ lưới CSS Grid: 35 cột x 40 hàng khớp 100% với sơ đồ mẫu
+ * Cấu trúc dữ liệu chuẩn của toàn bộ các ô trên SƠ ĐỒ BỐ TRÍ KHU VỰC SIÊU THỊ
+ * Chia thành các phân vùng CSS Grid độc lập khớp 100% với hình mẫu:
+ * - section: 'upper' (Lưới 27 cột x 20 hàng: Dải trên cùng + Cột vách trái + Khu trái + Đường đi + Khu phải + Cột kho phải)
+ * - section: 'acc_left' (Phụ kiện, Đồng hồ, BTV 1-4: Lưới 12 cột x 4 hàng)
+ * - section: 'acc_laptop' (Laptop 1-6: Lưới 2 cột x 4 hàng)
+ * - section: 'acc_phone' (Smartphone & Bàn trải nghiệm BTN: Lưới 3 cột x 4 hàng)
  */
 const DEFAULT_NTTT8_CELLS = [
-  // ================= KHU VỰC ĐỈNH (HÀNG 1) =================
+  // ================= A. DẢI TRÊN CÙNG (HÀNG 1) =================
   {
     id: 'top_wc',
     zone: 'A',
+    section: 'upper',
     type: 'static',
     area: 'WC',
     staff: '',
     displayOverride: 'WC',
     col: '1 / 2',
     row: '1 / 2',
-    bgClass: 'bg-nttt-white text-nttt-red',
-    borderClass: 'b-box',
-    orientation: 'tilted'
+    bgClass: 'bg-nttt-top-red text-nttt-red',
+    icon: 'wc',
+    iconLayout: 'inline'
   },
   {
     id: 'top_vach_hitachi',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH TỦ LẠNH HITACHI',
     staff: 'XUYÊN',
-    col: '2 / 7',
+    col: '2 / 9',
     row: '1 / 2',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    bgClass: 'bg-nttt-top-blue-1'
   },
   {
     id: 'top_vach_aqua',
-    zone: 'B',
+    zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH TỦ LẠNH AQUA',
     staff: 'XUYÊN',
-    col: '7 / 12',
+    col: '9 / 15',
     row: '1 / 2',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    bgClass: 'bg-nttt-top-blue-2'
   },
   {
     id: 'top_vach_lg',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH TỦ LẠNH LG',
-    staff: 'OANH',
-    col: '12 / 17',
+    staff: 'TÍN',
+    col: '15 / 25',
     row: '1 / 2',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    bgClass: 'bg-nttt-top-teal'
   },
   {
     id: 'top_cua_kho',
     zone: 'C',
+    section: 'upper',
     type: 'static',
     area: 'CỬA KHO',
     staff: '',
     displayOverride: 'CỬA KHO',
-    col: '17 / 18',
+    col: '25 / 28',
     row: '1 / 2',
-    bgClass: 'bg-nttt-white text-nttt-red',
-    borderClass: 'b-box'
+    bgClass: 'bg-nttt-top-red text-nttt-red',
+    icon: 'door',
+    iconLayout: 'inline'
   },
 
-  // ================= KHU VỰC A1: CỘT PHÂN LOẠI NGÀNH HÀNG DỌC BÊN TRÁI (CỘT 1) =================
-  {
-    id: 'left_spacer_top',
-    zone: 'A',
-    type: 'static',
-    area: '',
-    staff: '',
-    displayOverride: '',
-    col: '1 / 2',
-    row: '2 / 3',
-    bgClass: 'bg-nttt-white',
-    borderClass: 'b-box'
-  },
+  // ================= B. CỘT KHU VỰC BÊN TRÁI (CỘT 1) =================
   {
     id: 'left_vach_sharp',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH TỦ LẠNH SHARP',
     staff: 'TRANG',
     col: '1 / 2',
-    row: '3 / 7',
+    row: '2 / 5',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
     id: 'left_vach_toshiba',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH TỦ LẠNH TOSHIBA',
     staff: 'TRANG',
     col: '1 / 2',
-    row: '7 / 11',
+    row: '5 / 7',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
     id: 'left_vach_bep',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH BẾP ĐIỆN, BẾP GAS',
     staff: 'MY',
     col: '1 / 2',
-    row: '11 / 15',
+    row: '7 / 9',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
     id: 'left_vach_my',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH',
     staff: 'MY',
     col: '1 / 2',
-    row: '15 / 19',
+    row: '9 / 11',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
     id: 'left_vach_hang_gd',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
-    area: 'VÁCH HÃNG : JUNGER, HAFALE, SUNHOUSE, KANGAROO, BLUESTONE, PRIMRE, COMFEE.',
+    area: 'VÁCH HÃNG: JUNGER, HAFALE, SUNHOUSE, KANGAROO, BLUESTON, P.RIMRE, COMFEE.',
     staff: 'MY',
     col: '1 / 2',
-    row: '19 / 31',
+    row: '11 / 16',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box',
     orientation: 'vertical'
   },
   {
     id: 'left_vach_hang_toshiba',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH HÃNG TOSHIBA',
     staff: 'TÍN',
     col: '1 / 2',
-    row: '31 / 34',
-    bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-box',
-    orientation: 'tilted'
+    row: '16 / 18',
+    bgClass: 'bg-nttt-cyan',
+    orientation: 'vertical'
   },
   {
     id: 'left_vach_hang_lg',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH HÃNG LG',
-    staff: 'OANH',
+    staff: 'TÍN',
     col: '1 / 2',
-    row: '34 / 37',
-    bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-box',
-    orientation: 'tilted'
+    row: '18 / 20',
+    bgClass: 'bg-nttt-cyan',
+    orientation: 'vertical'
   },
   {
     id: 'left_vach_hang_samsung',
     zone: 'A',
+    section: 'upper',
     type: 'category_vertical',
     area: 'VÁCH HÃNG SAMSUNG',
     staff: 'TÍN',
     col: '1 / 2',
-    row: '37 / 40',
-    bgClass: 'bg-nttt-blue-strong',
-    borderClass: 'b-box',
-    orientation: 'tilted'
+    row: '20 / 21',
+    bgClass: 'bg-nttt-cyan',
+    orientation: 'vertical'
   },
 
-  // ================= KHU VỰC A2: KHỐI NGÀNH HÀNG BÊN TRÁI (CỘT 2..9) =================
-  // Hàng kệ 1 (Row 3)
+  // ================= C. KHU VỰC TỦ LẠNH VÀ GIA DỤNG BÊN TRÁI (CỘT 2..14) =================
   {
     id: 'a_buc_tl_1',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC TỦ LẠNH',
     staff: 'Ý',
-    col: '2 / 6',
-    row: '3 / 4',
+    col: '2 / 8',
+    row: '2 / 3',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'a_tl_aqua',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ LẠNH AQUA',
     staff: 'XUYÊN',
-    col: '6 / 10',
-    row: '3 / 4',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'fridge-dark'
   },
-  // Hàng kệ 2 (Row 5)
   {
     id: 'a_buc_tl_2',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC TỦ LẠNH',
     staff: 'Ý',
-    col: '2 / 6',
-    row: '5 / 6',
+    col: '2 / 8',
+    row: '3 / 4',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'a_tl_toshiba',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ LẠNH TOSHIBA',
     staff: 'TRANG',
-    col: '6 / 10',
-    row: '5 / 6',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-rose',
+    icon: 'fridge-silver'
   },
-  // Hàng kệ 3 (Row 7)
   {
     id: 'a_tl_panasonic',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ LẠNH PANASONIC',
     staff: 'Ý',
-    col: '2 / 6',
-    row: '7 / 8',
+    col: '2 / 8',
+    row: '4 / 5',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'a_tl_haier',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ LẠNH HAIER',
     staff: 'XUYÊN',
-    col: '6 / 10',
-    row: '7 / 8',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '4 / 5',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'fridge-dark'
   },
-  // Nhóm Gia dụng 07 -> 01 (Rows 9, 11, 13, 15, 17, 19, 21)
+
+  // Dải Gia dụng 07 -> 01
   {
     id: 'a_gd_07',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 07',
     staff: 'THẮM',
-    col: '2 / 10',
-    row: '9 / 10',
+    col: '2 / 14',
+    row: '5 / 6',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'pot-blue'
   },
   {
     id: 'a_gd_06',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 06',
-    staff: 'THẠCH VŨ',
-    col: '2 / 10',
-    row: '11 / 12',
+    staff: 'GIANG Ý',
+    col: '2 / 14',
+    row: '6 / 7',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'blender'
   },
   {
     id: 'a_gd_05',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 05',
     staff: 'KHANG HI',
-    col: '2 / 10',
-    row: '13 / 14',
+    col: '2 / 14',
+    row: '7 / 8',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'rice-cooker'
   },
   {
     id: 'a_gd_04',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 04',
     staff: 'NHẠN',
-    col: '2 / 10',
-    row: '15 / 16',
+    col: '2 / 14',
+    row: '8 / 9',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'pot-black'
   },
   {
     id: 'a_gd_03',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 03',
     staff: 'MI',
-    col: '2 / 10',
-    row: '17 / 18',
+    col: '2 / 14',
+    row: '9 / 10',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'skillet'
   },
   {
     id: 'a_gd_02',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 02',
     staff: 'ĐẠI',
-    col: '2 / 10',
-    row: '19 / 20',
+    col: '2 / 14',
+    row: '10 / 11',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'kettle'
   },
   {
     id: 'a_gd_01',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG 01',
-    staff: 'BĂNG BLUSTONE',
-    col: '2 / 10',
-    row: '21 / 22',
+    staff: 'TRANG',
+    col: '2 / 14',
+    row: '11 / 12',
     bgClass: 'bg-nttt-cream',
-    borderClass: 'b-box'
+    icon: 'pan-red'
   },
-  // Hàng kệ 11 (Row 23): Gia dụng Kangaroo & Toshiba
+
+  // Nhóm Gia dụng Kangaroo/Toshiba, Kệ GD/Sunhouse, Robot/MLN Sunhouse, MLN Mutoshi/Toshiba/Hoà Phát
   {
     id: 'a_gd_kangaroo',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG KANGAROO',
     staff: 'TRANG',
-    col: '2 / 6',
-    row: '23 / 24',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '2 / 8',
+    row: '12 / 13',
+    bgClass: 'bg-nttt-rose',
+    icon: 'induction'
   },
   {
     id: 'a_gd_toshiba',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG TOSHIBA',
     staff: 'TRANG',
-    col: '6 / 10',
-    row: '23 / 24',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '12 / 13',
+    bgClass: 'bg-nttt-rose',
+    icon: 'induction'
   },
-  // Hàng kệ 12 (Row 25): Kệ gia dụng & Gia dụng Sunhouse
   {
     id: 'a_ke_gd',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'KỆ GIA DỤNG',
     staff: 'TRINH',
-    col: '2 / 6',
-    row: '25 / 26',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '2 / 8',
+    row: '13 / 14',
+    bgClass: 'bg-nttt-amber-light',
+    icon: 'air-cooler'
   },
   {
     id: 'a_gd_sunhouse',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'GIA DỤNG SUNHOUSE',
     staff: 'TRINH',
-    col: '6 / 10',
-    row: '25 / 26',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '13 / 14',
+    bgClass: 'bg-nttt-amber-light',
+    icon: 'air-fryer'
   },
-  // Hàng kệ 13 (Row 27): Robot & MLN Sunhouse
   {
     id: 'a_robot',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'ROBOT',
     staff: 'TRINH',
-    col: '2 / 6',
-    row: '27 / 28',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '2 / 8',
+    row: '14 / 15',
+    bgClass: 'bg-nttt-amber-light',
+    icon: 'robot'
   },
   {
     id: 'a_mln_sunhouse',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN SUNHOUSE',
     staff: 'TRINH',
-    col: '6 / 10',
-    row: '27 / 28',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '8 / 14',
+    row: '14 / 15',
+    bgClass: 'bg-nttt-amber-light',
+    icon: 'air-fryer'
   },
-  // Hàng kệ 14 (Row 29): MLN Mutoshi, MLN Toshiba, MLN Hoà Phát
   {
     id: 'a_mln_mutoshi',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN MUTOSHI',
     staff: 'HI',
-    col: '2 / 5',
-    row: '29 / 30',
+    col: '2 / 6',
+    row: '15 / 16',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'ac-unit'
   },
   {
     id: 'a_mln_toshiba',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN TOSHIBA',
     staff: 'TRANG',
-    col: '5 / 8',
-    row: '29 / 30',
-    bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    col: '6 / 10',
+    row: '15 / 16',
+    bgClass: 'bg-nttt-rose',
+    icon: 'ac-unit'
   },
   {
     id: 'a_mln_hoaphat',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN HOÀ PHÁT',
     staff: 'HI',
-    col: '8 / 10',
-    row: '29 / 30',
+    col: '10 / 14',
+    row: '15 / 16',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'ac-unit'
   },
-  // Hàng kệ 15..18 (Rows 31, 33, 35, 37): Kệ loa Karaoke, Bục hãng Haier, Aqua, Xiaomi
+
+  // ================= D. KHU VỰC ĐIỀU HÒA VÀ BỤC HÃNG BÊN TRÁI =================
   {
     id: 'a_ke_loa_karaoke',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'KỆ LOA KARAOKE',
-    staff: 'TÍN',
-    col: '2 / 10',
-    row: '31 / 32',
+    staff: 'NHƯTCL',
+    col: '2 / 14',
+    row: '16 / 17',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box'
+    icon: 'speaker'
   },
   {
     id: 'a_buc_haier',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG HAIER',
     staff: 'XUYÊN',
-    col: '2 / 10',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box'
+    col: '2 / 14',
+    row: '17 / 18',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'ac-unit'
   },
   {
     id: 'a_buc_aqua',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG AQUA',
     staff: 'XUYÊN',
-    col: '2 / 10',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box'
+    col: '2 / 14',
+    row: '18 / 19',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'ac-unit'
   },
   {
     id: 'a_buc_xiaomi',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG XIAOMI',
-    staff: 'TÍN',
-    col: '2 / 10',
-    row: '37 / 38',
+    staff: 'NHƯTCL',
+    col: '2 / 14',
+    row: '19 / 20',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box'
+    icon: 'ac-unit'
   },
-  // Hàng kệ 19 (Row 39): Bục hãng Samsung gộp ngang qua Cột 2..16
   {
     id: 'ab_buc_samsung',
     zone: 'A',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG SAMSUNG',
-    staff: 'OANH',
-    col: '2 / 17',
-    row: '39 / 40',
+    staff: 'NHƯTCL',
+    col: '2 / 22',
+    row: '20 / 21',
     bgClass: 'bg-nttt-green',
-    borderClass: 'b-box'
+    icon: 'ac-unit'
   },
 
-  // ================= LỐI ĐI GIỮA (CỘT 10) =================
+  // ================= E. LỐI ĐI Ở GIỮA (CỘT 14) =================
   {
     id: 'walkway_duong_di',
     zone: 'B',
+    section: 'upper',
     type: 'static',
     area: 'ĐƯỜNG ĐI',
     staff: '',
-    displayOverride: 'Đ\nƯ\nỜ\nN\nG\n\nĐ\nI',
-    col: '10 / 11',
-    row: '2 / 39',
+    displayOverride: '↑\n\nĐƯỜNG\nĐI\n\n↓',
+    col: '14 / 15',
+    row: '2 / 20',
     bgClass: 'bg-nttt-white',
-    borderClass: 'b-box',
     orientation: 'walkway'
   },
 
-  // ================= KHU VỰC B: KHỐI NGÀNH HÀNG TRUNG TÂM (CỘT 11..16) =================
+  // ================= F. KHU VỰC BÊN PHẢI (CỘT 15..25) =================
   {
     id: 'b_tl_samsung',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ LẠNH SAMSUNG',
     staff: 'PHÚC',
-    col: '11 / 17',
-    row: '3 / 4',
+    col: '15 / 25',
+    row: '2 / 3',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'b_tu_dong_02',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ ĐÔNG 02',
     staff: 'PHÚC',
-    col: '11 / 17',
-    row: '5 / 6',
+    col: '15 / 25',
+    row: '3 / 4',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'b_tu_dong_03',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'TỦ ĐÔNG 03',
     staff: 'PHÚC',
-    col: '11 / 17',
-    row: '7 / 8',
+    col: '15 / 25',
+    row: '4 / 5',
     bgClass: 'bg-nttt-purple',
-    borderClass: 'b-box'
+    icon: 'fridge-silver'
   },
   {
     id: 'b_buc_may_giat',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC MÁY GIẶT',
     staff: 'PHÚC',
-    col: '11 / 17',
-    row: '9 / 10',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 25',
+    row: '5 / 6',
+    bgClass: 'bg-nttt-purple',
+    icon: 'washer'
   },
-  // Hàng Máy giặt Electrolux & Hisense (Row 11)
+
+  // 3 cặp ô Máy giặt song song
   {
     id: 'b_mg_electrolux',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT ELECTROLUX',
     staff: 'ĐƯỢC',
-    col: '11 / 14',
-    row: '11 / 12',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 20',
+    row: '6 / 7',
+    bgClass: 'bg-nttt-blue'
   },
   {
     id: 'b_mg_hisense',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT HISENSE',
     staff: 'ĐƯỢC',
-    col: '14 / 17',
-    row: '11 / 12',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '20 / 25',
+    row: '6 / 7',
+    bgClass: 'bg-nttt-blue'
   },
-  // Hàng Máy giặt Samsung & Panasonic (Row 13)
   {
     id: 'b_mg_samsung',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT SAMSUNG',
     staff: 'ĐƯỢC',
-    col: '11 / 14',
-    row: '13 / 14',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 20',
+    row: '7 / 8',
+    bgClass: 'bg-nttt-blue'
   },
   {
     id: 'b_mg_panasonic',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT PANASONIC',
     staff: 'ĐƯỢC',
-    col: '14 / 17',
-    row: '13 / 14',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '20 / 25',
+    row: '7 / 8',
+    bgClass: 'bg-nttt-blue'
   },
-  // Hàng Máy giặt Aqua & Haier (Row 15)
   {
     id: 'b_mg_aqua',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT AQUA',
     staff: 'XUYÊN',
-    displayOverride: 'MÁY GIẶT AQUA - XUYÊN-',
-    col: '11 / 14',
-    row: '15 / 16',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 20',
+    row: '8 / 9',
+    bgClass: 'bg-nttt-blue'
   },
   {
     id: 'b_mg_haier',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT HAIER',
     staff: 'XUYÊN',
-    col: '14 / 17',
-    row: '15 / 16',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '20 / 25',
+    row: '8 / 9',
+    bgClass: 'bg-nttt-blue'
   },
-  // Máy giặt Toshiba (Row 17) & Máy giặt LG (Row 19)
   {
     id: 'b_mg_toshiba',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT TOSHIBA',
     staff: 'TRANG',
-    col: '11 / 17',
-    row: '17 / 18',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 25',
+    row: '9 / 10',
+    bgClass: 'bg-nttt-rose',
+    icon: 'washer'
   },
   {
     id: 'b_mg_lg',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MÁY GIẶT LG',
-    staff: 'OANH',
-    col: '11 / 17',
-    row: '19 / 20',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    staff: 'TÍN',
+    col: '15 / 25',
+    row: '10 / 11',
+    bgClass: 'bg-nttt-cyan',
+    icon: 'washer'
   },
-  // Khối Bán hàng, Giao hàng, HTKT, Trang trí, Thu ngân (Hồng phấn #F4CCCC, Rows 21..26)
+
+  // ================= G. KHU VỰC GIÁ SỐC VÀ THU NGÂN (HÀNG 11..15) =================
   {
     id: 'b_kv_giasoc',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
-    area: 'KHU VỰC GIÁ SỐC/ MÙA VỤ',
+    area: 'KHU VỰC GIÁ SỐC / MÙA VỤ',
     staff: '',
-    displayOverride: 'KHU VỰC GIÁ SỐC/\nMÙA VỤ',
-    col: '11 / 13',
-    row: '21 / 26',
+    displayOverride: 'KHU VỰC GIÁ SỐC /\nMÙA VỤ',
+    col: '15 / 17',
+    row: '11 / 15',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-box'
+    icon: 'gift',
+    iconLayout: 'stack-bottom'
   },
   {
     id: 'b_ban_giaohang',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BÀN GIAO HÀNG',
     staff: '',
     displayOverride: 'BÀN\nGIAO HÀNG',
-    col: '13 / 14',
-    row: '21 / 26',
+    col: '17 / 19',
+    row: '11 / 15',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-box'
+    icon: 'cart',
+    iconLayout: 'stack-bottom'
   },
   {
     id: 'b_htkt',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'HTKT',
     staff: '',
     displayOverride: 'HTKT',
-    col: '14 / 15',
-    row: '21 / 26',
+    col: '19 / 21',
+    row: '11 / 15',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-box'
+    icon: 'wrench',
+    iconLayout: 'stack-bottom'
   },
   {
     id: 'b_trang_tri',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'TRANG TRÍ',
     staff: '',
     displayOverride: 'TRANG TRÍ',
-    col: '15 / 16',
-    row: '21 / 26',
+    col: '21 / 23',
+    row: '11 / 15',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-box'
+    icon: 'frame',
+    iconLayout: 'stack-bottom'
   },
   {
     id: 'b_thu_ngan',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'THU NGÂN',
     staff: '',
     displayOverride: 'THU NGÂN',
-    col: '16 / 17',
-    row: '21 / 26',
+    col: '23 / 25',
+    row: '11 / 15',
     bgClass: 'bg-nttt-pink',
-    borderClass: 'b-box'
+    icon: 'cart',
+    iconLayout: 'stack-bottom'
   },
-  // Hàng MLN Karofi & Kangaroo (Row 29)
+
+  // ================= I. KHU VỰC MLN VÀ BỤC HÃNG BÊN PHẢI (CỘT 15..25) =================
   {
     id: 'b_mln_karofi',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN KAROFI',
     staff: 'LAM',
-    col: '11 / 14',
-    row: '29 / 30',
+    col: '15 / 20',
+    row: '15 / 16',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'water-filter'
   },
   {
     id: 'b_mln_kangaroo',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'MLN KANGAROO',
     staff: 'LAM',
-    col: '14 / 17',
-    row: '29 / 30',
+    col: '20 / 25',
+    row: '15 / 16',
     bgClass: 'bg-nttt-green-light',
-    borderClass: 'b-box'
+    icon: 'ac-unit'
   },
-  // Các Bục hãng trung tâm dưới (Rows 31, 33, 35, 37)
   {
     id: 'b_buc_hesensi',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG HESENSI',
     staff: 'TÍN',
-    col: '11 / 17',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    col: '15 / 25',
+    row: '16 / 17',
+    bgClass: 'bg-nttt-cyan',
+    icon: 'ac-unit'
   },
   {
     id: 'b_buc_toshiba',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG TOSHIBA',
-    staff: 'TÍN',
-    col: '11 / 17',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    staff: 'NHƯTCL',
+    col: '15 / 25',
+    row: '17 / 18',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'ac-unit'
   },
   {
     id: 'b_buc_tcl',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG TCL',
-    staff: 'TÍN',
-    col: '11 / 17',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    staff: 'NHƯTCL',
+    col: '15 / 25',
+    row: '18 / 19',
+    bgClass: 'bg-nttt-blue-pastel',
+    icon: 'ac-unit'
   },
   {
     id: 'b_buc_lg',
     zone: 'B',
+    section: 'upper',
     type: 'assignment',
     area: 'BỤC HÃNG LG',
-    staff: 'OANH',
-    col: '11 / 17',
-    row: '37 / 38',
-    bgClass: 'bg-nttt-blue',
-    borderClass: 'b-box'
+    staff: 'TÍN',
+    col: '15 / 25',
+    row: '19 / 20',
+    bgClass: 'bg-nttt-cyan',
+    icon: 'ac-unit'
   },
 
-  // ================= KHU VỰC C: CỘT CỬA KHO & VÁCH PHỤ TRÁCH DỌC (CỘT 17) =================
+  // ================= H. CỘT NGOÀI CÙNG BÊN PHẢI (CỘT 25..28) =================
   {
     id: 'c_vach_tl_panasonic',
     zone: 'C',
+    section: 'upper',
     type: 'warehouse_vertical',
     area: 'VÁCH TỦ LẠNH PANASONIC',
     staff: 'MẠNH',
-    col: '17 / 18',
-    row: '2 / 7',
+    col: '25 / 28',
+    row: '2 / 5',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box',
-    orientation: 'vertical'
+    orientation: 'vertical',
+    icon: 'fridge-tall',
+    iconLayout: 'side-left'
   },
   {
     id: 'c_vach_tl_samsung',
     zone: 'C',
+    section: 'upper',
     type: 'warehouse_vertical',
     area: 'VÁCH TỦ LẠNH SAMSUNG',
     staff: 'MẠNH',
-    col: '17 / 18',
-    row: '7 / 11',
+    col: '25 / 28',
+    row: '5 / 8',
     bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box',
-    orientation: 'vertical'
+    orientation: 'vertical',
+    icon: 'fridge-tall',
+    iconLayout: 'side-left'
   },
   {
     id: 'c_vach_may_lanh',
     zone: 'C',
+    section: 'upper',
     type: 'warehouse_vertical',
     area: 'VÁCH MÁY LẠNH, MÁY NƯỚC NÓNG',
     staff: 'MẠNH',
-    col: '17 / 18',
-    row: '11 / 26',
-    bgClass: 'bg-nttt-orange',
-    borderClass: 'b-box',
-    orientation: 'vertical'
+    col: '25 / 28',
+    row: '8 / 12',
+    bgClass: 'bg-nttt-orange-soft',
+    orientation: 'vertical',
+    icon: 'washer-lg',
+    iconLayout: 'stack-top'
   },
   {
     id: 'c_vach_loa_my',
     zone: 'C',
+    section: 'upper',
     type: 'assignment',
     area: 'VÁCH LOA',
     staff: 'MỸ',
-    col: '17 / 18',
-    row: '26 / 28',
+    col: '25 / 28',
+    row: '12 / 15',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'c_vach_pk_my',
-    zone: 'C',
-    type: 'warehouse_vertical',
-    area: 'VÁCH PHỤ KIỆN',
-    staff: 'MỸ',
-    col: '17 / 18',
-    row: '28 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box',
-    orientation: 'vertical'
+    orientation: 'vertical',
+    icon: 'speaker-tall',
+    iconLayout: 'stack-top'
   },
 
-  // ================= KHU VỰC D: NHÓM LAPTOP, ĐIỆN THOẠI, PHỤ KIỆN & BTV BÊN PHẢI =================
-  // Dãy 1 (Row 31): Vách phụ kiện, Laptop 1-2, Smartphone, Motorola, Realme, Vivo, Xiaomi
+  // ================= J. KHU VỰC PHỤ KIỆN, LAPTOP, SMARTPHONE & BTV =================
+  // --- Nhóm 1 (Trái): Phụ kiện, Đồng hồ thời trang & BTV 1..4 (12 cột x 4 hàng) ---
   {
     id: 'd_vach_pk_1',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'VÁCH PHỤ KIỆN',
     staff: 'N.ANH',
-    col: '18 / 20',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    col: '1 / 7',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'headphone'
   },
   {
     id: 'd_vach_pk_2',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'VÁCH PHỤ KIỆN',
     staff: 'N.ANH',
-    col: '20 / 22',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    col: '7 / 13',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'usb-hub'
   },
-  {
-    id: 'd_laptop_1',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 1',
-    staff: 'N.ANH',
-    col: '22 / 24',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_laptop_2',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 2',
-    staff: 'N.ANH',
-    col: '24 / 26',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_smartphone',
-    zone: 'D',
-    type: 'assignment',
-    area: 'SMARTPHONE',
-    staff: 'TRÂM',
-    col: '26 / 28',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_motorola',
-    zone: 'D',
-    type: 'assignment',
-    area: 'MOTOROLA',
-    staff: 'TRÂM',
-    col: '28 / 30',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_realme',
-    zone: 'D',
-    type: 'assignment',
-    area: 'REALME',
-    staff: 'TRÂM',
-    col: '30 / 32',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_vivo',
-    zone: 'D',
-    type: 'assignment',
-    area: 'VIVO',
-    staff: 'ÁI',
-    col: '32 / 34',
-    row: '31 / 32',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_xiaomi_wall',
-    zone: 'D',
-    type: 'assignment',
-    area: 'XIAOMI',
-    staff: 'THANH',
-    col: '34 / 36',
-    row: '31 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-
-  // Dãy 2 (Row 33): Phụ kiện Basus, Anker, Camera, Laptop 3-4, BTN Xiaomi, BTN Motorola, BTN Table
   {
     id: 'd_pk_basus',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'PHỤ KIỆN BASUS',
     staff: 'MỸ',
-    col: '17 / 19',
-    row: '33 / 34',
+    col: '1 / 5',
+    row: '2 / 3',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'powerbank'
   },
   {
     id: 'd_pk_anker',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'PHỤ KIỆN ANKER',
     staff: 'MỸ',
-    col: '19 / 21',
-    row: '33 / 34',
+    col: '5 / 9',
+    row: '2 / 3',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'charger'
   },
   {
     id: 'd_camera',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'CAMERA',
     staff: 'MỸ',
-    col: '21 / 22',
-    row: '33 / 34',
+    col: '9 / 13',
+    row: '2 / 3',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'camera'
   },
-  {
-    id: 'd_laptop_3',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 3',
-    staff: 'N.ANH',
-    col: '22 / 24',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_laptop_4',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 4',
-    staff: 'N.ANH',
-    col: '24 / 26',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_xiaomi_1',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN XIAOMI',
-    staff: 'THANH',
-    col: '26 / 28',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_xiaomi_2',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN XIAOMI',
-    staff: 'THANH',
-    col: '28 / 30',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_motorola',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN MOTOROLA',
-    staff: 'TRÂM',
-    col: '30 / 32',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_table',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN TABLE',
-    staff: 'TRÂM',
-    col: '32 / 34',
-    row: '33 / 34',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-
-  // Dãy 3 (Row 35): Đồng hồ thời trang, Laptop 5-6, BTN Oppo, BTN Vivo, BTN Realme, Oppo
   {
     id: 'd_dong_ho',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'ĐỒNG HỒ THỜI TRANG',
     staff: 'MỸ',
-    col: '17 / 22',
-    row: '35 / 36',
+    col: '1 / 13',
+    row: '3 / 4',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'smartwatch'
   },
-  {
-    id: 'd_laptop_5',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 5',
-    staff: 'N.ANH',
-    col: '22 / 24',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_laptop_6',
-    zone: 'D',
-    type: 'assignment',
-    area: 'LAPTOP 6',
-    staff: 'N.ANH',
-    col: '24 / 26',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_oppo_1',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN OPPO',
-    staff: 'THƯ',
-    col: '26 / 28',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_oppo_2',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN OPPO',
-    staff: 'THƯ',
-    col: '28 / 30',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_vivo',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN VIVO',
-    staff: 'TRÂM',
-    col: '30 / 32',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_realme',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN REALME',
-    staff: 'TRÂM',
-    col: '32 / 34',
-    row: '35 / 36',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_oppo_wall',
-    zone: 'D',
-    type: 'assignment',
-    area: 'OPPO',
-    staff: 'THƯ',
-    col: '34 / 36',
-    row: '34 / 37',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-
-  // Dãy 4 (Row 37): BTV 1, BTV 2, BTN Samsung, BTN Honor, BTN Apple, Samsung
   {
     id: 'd_btv_1',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'BTV 1',
     staff: '',
     displayOverride: 'BTV 1',
-    col: '18 / 19',
-    row: '37 / 38',
+    col: '1 / 4',
+    row: '4 / 5',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'btv-phone'
   },
   {
     id: 'd_btv_2',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'BTV 2',
     staff: '',
     displayOverride: 'BTV 2',
-    col: '20 / 21',
-    row: '37 / 38',
+    col: '4 / 7',
+    row: '4 / 5',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'btv-watch'
   },
-  {
-    id: 'd_btn_samsung_1',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN SAMSUNG',
-    staff: 'THƯ',
-    col: '26 / 28',
-    row: '37 / 38',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_samsung_2',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN SAMSUNG',
-    staff: 'THƯ',
-    col: '28 / 30',
-    row: '37 / 38',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_honor',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN HONOR',
-    staff: 'THƯ',
-    col: '30 / 32',
-    row: '37 / 38',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_btn_apple',
-    zone: 'D',
-    type: 'assignment',
-    area: 'BTN APPLE',
-    staff: 'THƯ',
-    col: '32 / 34',
-    row: '37 / 38',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-  {
-    id: 'd_samsung_wall',
-    zone: 'D',
-    type: 'assignment',
-    area: 'SAMSUNG',
-    staff: 'THƯ',
-    col: '34 / 36',
-    row: '37 / 39',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
-  },
-
-  // Dãy 5 (Row 39): BTV 3, BTV 4, Apple
   {
     id: 'd_btv_3',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'BTV 3',
     staff: '',
     displayOverride: 'BTV 3',
-    col: '18 / 19',
-    row: '39 / 40',
+    col: '7 / 10',
+    row: '4 / 5',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'btv-cam'
   },
   {
     id: 'd_btv_4',
     zone: 'D',
+    section: 'acc_left',
     type: 'assignment',
     area: 'BTV 4',
     staff: '',
     displayOverride: 'BTV 4',
-    col: '20 / 21',
-    row: '39 / 40',
+    col: '10 / 13',
+    row: '4 / 5',
     bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    icon: 'btv-cam'
+  },
+
+  // --- Nhóm 2 (Giữa): Laptop 1..6 (2 cột x 4 hàng) ---
+  {
+    id: 'd_laptop_1',
+    zone: 'D',
+    section: 'acc_laptop',
+    type: 'assignment',
+    area: 'LAPTOP 1',
+    staff: 'N.ANH',
+    col: '1 / 2',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
   },
   {
-    id: 'd_apple_wall',
+    id: 'd_laptop_2',
     zone: 'D',
+    section: 'acc_laptop',
     type: 'assignment',
-    area: 'APPLE',
+    area: 'LAPTOP 2',
+    staff: 'N.ANH',
+    col: '2 / 3',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
+  },
+  {
+    id: 'd_laptop_3',
+    zone: 'D',
+    section: 'acc_laptop',
+    type: 'assignment',
+    area: 'LAPTOP 3',
+    staff: 'N.ANH',
+    col: '1 / 2',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
+  },
+  {
+    id: 'd_laptop_4',
+    zone: 'D',
+    section: 'acc_laptop',
+    type: 'assignment',
+    area: 'LAPTOP 4',
+    staff: 'N.ANH',
+    col: '2 / 3',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
+  },
+  {
+    id: 'd_laptop_5',
+    zone: 'D',
+    section: 'acc_laptop',
+    type: 'assignment',
+    area: 'LAPTOP 5',
+    staff: 'N.ANH',
+    col: '1 / 2',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
+  },
+  {
+    id: 'd_laptop_6',
+    zone: 'D',
+    section: 'acc_laptop',
+    type: 'assignment',
+    area: 'LAPTOP 6',
+    staff: 'N.ANH',
+    col: '2 / 3',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-lavender',
+    icon: 'laptop'
+  },
+
+  // --- Nhóm 3 (Phải): Smartphone & Bàn trải nghiệm BTN (3 cột x 4 hàng) ---
+  {
+    id: 'd_smartphone',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'SMARTPHONE',
+    staff: 'TRÂM',
+    col: '1 / 2',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-peach-strong',
+    icon: 'phone'
+  },
+  {
+    id: 'd_motorola',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'MOTOROLA',
+    staff: 'TRÂM',
+    col: '2 / 3',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-peach-strong',
+    icon: 'brand-motorola'
+  },
+  {
+    id: 'd_realme',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'REALME',
+    staff: 'TRÂM',
+    col: '3 / 4',
+    row: '1 / 2',
+    bgClass: 'bg-nttt-peach-strong',
+    icon: 'brand-realme'
+  },
+  {
+    id: 'd_btn_xiaomi_1',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN XIAOMI',
+    staff: 'THANH',
+    col: '1 / 2',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-pink-xiaomi',
+    icon: 'brand-xiaomi'
+  },
+  {
+    id: 'd_btn_xiaomi_2',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN XIAOMI',
+    staff: 'THANH',
+    col: '2 / 3',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-pink-xiaomi',
+    icon: 'brand-xiaomi'
+  },
+  {
+    id: 'd_btn_motorola',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN MOTOROLA',
+    staff: 'TRÂM',
+    col: '3 / 4',
+    row: '2 / 3',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'brand-motorola'
+  },
+  {
+    id: 'd_btn_oppo_1',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN OPPO',
     staff: 'THƯ',
-    col: '34 / 36',
-    row: '39 / 41',
-    bgClass: 'bg-nttt-yellow',
-    borderClass: 'b-box'
+    col: '1 / 2',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-green-oppo',
+    icon: 'brand-oppo'
+  },
+  {
+    id: 'd_btn_oppo_2',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN OPPO',
+    staff: 'THƯ',
+    col: '2 / 3',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-green-oppo',
+    icon: 'brand-oppo'
+  },
+  {
+    id: 'd_btn_vivo',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN VIVO',
+    staff: 'VY',
+    col: '3 / 4',
+    row: '3 / 4',
+    bgClass: 'bg-nttt-blue-vivo',
+    icon: 'brand-vivo'
+  },
+  {
+    id: 'd_btn_samsung_1',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN SAMSUNG',
+    staff: 'VY',
+    col: '1 / 2',
+    row: '4 / 5',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'brand-samsung'
+  },
+  {
+    id: 'd_btn_samsung_2',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN SAMSUNG',
+    staff: 'VY',
+    col: '2 / 3',
+    row: '4 / 5',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'brand-samsung'
+  },
+  {
+    id: 'd_btn_honor',
+    zone: 'D',
+    section: 'acc_phone',
+    type: 'assignment',
+    area: 'BTN HONOR',
+    staff: 'VY',
+    col: '3 / 4',
+    row: '4 / 5',
+    bgClass: 'bg-nttt-cream-soft',
+    icon: 'brand-honor'
   }
 ];
 
-/**
- * Các hàng vạch chia kệ (Tick dividers) đúng như trên hình mẫu sơ đồ
- */
-const NTTT8_TICK_ROWS = [
-  // Khu vực A (Cột 2..9)
-  { col: '2 / 10', row: '2 / 3', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '4 / 5', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '6 / 7', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '8 / 9', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '10 / 11', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '12 / 13', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '14 / 15', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '16 / 17', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '18 / 19', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '20 / 21', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '22 / 23', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '24 / 25', kind: 'cols-8-sparse', count: 3 },
-  { col: '2 / 10', row: '26 / 27', kind: 'cols-8-sparse', count: 3 },
-  { col: '2 / 10', row: '28 / 29', kind: 'cols-8-sparse', count: 3 },
-  { col: '2 / 10', row: '30 / 31', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '32 / 33', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '34 / 35', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '36 / 37', kind: 'cols-8', count: 8 },
-  { col: '2 / 10', row: '38 / 39', kind: 'cols-8', count: 8 },
-
-  // Khu vực B (Cột 11..16)
-  { col: '11 / 17', row: '2 / 3', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '4 / 5', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '6 / 7', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '8 / 9', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '10 / 11', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '12 / 13', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '14 / 15', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '16 / 17', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '18 / 19', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '20 / 21', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '30 / 31', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '32 / 33', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '34 / 35', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '36 / 37', kind: 'cols-6-left1', count: 2 },
-  { col: '11 / 17', row: '38 / 39', kind: 'cols-6-left1', count: 2 },
-
-  // Đường nối dọc giữa BTV 1-3 và BTV 2-4
-  { col: '18 / 19', row: '38 / 39', kind: 'btv-connector', count: 1 },
-  { col: '20 / 21', row: '38 / 39', kind: 'btv-connector', count: 1 }
-];
+const NTTT8_TICK_ROWS = [];
 
 const NTTT8State = {
   cells: [],
@@ -1378,11 +1304,14 @@ const NTTT8State = {
   staffList: [],
   pgList: [],
   areaAssignments: {}, // { [cellId]: { cellId, mainStaffId, pgIds: [], note: '', unassignedByUser: false } }
+  selectedStore: 'dmx_p8_camau',
+  selectedDate: '',
+  utilityBarExpanded: false,
   searchQuery: '',
   selectedStaff: '',
   editingCellId: null,
   editingCellPgIds: [],
-  zoomMode: 'actual', // 'actual' (100% cuộn ngang rõ chữ) hoặc 'fit' (Toàn sơ đồ)
+  zoomMode: 'actual',
   zoomScale: 1,
   showStaffOnMap: true,
   showPgOnMap: true,
@@ -1563,9 +1492,17 @@ function loadNTTT8Data() {
       if (savedMap && typeof savedMap === 'object') {
         baseCells.forEach(cell => {
           if (cell.type !== 'static' && savedMap[cell.id]) {
-            if (typeof savedMap[cell.id].area === 'string') cell.area = savedMap[cell.id].area;
-            if (typeof savedMap[cell.id].staff === 'string') cell.staff = savedMap[cell.id].staff;
-            if (typeof savedMap[cell.id].displayOverride === 'string') {
+            if (typeof savedMap[cell.id].area === 'string' && savedMap[cell.id].area.trim()) {
+              cell.area = savedMap[cell.id].area;
+            }
+            if (typeof savedMap[cell.id].staff === 'string') {
+              cell.staff = savedMap[cell.id].staff;
+            }
+            if (
+              typeof savedMap[cell.id].displayOverride === 'string' &&
+              !savedMap[cell.id].displayOverride.includes('\n') &&
+              !savedMap[cell.id].displayOverride.endsWith('-')
+            ) {
               cell.displayOverride = savedMap[cell.id].displayOverride;
             }
           }
@@ -1806,17 +1743,17 @@ function formatCellDisplayLabel(rawCell) {
   }
 
   if (area && staff) {
-    if (
-      cell.orientation === 'vertical' ||
-      cell.orientation === 'tilted' ||
-      cell.id === 'c_vach_loa_my' ||
-      cell.id === 'd_camera' ||
-      cell.id === 'd_xiaomi_wall' ||
-      cell.id === 'd_oppo_wall' ||
-      cell.id === 'd_samsung_wall' ||
-      cell.id === 'd_apple_wall'
-    ) {
+    if (cell.id === 'c_vach_loa_my') {
       return `${area} -\n${staff}`;
+    }
+    if (cell.id === 'c_vach_tl_panasonic' || cell.id === 'c_vach_tl_pana') {
+      return `VÁCH TỦ LẠNH\nPANASONIC -\n${staff}`;
+    }
+    if (cell.id === 'c_vach_tl_samsung' || cell.id === 'c_vach_tl_ss') {
+      return `VÁCH TỦ LẠNH\nSAMSUNG -\n${staff}`;
+    }
+    if (cell.id === 'c_vach_may_lanh' || cell.id === 'c_vach_ml_mnn') {
+      return `VÁCH MÁY LẠNH,\nMÁY NƯỚC\nNÓNG - ${staff}`;
     }
     return `${area} - ${staff}`;
   }
@@ -1845,8 +1782,302 @@ function escapeHtmlNTTT8(str) {
 }
 
 /**
+ * Trả về biểu tượng SVG sắc nét cho từng ngành hàng, thiết bị và thương hiệu theo chuẩn mẫu
+ */
+function getNTTT8CellSvgIcon(iconKey) {
+  if (!iconKey) return '';
+  switch (iconKey) {
+    case 'wc':
+      return `<svg class="nttt8-svg-icon icon-wc" viewBox="0 0 28 22" aria-hidden="true">
+        <rect x="0.75" y="0.75" width="26.5" height="20.5" rx="3" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+        <line x1="14" y1="3" x2="14" y2="19" stroke="#ffffff" stroke-width="1.4"/>
+        <circle cx="7.5" cy="5.5" r="2" fill="#ffffff"/>
+        <path d="M5 8.5h5l-.6 5.5H8.5v4.5h-2V14H5.6z" fill="#ffffff"/>
+        <circle cx="20.5" cy="5.5" r="2" fill="#ffffff"/>
+        <path d="M18.2 8.5h4.6l1.4 5.5h-2v4.5h-3.4V14h-2z" fill="#ffffff"/>
+      </svg>`;
+    case 'door':
+      return `<svg class="nttt8-svg-icon icon-door" viewBox="0 0 24 22" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="21" height="19" rx="2" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+        <line x1="12" y1="2" x2="12" y2="20" stroke="#ffffff" stroke-width="1.4"/>
+        <rect x="4" y="4.5" width="5.5" height="5" rx="0.8" fill="none" stroke="#ffffff" stroke-width="1.2"/>
+        <rect x="14.5" y="4.5" width="5.5" height="5" rx="0.8" fill="none" stroke="#ffffff" stroke-width="1.2"/>
+        <circle cx="9.8" cy="13" r="1" fill="#ffffff"/>
+        <circle cx="14.2" cy="13" r="1" fill="#ffffff"/>
+      </svg>`;
+    case 'fridge':
+    case 'fridge-silver':
+    case 'fridge-dark':
+    case 'fridge-tall':
+      return `<svg class="nttt8-svg-icon icon-fridge" viewBox="0 0 20 28" aria-hidden="true">
+        <defs>
+          <linearGradient id="ntttFridgeGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#b8c2cc"/>
+            <stop offset="50%" stop-color="#7f8c9a"/>
+            <stop offset="100%" stop-color="#4b5563"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="1" width="16" height="26" rx="1.8" fill="url(#ntttFridgeGrad)" stroke="#374151" stroke-width="1"/>
+        <line x1="10" y1="1.5" x2="10" y2="26.5" stroke="#1f2937" stroke-width="1"/>
+        <line x1="2.5" y1="11.5" x2="17.5" y2="11.5" stroke="#374151" stroke-width="0.9"/>
+        <rect x="7.8" y="4.5" width="1.1" height="5" rx="0.5" fill="#e5e7eb"/>
+        <rect x="11.1" y="4.5" width="1.1" height="5" rx="0.5" fill="#e5e7eb"/>
+        <rect x="4.5" y="6" width="2.2" height="3" rx="0.4" fill="#1f2937"/>
+      </svg>`;
+    case 'pot-blue':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 22" aria-hidden="true">
+        <path d="M5 7h14v10a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V7z" fill="#1d4ed8" stroke="#1e3a8a" stroke-width="1.2"/>
+        <path d="M4 7h16" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M9.5 4.5h5" stroke="#1e3a8a" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M2.5 9.5h2.5M19 9.5h2.5" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    case 'blender':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3h8l-1 10H8L7 3z" fill="#a7f3d0" stroke="#047857" stroke-width="1.3"/>
+        <path d="M15 5h3v5h-2.5" fill="none" stroke="#047857" stroke-width="1.4" stroke-linejoin="round"/>
+        <rect x="6.5" y="1.5" width="9" height="2" rx="0.8" fill="#065f46"/>
+        <path d="M7.5 13h7l1.2 7.5H6.3L7.5 13z" fill="#10b981" stroke="#065f46" stroke-width="1.2"/>
+        <circle cx="11" cy="17" r="1.6" fill="#ffffff"/>
+      </svg>`;
+    case 'rice-cooker':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 22" aria-hidden="true">
+        <ellipse cx="12" cy="6.5" rx="7.5" ry="2.8" fill="#e5e7eb" stroke="#6b7280" stroke-width="1.1"/>
+        <path d="M4.5 6.5v8.5c0 2.5 3.3 4.2 7.5 4.2s7.5-1.7 7.5-4.2V6.5" fill="#f9fafb" stroke="#6b7280" stroke-width="1.2"/>
+        <rect x="9.5" y="10.5" width="5" height="3.2" rx="0.8" fill="#ef4444"/>
+      </svg>`;
+    case 'pot-black':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 26 20" aria-hidden="true">
+        <path d="M5 7h16l-1.2 9.5a2 2 0 0 1-2 1.7H8.2a2 2 0 0 1-2-1.7L5 7z" fill="#1f2937" stroke="#111827" stroke-width="1.2"/>
+        <ellipse cx="13" cy="6.8" rx="8" ry="2" fill="#4b5563" stroke="#111827" stroke-width="1"/>
+        <path d="M2 8.5h3M21 8.5h3" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+      </svg>`;
+    case 'pan-black':
+    case 'skillet':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 28 20" aria-hidden="true">
+        <ellipse cx="10.5" cy="11.5" rx="8" ry="4.5" fill="#1f2937" stroke="#111827" stroke-width="1.2"/>
+        <ellipse cx="10.5" cy="10.5" rx="6.5" ry="2.8" fill="#374151"/>
+        <path d="M18 10.5l8-2.5" stroke="#111827" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>`;
+    case 'kettle':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 22" aria-hidden="true">
+        <path d="M6 5h9l1.5 13H4.5L6 5z" fill="#b91c1c" stroke="#1f2937" stroke-width="1.2"/>
+        <path d="M15 7h3.5c1 0 1.5 1 1.5 3.5S19.5 14 18.5 14H15.8" fill="none" stroke="#111827" stroke-width="1.8"/>
+        <path d="M4.5 6L3 4.5h3" fill="#111827"/>
+        <rect x="4" y="18" width="13" height="2" rx="0.8" fill="#111827"/>
+      </svg>`;
+    case 'pan-red':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 28 20" aria-hidden="true">
+        <path d="M3 10.5c0 3 3.5 5 8 5s8-2 8-5H3z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+        <ellipse cx="11" cy="10.5" rx="8" ry="2.6" fill="#1f2937" stroke="#111827" stroke-width="1"/>
+        <path d="M18.8 10l7.5-3" stroke="#111827" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>`;
+    case 'stove-double':
+    case 'induction':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 22" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="18" rx="2.2" fill="#111827" stroke="#374151" stroke-width="1.2"/>
+        <circle cx="8" cy="10" r="4" fill="none" stroke="#ef4444" stroke-width="1.3"/>
+        <circle cx="16" cy="10" r="4" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+        <line x1="5" y1="17" x2="19" y2="17" stroke="#ef4444" stroke-width="1.2"/>
+      </svg>`;
+    case 'pan-single':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 28 20" aria-hidden="true">
+        <circle cx="10" cy="10.5" r="7" fill="#1f2937" stroke="#374151" stroke-width="1.2"/>
+        <circle cx="10" cy="10.5" r="1.5" fill="#ef4444"/>
+        <path d="M16.8 9.8l8.5-2.3" stroke="#111827" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>`;
+    case 'water-dispenser':
+    case 'air-cooler':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 20 26" aria-hidden="true">
+        <rect x="4" y="1.5" width="12" height="23" rx="1.6" fill="#d97706" stroke="#1f2937" stroke-width="1.2"/>
+        <rect x="5.5" y="4" width="9" height="6.5" rx="0.8" fill="#111827"/>
+        <rect x="5.5" y="12.5" width="9" height="10" rx="0.8" fill="#fef3c7"/>
+      </svg>`;
+    case 'pressure-cooker':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 22 24" aria-hidden="true">
+        <rect x="4" y="5" width="14" height="16" rx="2.5" fill="#7f1d1d" stroke="#111827" stroke-width="1.3"/>
+        <ellipse cx="11" cy="5" rx="7" ry="2.2" fill="#111827"/>
+        <rect x="8" y="10" width="6" height="7" rx="1" fill="#111827"/>
+        <circle cx="11" cy="13.5" r="1.5" fill="#ef4444"/>
+      </svg>`;
+    case 'robot-vac':
+    case 'robot':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" fill="#1f2937" stroke="#111827" stroke-width="1.4"/>
+        <circle cx="12" cy="12" r="7" fill="none" stroke="#4b5563" stroke-width="1"/>
+        <circle cx="12" cy="8" r="2" fill="#374151" stroke="#9ca3af" stroke-width="0.9"/>
+      </svg>`;
+    case 'air-fryer':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 22 24" aria-hidden="true">
+        <rect x="4" y="2" width="14" height="20" rx="3.5" fill="#111827" stroke="#374151" stroke-width="1.2"/>
+        <line x1="4.5" y1="12" x2="17.5" y2="12" stroke="#4b5563" stroke-width="1.1"/>
+        <rect x="9.8" y="13.5" width="2.4" height="5.5" rx="1" fill="#9ca3af"/>
+        <circle cx="11" cy="7" r="2" fill="#38bdf8"/>
+      </svg>`;
+    case 'ac':
+    case 'ac-unit':
+      return `<svg class="nttt8-svg-icon icon-ac" viewBox="0 0 38 16" aria-hidden="true">
+        <rect x="1" y="2" width="36" height="12" rx="2.2" fill="#ffffff" stroke="#94a3b8" stroke-width="1.1"/>
+        <line x1="3" y1="10.5" x2="35" y2="10.5" stroke="#64748b" stroke-width="1.1"/>
+        <rect x="30" y="5" width="4" height="2" rx="0.5" fill="#0ea5e9"/>
+      </svg>`;
+    case 'water-filter':
+      return `<svg class="nttt8-svg-icon icon-appliance" viewBox="0 0 26 22" aria-hidden="true">
+        <rect x="4" y="3" width="7" height="16" rx="1.5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.2"/>
+        <rect x="14" y="3" width="7" height="16" rx="1.5" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.2"/>
+        <rect x="3.5" y="2" width="8" height="2.5" rx="0.8" fill="#0284c7"/>
+        <rect x="13.5" y="2" width="8" height="2.5" rx="0.8" fill="#0284c7"/>
+      </svg>`;
+    case 'speaker-tall':
+    case 'speaker':
+      return `<svg class="nttt8-svg-icon icon-speaker" viewBox="0 0 20 28" aria-hidden="true">
+        <rect x="3" y="1.5" width="14" height="25" rx="2" fill="#111827" stroke="#374151" stroke-width="1.2"/>
+        <circle cx="10" cy="8.5" r="3.8" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.3"/>
+        <circle cx="10" cy="8.5" r="1.2" fill="#e5e7eb"/>
+        <circle cx="10" cy="18.5" r="4.4" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.3"/>
+        <circle cx="10" cy="18.5" r="1.5" fill="#e5e7eb"/>
+      </svg>`;
+    case 'washer':
+    case 'washer-lg':
+      return `<svg class="nttt8-svg-icon icon-washer" viewBox="0 0 22 26" aria-hidden="true">
+        <rect x="2" y="1.5" width="18" height="23" rx="2" fill="#e2e8f0" stroke="#475569" stroke-width="1.2"/>
+        <line x1="2.5" y1="6.5" x2="19.5" y2="6.5" stroke="#64748b" stroke-width="1"/>
+        <circle cx="6" cy="4" r="1" fill="#334155"/>
+        <rect x="12" y="3" width="5" height="2" rx="0.5" fill="#0f172a"/>
+        <circle cx="11" cy="15" r="5.5" fill="#1e293b" stroke="#64748b" stroke-width="1.4"/>
+        <circle cx="11" cy="15" r="3.2" fill="#475569"/>
+      </svg>`;
+    case 'gift':
+      return `<svg class="nttt8-svg-icon icon-op-symbol" viewBox="0 0 26 26" aria-hidden="true">
+        <rect x="3" y="10" width="20" height="13" rx="1.5" fill="#ef4444"/>
+        <rect x="2" y="6.5" width="22" height="4" rx="1.2" fill="#dc2626"/>
+        <rect x="11.2" y="6.5" width="3.6" height="16.5" fill="#fef2f2"/>
+        <rect x="3" y="14.5" width="20" height="3" fill="#fef2f2"/>
+        <path d="M13 6.5c-2.5-3.5-6-2.5-5 0.5h5zm0 0c2.5-3.5 6-2.5 5 0.5h-5z" fill="#dc2626" stroke="#b91c1c" stroke-width="1"/>
+      </svg>`;
+    case 'cart':
+      return `<svg class="nttt8-svg-icon icon-op-symbol" viewBox="0 0 26 24" aria-hidden="true">
+        <path d="M2 3h3.5l2.4 11.5h11.6l2.5-8.5H6.5" fill="none" stroke="#111827" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="9.5" cy="19.5" r="2" fill="#111827"/>
+        <circle cx="18" cy="19.5" r="2" fill="#111827"/>
+      </svg>`;
+    case 'wrench':
+      return `<svg class="nttt8-svg-icon icon-op-symbol" viewBox="0 0 26 26" aria-hidden="true">
+        <path d="M21.5 6.5a5.5 5.5 0 0 1-7.4 6.2l-7.3 7.3a2.1 2.1 0 1 1-3-3l7.3-7.3A5.5 5.5 0 0 1 17.3 2.3l-2.8 2.8 2.2 2.2 2.8-2.8c.8.6 1.5 1.2 2 2z" fill="#111827"/>
+      </svg>`;
+    case 'picture':
+    case 'frame':
+      return `<svg class="nttt8-svg-icon icon-op-symbol" viewBox="0 0 26 22" aria-hidden="true">
+        <rect x="2" y="2" width="22" height="18" rx="2" fill="#111827"/>
+        <circle cx="8" cy="7.5" r="2" fill="#ffffff"/>
+        <path d="M4.5 17l5.5-6 4 4.2 3.2-3.5 4.3 5.3H4.5z" fill="#ffffff"/>
+      </svg>`;
+    case 'headphone':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 13v-1a8 8 0 0 1 16 0v1" fill="none" stroke="#312e81" stroke-width="2.2"/>
+        <rect x="2.5" y="12" width="4" height="7" rx="1.8" fill="#4338ca"/>
+        <rect x="17.5" y="12" width="4" height="7" rx="1.8" fill="#4338ca"/>
+      </svg>`;
+    case 'mouse':
+    case 'usb-hub':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 20 24" aria-hidden="true">
+        <rect x="4" y="2" width="12" height="20" rx="6" fill="#312e81" stroke="#1e1b4b" stroke-width="1.2"/>
+        <line x1="10" y1="5" x2="10" y2="9.5" stroke="#e0e7ff" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>`;
+    case 'powerbank':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 20 24" aria-hidden="true">
+        <rect x="4" y="4" width="12" height="18" rx="2" fill="#111827"/>
+        <line x1="7.5" y1="1.5" x2="7.5" y2="4" stroke="#111827" stroke-width="1.8"/>
+        <line x1="12.5" y1="1.5" x2="12.5" y2="4" stroke="#111827" stroke-width="1.8"/>
+        <path d="M10.5 8l-2 4.5h2.2l-.7 4 3-5h-2.2z" fill="#fde047"/>
+      </svg>`;
+    case 'bolt':
+    case 'charger':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 20 24" aria-hidden="true">
+        <path d="M12 2L4.5 13h5.5l-2 9 8.5-11.5h-5.5L12 2z" fill="#111827"/>
+      </svg>`;
+    case 'camera':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 24 20" aria-hidden="true">
+        <path d="M8 3h8l1.5 2.5H21a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h3.5L8 3z" fill="#111827"/>
+        <circle cx="12" cy="11.5" r="3.8" fill="#fde047"/>
+        <circle cx="12" cy="11.5" r="2" fill="#111827"/>
+      </svg>`;
+    case 'smartwatch':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 20 24" aria-hidden="true">
+        <rect x="6.5" y="1" width="7" height="22" rx="2" fill="#374151"/>
+        <rect x="4" y="5" width="12" height="14" rx="2.8" fill="#111827" stroke="#ffffff" stroke-width="0.9"/>
+        <rect x="6" y="7" width="8" height="10" rx="1.4" fill="#22c55e"/>
+      </svg>`;
+    case 'btv-phone':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 18 24" aria-hidden="true">
+        <rect x="3" y="1.5" width="12" height="21" rx="2" fill="#111827"/>
+        <rect x="4.6" y="4" width="8.8" height="15.5" rx="1" fill="#38bdf8"/>
+      </svg>`;
+    case 'btv-watch':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 20 24" aria-hidden="true">
+        <rect x="6.5" y="1.5" width="7" height="21" rx="2" fill="#1e293b"/>
+        <circle cx="10" cy="12" r="6" fill="#0f172a" stroke="#e2e8f0" stroke-width="1"/>
+        <circle cx="10" cy="12" r="4" fill="#38bdf8"/>
+      </svg>`;
+    case 'btv-cam':
+    case 'btv-cam-1':
+    case 'btv-cam-2':
+      return `<svg class="nttt8-svg-icon icon-acc" viewBox="0 0 22 20" aria-hidden="true">
+        <rect x="2" y="4" width="18" height="13" rx="2.5" fill="#111827"/>
+        <circle cx="11" cy="10.5" r="3.8" fill="#fde047"/>
+        <circle cx="11" cy="10.5" r="1.8" fill="#111827"/>
+      </svg>`;
+    case 'laptop':
+      return `<svg class="nttt8-svg-icon icon-laptop" viewBox="0 0 28 20" aria-hidden="true">
+        <rect x="4" y="2" width="20" height="13" rx="1.5" fill="#1e1b4b" stroke="#111827" stroke-width="1.2"/>
+        <rect x="5.8" y="3.8" width="16.4" height="9.4" fill="#818cf8"/>
+        <path d="M1.5 15.5h25l-1.8 2.5H3.3L1.5 15.5z" fill="#374151" stroke="#111827" stroke-width="1"/>
+      </svg>`;
+    case 'phone':
+      return `<svg class="nttt8-svg-icon icon-phone" viewBox="0 0 18 24" aria-hidden="true">
+        <rect x="3" y="1.5" width="12" height="21" rx="2.2" fill="none" stroke="#111827" stroke-width="1.8"/>
+        <line x1="7.5" y1="4" x2="10.5" y2="4" stroke="#111827" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="9" cy="19.5" r="1" fill="#111827"/>
+      </svg>`;
+    case 'brand-motorola':
+      return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.5" fill="#111827"/>
+        <path d="M6.2 17.5L9.2 6.8l2.8 6.2 2.8-6.2 3 10.7h-2.1l-1.4-5.6-2.3 4.8-2.3-4.8-1.4 5.6H6.2z" fill="#ffffff"/>
+      </svg>`;
+    case 'brand-realme':
+      return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="3.5" fill="none" stroke="#111827" stroke-width="2"/>
+        <text x="12" y="16.8" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#111827">R</text>
+      </svg>`;
+    case 'brand-xiaomi':
+      return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.5" fill="#ff4520"/>
+        <text x="12" y="15.8" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="11.5" fill="#ffffff">mi</text>
+      </svg>`;
+    case 'brand-oppo':
+      return `<svg class="nttt8-svg-icon icon-brand-wide" viewBox="0 0 42 18" aria-hidden="true">
+        <text x="21" y="13.5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="13.5" fill="#046c4e">oppo</text>
+      </svg>`;
+    case 'brand-vivo':
+      return `<svg class="nttt8-svg-icon icon-brand-wide" viewBox="0 0 42 18" aria-hidden="true">
+        <text x="21" y="13.5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="14" fill="#1d4ed8">vivo</text>
+      </svg>`;
+    case 'brand-samsung':
+      return `<svg class="nttt8-svg-icon icon-brand-wide" viewBox="0 0 48 18" aria-hidden="true">
+        <ellipse cx="24" cy="9" rx="22" ry="7.2" transform="rotate(-6 24 9)" fill="#1428a0"/>
+        <text x="24" y="11.6" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="7.4" letter-spacing="0.4" fill="#ffffff">SAMSUNG</text>
+      </svg>`;
+    case 'brand-honor':
+      return `<svg class="nttt8-svg-icon icon-brand-badge" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 5v14M17 5l-6.5 7L17 19" fill="none" stroke="#111827" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+    default:
+      return '';
+  }
+}
+
+/**
  * Render một ô phân công (AssignmentCell / CategoryLabel / WarehouseColumn)
- * Tích hợp hiển thị tên Nhân viên chính và PG hỗ trợ (nếu có) mà không làm mất đường kẻ viền.
+ * Tích hợp icon sản phẩm/thương hiệu, tên Nhân viên chính và PG hỗ trợ (nếu có).
  */
 function createAssignmentCellHTML(cell, highlightState) {
   const isStatic = cell.type === 'static';
@@ -1868,7 +2099,7 @@ function createAssignmentCellHTML(cell, highlightState) {
     assignRec &&
     assignRec.unassignedByUser;
 
-  let mainSpan = `<span>${safeHtmlLabel}</span>`;
+  let mainSpan = `<span class="nttt8-cell-label">${safeHtmlLabel}</span>`;
   if (cell.orientation === 'walkway') {
     mainSpan = `<span class="nttt8-walkway-label">${safeHtmlLabel}</span>`;
   } else if (cell.orientation === 'vertical') {
@@ -1885,9 +2116,24 @@ function createAssignmentCellHTML(cell, highlightState) {
     subLines += `<span class="nttt8-cell-pg-line">✨ ${escapeHtmlNTTT8(pgNames.join(', '))}</span>`;
   }
 
-  const innerContent = subLines
+  const textBlock = subLines
     ? `<div class="nttt8-cell-content-stack">${mainSpan}${subLines}</div>`
     : mainSpan;
+
+  const iconSvg = cell.icon ? getNTTT8CellSvgIcon(cell.icon) : '';
+  const iconLayout = cell.iconLayout || 'inline';
+  let innerContent = textBlock;
+  if (iconSvg) {
+    if (iconLayout === 'stack-bottom') {
+      innerContent = `<div class="nttt8-cell-inner layout-stack-bottom">${textBlock}<span class="nttt8-cell-icon-wrap">${iconSvg}</span></div>`;
+    } else if (iconLayout === 'stack-top') {
+      innerContent = `<div class="nttt8-cell-inner layout-stack-top"><span class="nttt8-cell-icon-wrap">${iconSvg}</span>${textBlock}</div>`;
+    } else if (iconLayout === 'side-left') {
+      innerContent = `<div class="nttt8-cell-inner layout-side-left"><span class="nttt8-cell-icon-wrap">${iconSvg}</span>${textBlock}</div>`;
+    } else {
+      innerContent = `<div class="nttt8-cell-inner layout-inline"><span class="nttt8-cell-icon-wrap">${iconSvg}</span>${textBlock}</div>`;
+    }
+  }
 
   const clickAttr = isStatic ? '' : `onclick="openNTTT8CellEditModal('${cell.id}')"`;
   const allPgNames = !isStatic ? getAssignedPgNamesForCellNTTT8(cell.id) : [];
@@ -1926,97 +2172,79 @@ function toggleNTTT8MapDisplayOption(kind, checked) {
 }
 
 /**
- * Render bảng quy định VẬN HÀNH (OperationRules) ở góc trên bên phải
+ * Render khu vực VẬN HÀNH (.operation-footer) nằm dưới cùng toàn chiều ngang sơ đồ
  */
 function createOperationRulesHTML() {
   const r = NTTT8State.rules || DEFAULT_NTTT8_OPERATION_RULES;
   return `
     <div
-      class="nttt8-operation-box"
-      style="grid-column: 19 / 33; grid-row: 1 / 13;"
+      class="operation-footer nttt8-operation-box"
       onclick="openNTTT8RulesEditModal()"
-      title="Bảng quy định VẬN HÀNH (Nhấn để chỉnh sửa nếu cần)"
+      title="Bảng quy định VẬN HÀNH (Nhấn để chỉnh sửa nội dung quy định)"
     >
-      <div class="nttt8-operation-header">${escapeHtmlNTTT8(r.title)}</div>
-      <div class="nttt8-operation-body">
-        <p>
-          ${escapeHtmlNTTT8(r.line1Prefix)}<span class="vh-highlight-red">${escapeHtmlNTTT8(r.line1Highlight)}</span>${escapeHtmlNTTT8(r.line1Suffix)}
-        </p>
-        <p>${escapeHtmlNTTT8(r.line2)}</p>
-        <p>${escapeHtmlNTTT8(r.line3)}</p>
-        <p>${escapeHtmlNTTT8(r.line4)}</p>
-        <ul class="vh-sublist">
-          <li>${escapeHtmlNTTT8(r.sub1)}</li>
-          <li>${escapeHtmlNTTT8(r.sub2)}</li>
-          <li>${escapeHtmlNTTT8(r.sub3)}</li>
-        </ul>
+      <div class="operation-footer-badge nttt8-operation-header">
+        <span class="operation-gear-icon"><i class="fa-solid fa-gear"></i></span>
+        <span class="operation-badge-text">${escapeHtmlNTTT8(r.title || 'VẬN HÀNH')}</span>
+      </div>
+      <div class="operation-footer-content nttt8-operation-body">
+        <div class="operation-col operation-col-left">
+          <p>
+            ${escapeHtmlNTTT8(r.line1Prefix)}<span class="vh-highlight-red">${escapeHtmlNTTT8(r.line1Highlight)}</span>${escapeHtmlNTTT8(r.line1Suffix)}
+          </p>
+          <p>${escapeHtmlNTTT8(r.line2)}</p>
+          <p>${escapeHtmlNTTT8(r.line3)}</p>
+        </div>
+        <div class="operation-col operation-col-right">
+          <p>${escapeHtmlNTTT8(r.line4)}</p>
+          <ul class="vh-sublist">
+            <li>${escapeHtmlNTTT8(r.sub1)}</li>
+            <li>${escapeHtmlNTTT8(r.sub2)}</li>
+            <li>${escapeHtmlNTTT8(r.sub3)}</li>
+          </ul>
+        </div>
       </div>
     </div>
   `;
 }
 
-/**
- * Render các hàng vạch chia cột kệ (Tick rows) giữa các dãy ngành hàng
- */
 function createTickRowsHTML() {
-  return NTTT8_TICK_ROWS.map(t => {
-    if (t.kind === 'btv-connector') {
-      return `<div class="nttt8-btv-connector" style="grid-column: ${t.col}; grid-row: ${t.row}; border: 1px solid #333333; background: #ffffff; height: 11px; box-sizing: border-box;"></div>`;
-    }
-    const cells = Array.from({ length: t.count }, () => `<div class="nttt8-tick-cell"></div>`).join('');
-    return `
-      <div class="nttt8-tick-row ${t.kind}" style="grid-column: ${t.col}; grid-row: ${t.row};">
-        ${cells}
-      </div>
-    `;
-  }).join('');
+  return '';
 }
 
-/**
- * Tạo các ô lưới trống (.nttt8-empty-grid-cell) cho toàn bộ vùng chưa có phần tử
- * (bên dưới VẬN HÀNH, bên dưới khối hồng phấn, xung quanh BTV 1..4...)
- * để giữ nguyên 100% đường kẻ lưới bảng tính trên giao diện web và khi xuất ảnh.
- */
 function parseGridSpanNTTT8(spanStr) {
   const parts = String(spanStr || '').split('/').map(s => parseInt(s.trim(), 10));
   return [parts[0] || 1, parts[1] || 2];
 }
 
 function createEmptyGridCellsHTML() {
-  const totalRows = 40;
-  const totalCols = 35;
-  const occupied = Array.from({ length: totalRows + 1 }, () => Array(totalCols + 1).fill(false));
+  return '';
+}
 
-  const markOccupied = (colSpanStr, rowSpanStr) => {
-    const [c1, c2] = parseGridSpanNTTT8(colSpanStr);
-    const [r1, r2] = parseGridSpanNTTT8(rowSpanStr);
-    for (let r = Math.max(1, r1); r < Math.min(totalRows + 1, r2); r++) {
-      for (let c = Math.max(1, c1); c < Math.min(totalCols + 1, c2); c++) {
-        occupied[r][c] = true;
-      }
-    }
-  };
+function computeCellHighlightStateNTTT8(cell, query, staffFilter, hasFilter) {
+  if (!hasFilter || cell.type === 'static') return 'normal';
+  const pgNames = getAssignedPgNamesForCellNTTT8(cell.id).join(' ');
+  const cellText = `${cell.area} ${cell.staff} ${pgNames} ${cell.displayOverride || ''}`.toUpperCase();
+  const cellStaff = (cell.staff || '').trim().toUpperCase();
 
-  NTTT8State.cells.forEach(cell => markOccupied(cell.col, cell.row));
-  NTTT8_TICK_ROWS.forEach(tick => markOccupied(tick.col, tick.row));
-  // Khung VẬN HÀNH (Cột 19..33, Hàng 1..13)
-  markOccupied('19 / 33', '1 / 13');
-
-  const emptyHtml = [];
-  for (let r = 1; r <= totalRows; r++) {
-    for (let c = 1; c <= totalCols; c++) {
-      if (!occupied[r][c]) {
-        emptyHtml.push(
-          `<div class="nttt8-empty-grid-cell" style="grid-column: ${c} / ${c + 1}; grid-row: ${r} / ${r + 1};"></div>`
-        );
-      }
+  const matchQuery = !query || cellText.includes(query);
+  let matchStaff = true;
+  if (staffFilter) {
+    if (staffFilter.startsWith('PG:')) {
+      const targetPgName = staffFilter.slice(3).trim();
+      matchStaff = pgNames.toUpperCase().includes(targetPgName);
+    } else {
+      matchStaff = cellStaff === staffFilter || cellText.includes(`- ${staffFilter}`);
     }
   }
-  return emptyHtml.join('');
+  return matchQuery && matchStaff ? 'highlighted' : 'dimmed';
 }
 
 /**
- * Render toàn bộ lưới sơ đồ phân công 8NTTT (AssignmentGrid)
+ * Render toàn bộ lưới sơ đồ bố trí khu vực siêu thị (#nttt8AssignmentGrid)
+ * Gồm 3 phân vùng chuẩn:
+ *   1. .floor-plan-upper-grid (Khu trưng bày trên: Tủ lạnh, Gia dụng, Đường đi, Máy giặt, Giá sốc, Bục hãng, Cột kho)
+ *   2. .accessory-zone (Khu phụ kiện - đồng hồ, Laptop 1..6, Smartphone & Bàn trải nghiệm BTN)
+ *   3. .operation-footer (Khối VẬN HÀNH dưới cùng)
  */
 function renderNTTT8AssignmentGrid() {
   const gridEl = document.getElementById('nttt8AssignmentGrid');
@@ -2026,40 +2254,206 @@ function renderNTTT8AssignmentGrid() {
   const staffFilter = (NTTT8State.selectedStaff || '').trim().toUpperCase();
   const hasFilter = Boolean(query || staffFilter);
 
-  const emptyCellsHtml = createEmptyGridCellsHTML();
+  const upperCells = [];
+  const accLeftCells = [];
+  const accLaptopCells = [];
+  const accPhoneCells = [];
 
-  const cellsHtml = NTTT8State.cells.map(cell => {
-    let highlightState = 'normal';
-    if (hasFilter && cell.type !== 'static') {
-      const pgNames = getAssignedPgNamesForCellNTTT8(cell.id).join(' ');
-      const cellText = `${cell.area} ${cell.staff} ${pgNames} ${cell.displayOverride || ''}`.toUpperCase();
-      const cellStaff = (cell.staff || '').trim().toUpperCase();
-
-      const matchQuery = !query || cellText.includes(query);
-      let matchStaff = true;
-      if (staffFilter) {
-        if (staffFilter.startsWith('PG:')) {
-          const targetPgName = staffFilter.slice(3).trim();
-          matchStaff = pgNames.toUpperCase().includes(targetPgName);
-        } else {
-          matchStaff = cellStaff === staffFilter || cellText.includes(`- ${staffFilter}`);
-        }
-      }
-
-      if (matchQuery && matchStaff) {
-        highlightState = 'highlighted';
-      } else {
-        highlightState = 'dimmed';
-      }
+  NTTT8State.cells.forEach(cell => {
+    const hl = computeCellHighlightStateNTTT8(cell, query, staffFilter, hasFilter);
+    const html = createAssignmentCellHTML(cell, hl);
+    if (cell.section === 'acc_left') {
+      accLeftCells.push(html);
+    } else if (cell.section === 'acc_laptop') {
+      accLaptopCells.push(html);
+    } else if (cell.section === 'acc_phone') {
+      accPhoneCells.push(html);
+    } else {
+      upperCells.push(html);
     }
-    return createAssignmentCellHTML(cell, highlightState);
-  }).join('');
+  });
 
-  const ticksHtml = createTickRowsHTML();
   const rulesHtml = createOperationRulesHTML();
 
-  gridEl.innerHTML = emptyCellsHtml + cellsHtml + ticksHtml + rulesHtml;
+  gridEl.innerHTML = `
+    <div class="floor-plan-upper-grid">
+      ${upperCells.join('')}
+    </div>
+    <div class="accessory-zone">
+      <div class="accessory-group accessory-group-left">
+        ${accLeftCells.join('')}
+      </div>
+      <div class="accessory-group accessory-group-laptop">
+        ${accLaptopCells.join('')}
+      </div>
+      <div class="accessory-group accessory-group-phone">
+        ${accPhoneCells.join('')}
+      </div>
+    </div>
+    ${rulesHtml}
+  `;
+
   applyNTTT8ZoomTransform();
+}
+
+// ==========================================================================
+// 2B. ĐIỀU HƯỚNG SIDEBAR TRÁI, HEADER SIÊU THỊ, NGÀY & THANH CÔNG CỤ
+// ==========================================================================
+
+function formatDateDMYNTTT8(dateObj) {
+  const d = dateObj instanceof Date && !isNaN(dateObj) ? dateObj : new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+function formatDateISONTTT8(dateObj) {
+  const d = dateObj instanceof Date && !isNaN(dateObj) ? dateObj : new Date();
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function initNTTT8HeaderControls() {
+  const dateDisplay = document.getElementById('nttt8HeaderDateDisplay');
+  const dateInput = document.getElementById('nttt8HeaderDateInput');
+  const storeSelect = document.getElementById('nttt8StoreSelect');
+
+  if (!NTTT8State.selectedDate) {
+    const now = new Date();
+    NTTT8State.selectedDate = formatDateDMYNTTT8(now);
+    if (dateInput) dateInput.value = formatDateISONTTT8(now);
+  }
+  if (dateDisplay) {
+    dateDisplay.textContent = NTTT8State.selectedDate;
+  }
+  if (storeSelect && NTTT8State.selectedStore) {
+    storeSelect.value = NTTT8State.selectedStore;
+  }
+}
+
+function onChangeNTTT8StoreSelect(storeVal) {
+  NTTT8State.selectedStore = storeVal || 'dmx_p8_camau';
+  const storeSubtitleMap = {
+    dmx_p8_camau: 'P.8 – CÀ MAU',
+    dmx_p5_camau: 'P.5 – CÀ MAU',
+    dmx_thd_camau: 'TRẦN HƯNG ĐẠO',
+    dmx_giarai: 'GIÁ RAI – BẠC LIÊU'
+  };
+  const subEl =
+    document.getElementById('nttt8SidebarStoreShort') ||
+    document.querySelector('#nttt8Sidebar .nttt8-brand-sub, #nttt8Sidebar .nttt8-brand-loc');
+  if (subEl && storeSubtitleMap[NTTT8State.selectedStore]) {
+    subEl.textContent = storeSubtitleMap[NTTT8State.selectedStore];
+  }
+  if (typeof showToast === 'function') {
+    showToast('Đã chuyển siêu thị hiển thị trên sơ đồ.');
+  }
+}
+
+function onChangeNTTT8DateInput(isoVal) {
+  if (!isoVal) return;
+  const parts = String(isoVal).split('-');
+  if (parts.length === 3) {
+    NTTT8State.selectedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    const dateDisplay = document.getElementById('nttt8HeaderDateDisplay');
+    if (dateDisplay) {
+      dateDisplay.textContent = NTTT8State.selectedDate;
+    }
+  }
+}
+
+function toggleNTTT8UtilityBar(forceOpen) {
+  const bar = document.getElementById('nttt8UtilityBar');
+  const btn = document.getElementById('btn8NTTTToggleTools');
+  if (!bar) return;
+
+  const nextOpen =
+    typeof forceOpen === 'boolean' ? forceOpen : bar.classList.contains('hidden');
+  NTTT8State.utilityBarExpanded = nextOpen;
+  bar.classList.toggle('hidden', !nextOpen);
+  if (btn) {
+    btn.classList.toggle('active', nextOpen);
+  }
+}
+
+function toggleNTTT8MobileSidebar(forceOpen) {
+  const sidebar = document.getElementById('nttt8Sidebar');
+  const overlay =
+    document.getElementById('nttt8SidebarBackdrop') ||
+    document.getElementById('nttt8SidebarOverlay');
+  if (!sidebar) return;
+
+  const isOpen =
+    typeof forceOpen === 'boolean' ? forceOpen : !sidebar.classList.contains('mobile-open');
+  sidebar.classList.toggle('mobile-open', isOpen);
+  if (overlay) {
+    overlay.classList.toggle('active', isOpen);
+    overlay.classList.toggle('hidden', !isOpen);
+  }
+}
+
+function handleNTTT8SidebarNav(navKey) {
+  toggleNTTT8MobileSidebar(false);
+
+  const items = document.querySelectorAll('#nttt8Sidebar .nttt8-nav-item, #nttt8Sidebar .nttt8-sidebar-item');
+  const getKey = btn => btn.getAttribute('data-nav') || btn.getAttribute('data-nav-id');
+  items.forEach(btn => {
+    btn.classList.toggle('active', getKey(btn) === navKey);
+  });
+
+  switch (navKey) {
+    case 'overview':
+      if (typeof switchMainTab === 'function') {
+        switchMainTab('overview');
+      }
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    case 'floorplan':
+      break;
+    case 'assign':
+    case 'staff_assign':
+      openNTTT8StaffPgManagerModal('assign');
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    case 'staff_pg':
+      openNTTT8StaffPgManagerModal('staff');
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    case 'daily_report':
+      openNTTT8RulesEditModal();
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    case 'category_program':
+    case 'category_prog':
+      toggleNTTT8UtilityBar(true);
+      {
+        const searchInput = document.getElementById('nttt8SearchInput');
+        if (searchInput) searchInput.focus();
+      }
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    case 'settings':
+      toggleNTTT8UtilityBar(true);
+      items.forEach(btn => {
+        btn.classList.toggle('active', getKey(btn) === 'floorplan');
+      });
+      break;
+    default:
+      break;
+  }
 }
 
 // ==========================================================================
@@ -2141,9 +2535,9 @@ function applyNTTT8ZoomTransform() {
   if (!viewport || !stage || !grid) return;
 
   if (NTTT8State.zoomMode === 'fit') {
-    const availWidth = Math.max(280, viewport.clientWidth - 12);
-    const naturalWidth = Math.max(1713, grid.scrollWidth || 1713);
-    const scale = Math.min(1, Math.max(0.22, availWidth / naturalWidth));
+    const availWidth = Math.max(320, viewport.clientWidth - 8);
+    const naturalWidth = Math.max(1180, grid.scrollWidth || 1240);
+    const scale = Math.min(1, Math.max(0.35, availWidth / naturalWidth));
     NTTT8State.zoomScale = scale;
   }
 
@@ -2153,8 +2547,8 @@ function applyNTTT8ZoomTransform() {
     stage.style.width = '100%';
     stage.style.height = 'auto';
   } else {
-    const naturalW = Math.max(1713, grid.offsetWidth || 1713);
-    const naturalH = grid.offsetHeight || 820;
+    const naturalW = Math.max(1180, grid.offsetWidth || 1240);
+    const naturalH = grid.offsetHeight || 780;
     stage.style.transform = `scale(${scale})`;
     stage.style.width = `${Math.ceil(naturalW * scale)}px`;
     stage.style.height = `${Math.ceil(naturalH * scale)}px`;
@@ -4189,83 +4583,8 @@ function reinforceNTTT8CanvasBorders(canvas, gridEl, scale) {
   if (!gridRect.width || !gridRect.height) return;
 
   ctx.save();
-
-  const snap = val => Math.round(val * scale);
-  const strokeBox = (rect, color, lineWidth) => {
-    const x1 = snap(rect.left - gridRect.left);
-    const y1 = snap(rect.top - gridRect.top);
-    const x2 = snap(rect.right - gridRect.left);
-    const y2 = snap(rect.bottom - gridRect.top);
-    const w = Math.max(1, x2 - x1);
-    const h = Math.max(1, y2 - y1);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.strokeRect(x1 + 0.5, y1 + 0.5, w - 1, h - 1);
-  };
-
-  // 1. Vẽ lưới bảng tính (#d4d4d8) cho toàn bộ các ô trống (.nttt8-empty-grid-cell)
-  const emptyLineW = Math.max(1, Math.round(scale * 0.75));
-  const emptyCells = gridEl.querySelectorAll('.nttt8-empty-grid-cell');
-  emptyCells.forEach(el => {
-    const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) {
-      strokeBox(r, '#d4d4d8', emptyLineW);
-    }
-  });
-
-  // 2. Vẽ đường kẻ các hàng vạch chia kệ (.nttt8-tick-row, .nttt8-btv-connector, .nttt8-tick-cell)
-  const cellLineW = Math.max(1, Math.round(scale));
-  const tickRows = gridEl.querySelectorAll('.nttt8-tick-row, .nttt8-btv-connector');
-  tickRows.forEach(rowEl => {
-    const r = rowEl.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) {
-      strokeBox(r, '#333333', cellLineW);
-    }
-    const tickCells = rowEl.querySelectorAll('.nttt8-tick-cell');
-    tickCells.forEach((tc, idx) => {
-      if (idx < tickCells.length - 1) {
-        const tr = tc.getBoundingClientRect();
-        const x = snap(tr.right - gridRect.left) + 0.5;
-        const y1 = snap(tr.top - gridRect.top);
-        const y2 = snap(tr.bottom - gridRect.top);
-        ctx.beginPath();
-        ctx.strokeStyle = '#333333';
-        ctx.lineWidth = cellLineW;
-        ctx.moveTo(x, y1);
-        ctx.lineTo(x, y2);
-        ctx.stroke();
-      }
-    });
-  });
-
-  // 3. Vẽ đầy đủ 4 cạnh đường viền (#333333) cho tất cả các ô phân công & danh mục (.nttt8-cell)
-  const cells = gridEl.querySelectorAll('.nttt8-cell');
-  cells.forEach(cellEl => {
-    const r = cellEl.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) {
-      strokeBox(r, '#333333', cellLineW);
-    }
-  });
-
-  // 4. Vẽ khung viền bảng quy định VẬN HÀNH (.nttt8-operation-box & .nttt8-operation-header)
-  const opBox = gridEl.querySelector('.nttt8-operation-box');
-  if (opBox) {
-    const r = opBox.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) {
-      strokeBox(r, '#333333', Math.max(2, Math.round(scale * 1.2)));
-    }
-    const opHeader = opBox.querySelector('.nttt8-operation-header');
-    if (opHeader) {
-      const hr = opHeader.getBoundingClientRect();
-      if (hr.width > 0 && hr.height > 0) {
-        strokeBox(hr, '#333333', cellLineW);
-      }
-    }
-  }
-
-  // 5. Vẽ đường viền bao ngoài cùng của toàn bộ sơ đồ (#222222)
-  const outerLineW = Math.max(2, Math.round(scale * 1.5));
-  ctx.strokeStyle = '#222222';
+  const outerLineW = Math.max(2, Math.round(scale));
+  ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = outerLineW;
   const halfOuter = outerLineW / 2;
   ctx.strokeRect(
@@ -4274,7 +4593,6 @@ function reinforceNTTT8CanvasBorders(canvas, gridEl, scale) {
     canvas.width - outerLineW,
     canvas.height - outerLineW
   );
-
   ctx.restore();
 }
 
@@ -4451,7 +4769,7 @@ async function exportNTTT8DiagramImage(requestedMode) {
     document.body.classList.add('exporting-8nttt-map');
     if (stageEl) {
       stageEl.style.transform = 'none';
-      stageEl.style.width = '1713px';
+      stageEl.style.width = '1440px';
       stageEl.style.height = 'auto';
     }
     if (viewportEl) {
@@ -4464,8 +4782,8 @@ async function exportNTTT8DiagramImage(requestedMode) {
     await new Promise(r => setTimeout(r, 80));
 
     const gridRect = gridEl.getBoundingClientRect();
-    const fullWidth = Math.max(1713, Math.ceil(gridRect.width || gridEl.scrollWidth || 1713));
-    const fullHeight = Math.max(700, Math.ceil(gridRect.height || gridEl.scrollHeight || 860));
+    const fullWidth = Math.max(1380, Math.ceil(gridRect.width || gridEl.scrollWidth || 1440));
+    const fullHeight = Math.max(720, Math.ceil(gridRect.height || gridEl.scrollHeight || 920));
 
     // Tính toán độ phân giải cao (ưu tiên 2.5x, đảm bảo không vượt giới hạn kích thước canvas của trình duyệt)
     const maxCanvasSide = 8192;
@@ -4556,6 +4874,7 @@ async function exportNTTT8DiagramImage(requestedMode) {
 
 function initNTTT8Module() {
   loadNTTT8Data();
+  initNTTT8HeaderControls();
   renderNTTT8AssignmentGrid();
   populateNTTT8StaffFilter();
   listenNTTT8FirestoreChanges();
