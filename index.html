@@ -28,7 +28,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="flyer.css?v=20261020_dirty_check">
-  <link rel="stylesheet" href="nttt8.css?v=20261029_export_fix_v2">
+  <link rel="stylesheet" href="nttt8.css?v=20261029_staff_pg_manager">
 </head>
 <body>
   <!-- Header / Navigation Bar -->
@@ -992,6 +992,11 @@
       </div>
 
       <div class="nttt8-toolbar-right">
+        <button type="button" class="nttt8-btn nttt8-btn-manage-staff-pg" id="btn8NTTTManageStaffPg" onclick="openNTTT8StaffPgManagerModal('staff')" title="Quản lý danh sách Nhân viên, PG hỗ trợ và Phân công khu vực">
+          <i class="fa-solid fa-users"></i>
+          <span>👥 QUẢN LÝ NHÂN VIÊN &amp; PG</span>
+        </button>
+
         <button type="button" class="nttt8-btn" id="btn8NTTTZoomFit" title="Thu nhỏ vừa màn hình để xem toàn bộ sơ đồ">
           <i class="fa-solid fa-compress"></i>
           <span>Toàn sơ đồ</span>
@@ -1012,6 +1017,11 @@
           <span>XUẤT ẢNH</span>
         </button>
 
+        <button type="button" class="nttt8-btn" id="btn8NTTTPrintMap" onclick="printNTTT8Diagram()" title="In sơ đồ phân công khu vực">
+          <i class="fa-solid fa-print"></i>
+          <span>In sơ đồ</span>
+        </button>
+
         <button type="button" class="nttt8-btn" onclick="resetNTTT8ToDefaultData()" title="Khôi phục dữ liệu phân công mặc định">
           <i class="fa-solid fa-rotate-left"></i>
           <span>Mặc định</span>
@@ -1019,7 +1029,7 @@
       </div>
     </div>
 
-    <!-- Chú thích nhóm màu ngành hàng -->
+    <!-- Chú thích nhóm màu ngành hàng & Tùy chọn hiển thị tên NV / PG trên sơ đồ -->
     <div class="nttt8-legend-bar">
       <div class="nttt8-legend-items">
         <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#D9D2E9;"></span> Cột phân loại / Tủ đông</span>
@@ -1030,7 +1040,17 @@
         <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#FFFF00;"></span> Phụ kiện / Laptop / ĐT / Vận hành</span>
         <span class="nttt8-legend-item"><span class="nttt8-legend-swatch" style="background:#F4CCCC;"></span> Bán hàng / Trang trí / Thu ngân</span>
       </div>
-      <span class="nttt8-hint-text"><i class="fa-solid fa-hand-pointer"></i> Nhấp vào ô bất kỳ để chỉnh sửa phân công</span>
+      <div class="nttt8-display-options-group">
+        <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên nhân viên chính trên sơ đồ">
+          <input type="checkbox" id="chk8NTTTShowStaff" checked onchange="toggleNTTT8MapDisplayOption('staff', this.checked)">
+          <span>👤 Hiện tên NV</span>
+        </label>
+        <label class="nttt8-toggle-pill" title="Hiển thị hoặc ẩn tên PG hỗ trợ trên sơ đồ">
+          <input type="checkbox" id="chk8NTTTShowPg" checked onchange="toggleNTTT8MapDisplayOption('pg', this.checked)">
+          <span>✨ Hiện tên PG</span>
+        </label>
+        <span class="nttt8-hint-text"><i class="fa-solid fa-hand-pointer"></i> Nhấp vào ô bất kỳ để chỉnh sửa</span>
+      </div>
     </div>
 
     <!-- Gợi ý cuộn ngang trên điện thoại -->
@@ -1050,32 +1070,51 @@
       </div>
     </div>
 
-    <!-- MODALS CHO TAB 8NTTT (CHỈNH SỬA PHÂN CÔNG Ô & BẢNG VẬN HÀNH) -->
+    <!-- MODALS CHO TAB 8NTTT (CHỈNH SỬA PHÂN CÔNG Ô, BẢNG VẬN HÀNH & QUẢN LÝ NHÂN VIÊN / PG) -->
     <div class="nttt8-modal-backdrop hidden" id="modal8NTTTEditCell" onclick="if(event.target === this) closeNTTT8CellEditModal()">
-      <div class="nttt8-modal-card">
+      <div class="nttt8-modal-card" style="max-width: 560px;">
         <div class="nttt8-modal-header">
-          <h3>Chỉnh Sửa Ô Phân Công 8NTTT</h3>
+          <h3><i class="fa-solid fa-pen-to-square" style="color: #0284c7; margin-right: 6px;"></i>Phân Công Khu Vực &amp; PG Hỗ Trợ</h3>
           <button type="button" class="nttt8-modal-close" onclick="closeNTTT8CellEditModal()">&times;</button>
         </div>
-        <div class="nttt8-modal-body">
+        <div class="nttt8-modal-body" style="max-height: 75vh; overflow-y: auto;">
           <div class="nttt8-form-group">
             <label for="nttt8EditAreaInput">Tên ngành hàng / Khu vực:</label>
             <input type="text" id="nttt8EditAreaInput" class="nttt8-form-input" placeholder="VD: TỦ LẠNH AQUA">
           </div>
           <div class="nttt8-form-group">
-            <label for="nttt8EditStaffInput">Nhân viên phụ trách:</label>
-            <input type="text" id="nttt8EditStaffInput" class="nttt8-form-input" placeholder="VD: XUYÊN" onkeydown="if(event.key === 'Enter') confirmSaveNTTT8CellEdit()">
+            <label for="nttt8EditMainStaffSelect">Nhân viên chính phụ trách:</label>
+            <select id="nttt8EditMainStaffSelect" class="nttt8-form-select" onchange="onChangeNTTT8CellMainStaffSelect(this.value)">
+              <option value="">-- CHƯA PHÂN CÔNG --</option>
+            </select>
           </div>
           <div class="nttt8-form-group">
-            <label>Chọn nhanh nhân viên hiện có:</label>
+            <label for="nttt8EditStaffInput">Hoặc nhập nhanh tên nhân viên chính:</label>
+            <input type="text" id="nttt8EditStaffInput" class="nttt8-form-input" placeholder="VD: XUYÊN (Để trống nếu chưa phân công)" onkeydown="if(event.key === 'Enter') confirmSaveNTTT8CellEdit()">
+          </div>
+          <div class="nttt8-form-group">
+            <label>Chọn nhanh nhân viên chính:</label>
             <div class="nttt8-quick-staff-pills" id="nttt8QuickStaffPills"></div>
           </div>
+          <div class="nttt8-form-group">
+            <label>✨ PG Hỗ Trợ Khu Vực Này (Có thể chọn 1 hoặc nhiều PG):</label>
+            <div class="nttt8-quick-staff-pills" id="nttt8EditCellPgPills"></div>
+          </div>
+          <div class="nttt8-form-group">
+            <label for="nttt8EditCellNoteInput">Ghi chú phân công khu vực:</label>
+            <input type="text" id="nttt8EditCellNoteInput" class="nttt8-form-input" placeholder="VD: Hỗ trợ thêm cuối tuần, kiểm tra trưng bày...">
+          </div>
         </div>
-        <div class="nttt8-modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeNTTT8CellEditModal()">Hủy</button>
-          <button type="button" class="btn btn-primary" onclick="confirmSaveNTTT8CellEdit()">
-            <i class="fa-solid fa-check"></i> Lưu Thay Đổi
+        <div class="nttt8-modal-footer" style="justify-content: space-between;">
+          <button type="button" class="nttt8-btn" style="color: #dc2626; border-color: #fecaca;" onclick="clearNTTT8CellAssignmentInModal()" title="Gỡ người phụ trách khỏi khu vực này">
+            <i class="fa-solid fa-user-xmark"></i> Bỏ phân công
           </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="closeNTTT8CellEditModal()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="confirmSaveNTTT8CellEdit()">
+              <i class="fa-solid fa-check"></i> Lưu Thay Đổi
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1155,10 +1194,23 @@
             <span id="nttt8PreviewStatusText">Đã sao chép ảnh! Bạn có thể dán trực tiếp vào ứng dụng cần sử dụng.</span>
           </div>
 
-          <!-- Thanh điều chỉnh chế độ xem trước ảnh trong popup (chỉ co giãn CSS hiển thị, giữ nguyên độ phân giải ảnh gốc) -->
+          <!-- Thanh điều chỉnh chế độ nội dung xuất ảnh & chế độ xem trước -->
           <div class="nttt8-preview-controls-bar">
-            <span class="nttt8-preview-resolution-info" id="nttt8PreviewResolutionInfo">Độ phân giải gốc PNG sắc nét</span>
+            <div class="nttt8-export-mode-pills">
+              <span class="nttt8-export-mode-label">Chế độ ảnh:</span>
+              <button type="button" class="nttt8-btn active" id="btn8NTTTExportModeWithAssign" onclick="switchNTTT8ExportContentMode('with_assignment')" title="Xuất ảnh sơ đồ kèm đầy đủ thông tin Nhân viên & PG đang hiển thị">
+                <i class="fa-solid fa-user-check"></i> Kèm thông tin phân công
+              </button>
+              <button type="button" class="nttt8-btn" id="btn8NTTTExportModeNoAssign" onclick="switchNTTT8ExportContentMode('no_assignment')" title="Xuất ảnh sơ đồ không kèm thông tin phân công (ẩn tên NV & PG)">
+                <i class="fa-solid fa-map"></i> Không kèm phân công
+              </button>
+              <button type="button" class="nttt8-btn" id="btn8NTTTExportModeOriginal" onclick="switchNTTT8ExportContentMode('original_sample')" title="Giữ nguyên 100% nhãn sơ đồ mẫu gốc">
+                <i class="fa-solid fa-shield-heart"></i> Chuẩn mẫu gốc
+              </button>
+            </div>
+
             <div class="nttt8-preview-zoom-btns">
+              <span class="nttt8-preview-resolution-info" id="nttt8PreviewResolutionInfo">Độ phân giải gốc PNG sắc nét</span>
               <button type="button" class="nttt8-btn active" id="btn8NTTTPreviewFit" onclick="setNTTT8PreviewDisplayMode('fit')" title="Thu nhỏ vừa khung popup để nhìn tổng thể">
                 <i class="fa-solid fa-compress"></i> Vừa khung
               </button>
@@ -1180,6 +1232,10 @@
             <span>ĐÓNG</span>
           </button>
           <div class="nttt8-preview-footer-actions">
+            <button type="button" class="nttt8-btn" onclick="printNTTT8Diagram()" title="In trực tiếp sơ đồ phân công">
+              <i class="fa-solid fa-print"></i>
+              <span>IN SƠ ĐỒ</span>
+            </button>
             <button type="button" class="nttt8-btn" id="btn8NTTTDownloadImage" onclick="downloadNTTT8PreviewImage()" title="Tải file ảnh PNG về máy tính / điện thoại">
               <i class="fa-solid fa-download"></i>
               <span>TẢI ẢNH XUỐNG</span>
@@ -1189,6 +1245,556 @@
               <span>SAO CHÉP ẢNH</span>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- DASHBOARD MODAL: QUẢN LÝ NHÂN VIÊN & PG (8NTTT) -->
+    <!-- ========================================================================== -->
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTStaffPgManager" onclick="if(event.target === this) closeNTTT8StaffPgManagerModal()">
+      <div class="nttt8-modal-card nttt8-manager-modal-card">
+        <!-- Phần đầu trang Dashboard -->
+        <div class="nttt8-manager-header">
+          <div class="nttt8-manager-title-wrap">
+            <div class="nttt8-manager-icon-box">
+              <i class="fa-solid fa-users-gear"></i>
+            </div>
+            <div>
+              <h3 class="nttt8-manager-title">QUẢN LÝ NHÂN VIÊN &amp; PG</h3>
+              <p class="nttt8-manager-subtitle">Quản lý danh sách Nhân viên chính thức, PG hỗ trợ và Phân công khu vực sơ đồ 8NTTT</p>
+            </div>
+          </div>
+          <div class="nttt8-manager-header-right">
+            <span class="nttt8-sync-pill" id="nttt8ManagerSyncStatus">
+              <i class="fa-solid fa-cloud-check"></i> Đã lưu &amp; đồng bộ
+            </span>
+            <button type="button" class="nttt8-modal-close" onclick="closeNTTT8StaffPgManagerModal()" title="Đóng">&times;</button>
+          </div>
+        </div>
+
+        <!-- 4 Thẻ KPI Tổng quan -->
+        <div class="nttt8-kpi-bar">
+          <div class="nttt8-kpi-card kpi-blue" onclick="switchNTTT8ManagerTab('staff')">
+            <div class="nttt8-kpi-icon"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="nttt8-kpi-info">
+              <span class="nttt8-kpi-label">Tổng số nhân viên</span>
+              <strong class="nttt8-kpi-value" id="nttt8KpiTotalStaff">0</strong>
+              <span class="nttt8-kpi-sub" id="nttt8KpiActiveStaff">0 đang làm việc</span>
+            </div>
+          </div>
+          <div class="nttt8-kpi-card kpi-purple" onclick="switchNTTT8ManagerTab('pg')">
+            <div class="nttt8-kpi-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="nttt8-kpi-info">
+              <span class="nttt8-kpi-label">Tổng số PG hỗ trợ</span>
+              <strong class="nttt8-kpi-value" id="nttt8KpiTotalPg">0</strong>
+              <span class="nttt8-kpi-sub" id="nttt8KpiActivePg">0 đang hoạt động</span>
+            </div>
+          </div>
+          <div class="nttt8-kpi-card kpi-emerald" onclick="switchNTTT8ManagerTab('assign')">
+            <div class="nttt8-kpi-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="nttt8-kpi-info">
+              <span class="nttt8-kpi-label">Khu vực đã phân công</span>
+              <strong class="nttt8-kpi-value" id="nttt8KpiAssignedCount">0</strong>
+              <span class="nttt8-kpi-sub" id="nttt8KpiAssignedSub">Có nhân viên phụ trách</span>
+            </div>
+          </div>
+          <div class="nttt8-kpi-card kpi-amber" onclick="filterNTTT8UnassignedAreas()">
+            <div class="nttt8-kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="nttt8-kpi-info">
+              <span class="nttt8-kpi-label">Khu vực chưa phân công</span>
+              <strong class="nttt8-kpi-value" id="nttt8KpiUnassignedCount">0</strong>
+              <span class="nttt8-kpi-sub">Nhấn để lọc khu vực trống</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Thanh Tab Chức Năng & Các Nút Thao Tác Chính -->
+        <div class="nttt8-manager-nav-bar">
+          <div class="nttt8-manager-tabs">
+            <button type="button" class="nttt8-manager-tab active" id="btn8NTTTTabStaff" onclick="switchNTTT8ManagerTab('staff')">
+              <i class="fa-solid fa-user-tie"></i>
+              <span>1. NHÂN VIÊN</span>
+            </button>
+            <button type="button" class="nttt8-manager-tab" id="btn8NTTTTabPg" onclick="switchNTTT8ManagerTab('pg')">
+              <i class="fa-solid fa-star"></i>
+              <span>2. PG HỖ TRỢ</span>
+            </button>
+            <button type="button" class="nttt8-manager-tab" id="btn8NTTTTabAssign" onclick="switchNTTT8ManagerTab('assign')">
+              <i class="fa-solid fa-map-location-dot"></i>
+              <span>3. PHÂN CÔNG KHU VỰC</span>
+            </button>
+            <button type="button" class="nttt8-manager-tab" id="btn8NTTTTabQuick" onclick="switchNTTT8ManagerTab('quick')">
+              <i class="fa-solid fa-bolt"></i>
+              <span>4. PHÂN CHIA NHANH</span>
+            </button>
+          </div>
+
+          <div class="nttt8-manager-actions">
+            <button type="button" class="nttt8-btn nttt8-btn-action-blue" onclick="triggerAddNTTT8StaffFromTop()">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>THÊM NHÂN VIÊN</span>
+            </button>
+            <button type="button" class="nttt8-btn nttt8-btn-action-purple" onclick="triggerAddNTTT8PgFromTop()">
+              <i class="fa-solid fa-plus-circle"></i>
+              <span>THÊM PG</span>
+            </button>
+            <button type="button" class="nttt8-btn nttt8-btn-action-amber" onclick="switchNTTT8ManagerTab('quick')">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>PHÂN CÔNG NHANH</span>
+            </button>
+            <button type="button" class="nttt8-btn nttt8-btn-action-emerald" onclick="saveAllNTTT8ManagerChanges()">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>LƯU THAY ĐỔI</span>
+            </button>
+            <button type="button" class="nttt8-btn" onclick="exportNTTT8StaffPgReportCsv()">
+              <i class="fa-solid fa-file-export"></i>
+              <span>XUẤT DANH SÁCH</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nội dung các Tab -->
+        <div class="nttt8-manager-body">
+          <!-- ==================== TAB 1: NHÂN VIÊN ==================== -->
+          <div class="nttt8-manager-pane" id="nttt8PaneStaff">
+            <!-- Form thêm / sửa nhân viên -->
+            <div class="nttt8-entity-form-card" id="nttt8StaffFormCard">
+              <div class="nttt8-entity-form-header">
+                <h4 id="nttt8StaffFormTitle"><i class="fa-solid fa-user-plus"></i> Thêm Nhân Viên Chính Thức</h4>
+                <div class="nttt8-entity-form-tools">
+                  <button type="button" class="nttt8-btn" onclick="openNTTT8BulkImportModal('staff')" title="Dán nhanh danh sách nhân viên nhiều dòng">
+                    <i class="fa-solid fa-paste"></i> Dán nhiều dòng
+                  </button>
+                  <label class="nttt8-btn" style="cursor: pointer; margin: 0;" title="Nhập danh sách nhân viên từ file Excel / CSV">
+                    <i class="fa-solid fa-file-csv"></i> Nhập Excel/CSV
+                    <input type="file" id="nttt8StaffCsvInput" accept=".csv,.txt,.tsv" style="display: none;" onchange="handleNTTT8CsvUpload('staff', this)">
+                  </label>
+                </div>
+              </div>
+              <input type="hidden" id="nttt8StaffEditId" value="">
+              <div class="nttt8-form-grid-7">
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffCodeInput">Mã nhân viên:</label>
+                  <input type="text" id="nttt8StaffCodeInput" class="nttt8-form-input" placeholder="Tự sinh (VD: NV026)">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffNameInput">Họ và tên (*):</label>
+                  <input type="text" id="nttt8StaffNameInput" class="nttt8-form-input" placeholder="VD: NGUYỄN VĂN A" onkeydown="if(event.key==='Enter') saveNTTT8StaffEntry()">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffPhoneInput">Số điện thoại:</label>
+                  <input type="text" id="nttt8StaffPhoneInput" class="nttt8-form-input" placeholder="09xxxxxxxx">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffTitleInput">Chức danh:</label>
+                  <input type="text" id="nttt8StaffTitleInput" class="nttt8-form-input" placeholder="VD: NV Bán hàng" list="nttt8StaffTitleSuggestions">
+                  <datalist id="nttt8StaffTitleSuggestions">
+                    <option value="Nhân viên bán hàng"></option>
+                    <option value="Trưởng nhóm ngành hàng"></option>
+                    <option value="Thu ngân"></option>
+                    <option value="Hỗ trợ kỹ thuật / Kho"></option>
+                    <option value="Tư vấn viên"></option>
+                  </datalist>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffDeptInput">Nhóm / Bộ phận:</label>
+                  <input type="text" id="nttt8StaffDeptInput" class="nttt8-form-input" placeholder="VD: Điện lạnh / Gia dụng" list="nttt8StaffDeptSuggestions">
+                  <datalist id="nttt8StaffDeptSuggestions">
+                    <option value="Điện máy - Điện lạnh"></option>
+                    <option value="Gia dụng"></option>
+                    <option value="ICT - Điện thoại & Laptop"></option>
+                    <option value="Phụ kiện & Viễn thông"></option>
+                    <option value="Kho & Vận hành"></option>
+                  </datalist>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffStatusSelect">Trạng thái làm việc:</label>
+                  <select id="nttt8StaffStatusSelect" class="nttt8-form-select">
+                    <option value="active">🟢 Đang làm việc</option>
+                    <option value="inactive">🔴 Ngừng làm việc</option>
+                  </select>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8StaffNoteInput">Ghi chú:</label>
+                  <input type="text" id="nttt8StaffNoteInput" class="nttt8-form-input" placeholder="Ghi chú thêm...">
+                </div>
+              </div>
+              <div class="nttt8-entity-form-actions">
+                <span class="nttt8-form-error-msg hidden" id="nttt8StaffFormError"></span>
+                <div style="display: flex; gap: 8px; margin-left: auto;">
+                  <button type="button" class="nttt8-btn hidden" id="btn8NTTTStaffCancelEdit" onclick="resetNTTT8StaffForm()">Hủy sửa</button>
+                  <button type="button" class="nttt8-btn nttt8-btn-primary" id="btn8NTTTStaffSubmit" onclick="saveNTTT8StaffEntry()">
+                    <i class="fa-solid fa-plus"></i> <span id="btn8NTTTStaffSubmitText">Thêm Nhân Viên</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thanh tìm kiếm & lọc nhân viên -->
+            <div class="nttt8-filter-bar">
+              <div class="nttt8-filter-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="nttt8StaffTableSearch" class="nttt8-form-input" placeholder="Tìm kiếm nhân viên theo tên, mã NV, SĐT, bộ phận..." oninput="renderNTTT8StaffTable()">
+              </div>
+              <select id="nttt8StaffTableStatusFilter" class="nttt8-form-select" style="width: 185px;" onchange="renderNTTT8StaffTable()">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">🟢 Đang làm việc</option>
+                <option value="inactive">🔴 Ngừng làm việc</option>
+              </select>
+              <select id="nttt8StaffTableDeptFilter" class="nttt8-form-select" style="width: 200px;" onchange="renderNTTT8StaffTable()">
+                <option value="all">Tất cả nhóm / bộ phận</option>
+              </select>
+            </div>
+
+            <!-- Bảng danh sách nhân viên -->
+            <div class="nttt8-table-wrap">
+              <table class="nttt8-data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 85px;">Mã NV</th>
+                    <th style="min-width: 145px;">Họ và tên</th>
+                    <th style="min-width: 130px;">Chức danh</th>
+                    <th style="min-width: 140px;">Nhóm / Bộ phận</th>
+                    <th style="width: 110px;">Số ĐT</th>
+                    <th style="min-width: 180px;">Khu vực đang phụ trách</th>
+                    <th style="width: 130px;">Trạng thái</th>
+                    <th style="min-width: 120px;">Ghi chú</th>
+                    <th style="width: 100px; text-align: center;">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="nttt8StaffTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ==================== TAB 2: PG HỖ TRỢ ==================== -->
+          <div class="nttt8-manager-pane hidden" id="nttt8PanePg">
+            <!-- Form thêm / sửa PG -->
+            <div class="nttt8-entity-form-card pg-theme" id="nttt8PgFormCard">
+              <div class="nttt8-entity-form-header">
+                <h4 id="nttt8PgFormTitle"><i class="fa-solid fa-star"></i> Thêm PG Hỗ Trợ Ngành Hàng / Thương Hiệu</h4>
+                <div class="nttt8-entity-form-tools">
+                  <button type="button" class="nttt8-btn" onclick="openNTTT8BulkImportModal('pg')" title="Dán nhanh danh sách PG nhiều dòng">
+                    <i class="fa-solid fa-paste"></i> Dán nhiều dòng PG
+                  </button>
+                  <label class="nttt8-btn" style="cursor: pointer; margin: 0;" title="Nhập danh sách PG từ file Excel / CSV">
+                    <i class="fa-solid fa-file-csv"></i> Nhập Excel/CSV
+                    <input type="file" id="nttt8PgCsvInput" accept=".csv,.txt,.tsv" style="display: none;" onchange="handleNTTT8CsvUpload('pg', this)">
+                  </label>
+                </div>
+              </div>
+              <input type="hidden" id="nttt8PgEditId" value="">
+              <div class="nttt8-form-grid-8">
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgCodeInput">Mã PG:</label>
+                  <input type="text" id="nttt8PgCodeInput" class="nttt8-form-input" placeholder="Tự sinh (VD: PG009)">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgNameInput">Họ và tên PG (*):</label>
+                  <input type="text" id="nttt8PgNameInput" class="nttt8-form-input" placeholder="VD: PG NGỌC LAN" onkeydown="if(event.key==='Enter') saveNTTT8PgEntry()">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgBrandInput">Thương hiệu phụ trách:</label>
+                  <input type="text" id="nttt8PgBrandInput" class="nttt8-form-input" placeholder="VD: SAMSUNG, LG, AQUA..." list="nttt8PgBrandSuggestions">
+                  <datalist id="nttt8PgBrandSuggestions">
+                    <option value="SAMSUNG"></option>
+                    <option value="LG"></option>
+                    <option value="TOSHIBA"></option>
+                    <option value="AQUA"></option>
+                    <option value="PANASONIC"></option>
+                    <option value="HAIER"></option>
+                    <option value="SUNHOUSE"></option>
+                    <option value="KANGAROO"></option>
+                    <option value="KAROFI"></option>
+                    <option value="OPPO"></option>
+                    <option value="VIVO"></option>
+                    <option value="XIAOMI"></option>
+                    <option value="REALME"></option>
+                    <option value="APPLE"></option>
+                  </datalist>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgCategoryInput">Ngành hàng hỗ trợ:</label>
+                  <input type="text" id="nttt8PgCategoryInput" class="nttt8-form-input" placeholder="VD: Tủ lạnh, Máy giặt..." list="nttt8PgCategorySuggestions">
+                  <datalist id="nttt8PgCategorySuggestions">
+                    <option value="Tủ lạnh & Tủ đông"></option>
+                    <option value="Máy giặt & Máy lạnh"></option>
+                    <option value="Gia dụng"></option>
+                    <option value="Máy lọc nước (MLN)"></option>
+                    <option value="Tivi & Loa Karaoke"></option>
+                    <option value="Điện thoại & Tablet"></option>
+                    <option value="Laptop & Phụ kiện"></option>
+                  </datalist>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgSupportAreasInput">Khu vực có thể hỗ trợ:</label>
+                  <input type="text" id="nttt8PgSupportAreasInput" class="nttt8-form-input" placeholder="VD: Khu vực A, Khu vực B">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgPhoneInput">Số điện thoại:</label>
+                  <input type="text" id="nttt8PgPhoneInput" class="nttt8-form-input" placeholder="09xxxxxxxx">
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgStatusSelect">Trạng thái hoạt động:</label>
+                  <select id="nttt8PgStatusSelect" class="nttt8-form-select">
+                    <option value="active">🟢 Đang hoạt động</option>
+                    <option value="inactive">🔴 Ngừng hoạt động</option>
+                  </select>
+                </div>
+                <div class="nttt8-form-group">
+                  <label for="nttt8PgNoteInput">Ghi chú:</label>
+                  <input type="text" id="nttt8PgNoteInput" class="nttt8-form-input" placeholder="Ca làm việc, lịch trực...">
+                </div>
+              </div>
+              <div class="nttt8-entity-form-actions">
+                <span class="nttt8-form-error-msg hidden" id="nttt8PgFormError"></span>
+                <div style="display: flex; gap: 8px; margin-left: auto;">
+                  <button type="button" class="nttt8-btn hidden" id="btn8NTTTPgCancelEdit" onclick="resetNTTT8PgForm()">Hủy sửa</button>
+                  <button type="button" class="nttt8-btn nttt8-btn-action-purple" id="btn8NTTTPgSubmit" onclick="saveNTTT8PgEntry()">
+                    <i class="fa-solid fa-plus"></i> <span id="btn8NTTTPgSubmitText">Thêm PG Hỗ Trợ</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Thanh tìm kiếm & lọc PG -->
+            <div class="nttt8-filter-bar">
+              <div class="nttt8-filter-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="nttt8PgTableSearch" class="nttt8-form-input" placeholder="Tìm PG theo tên, mã PG, thương hiệu, ngành hàng..." oninput="renderNTTT8PgTable()">
+              </div>
+              <select id="nttt8PgBrandFilter" class="nttt8-form-select" style="width: 175px;" onchange="renderNTTT8PgTable()">
+                <option value="all">Tất cả thương hiệu</option>
+              </select>
+              <select id="nttt8PgCategoryFilter" class="nttt8-form-select" style="width: 185px;" onchange="renderNTTT8PgTable()">
+                <option value="all">Tất cả ngành hàng</option>
+              </select>
+              <select id="nttt8PgStatusFilter" class="nttt8-form-select" style="width: 175px;" onchange="renderNTTT8PgTable()">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="active">🟢 Đang hoạt động</option>
+                <option value="inactive">🔴 Ngừng hoạt động</option>
+              </select>
+            </div>
+
+            <!-- Bảng danh sách PG -->
+            <div class="nttt8-table-wrap">
+              <table class="nttt8-data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">Mã PG</th>
+                    <th style="min-width: 140px;">Họ và tên PG</th>
+                    <th style="min-width: 120px;">Thương hiệu</th>
+                    <th style="min-width: 135px;">Ngành hàng hỗ trợ</th>
+                    <th style="min-width: 140px;">Khu vực có thể hỗ trợ</th>
+                    <th style="min-width: 175px;">Khu vực đang được gán</th>
+                    <th style="width: 105px;">Số ĐT</th>
+                    <th style="width: 130px;">Trạng thái</th>
+                    <th style="min-width: 110px;">Ghi chú</th>
+                    <th style="width: 95px; text-align: center;">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="nttt8PgTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ==================== TAB 3: PHÂN CÔNG KHU VỰC ==================== -->
+          <div class="nttt8-manager-pane hidden" id="nttt8PaneAssign">
+            <div class="nttt8-filter-bar">
+              <div class="nttt8-filter-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="nttt8AssignSearchInput" class="nttt8-form-input" placeholder="Tìm khu vực, ngành hàng, nhân viên chính, PG hỗ trợ..." oninput="renderNTTT8AreaAssignmentTable()">
+              </div>
+              <select id="nttt8AssignZoneFilter" class="nttt8-form-select" style="width: 195px;" onchange="renderNTTT8AreaAssignmentTable()">
+                <option value="all">Tất cả phân khu (A, B, C, D)</option>
+                <option value="A">Khu vực A (Cột trái &amp; Kệ trái)</option>
+                <option value="B">Khu vực B (Kệ trung tâm)</option>
+                <option value="C">Khu vực C (Cửa kho &amp; Vách dọc)</option>
+                <option value="D">Khu vực D (ĐT, Laptop, Phụ kiện)</option>
+              </select>
+              <select id="nttt8AssignStatusFilter" class="nttt8-form-select" style="width: 185px;" onchange="renderNTTT8AreaAssignmentTable()">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="assigned">✅ Đã phân công NV</option>
+                <option value="unassigned">⚠️ CHƯA PHÂN CÔNG</option>
+                <option value="has_pg">✨ Có PG hỗ trợ</option>
+                <option value="no_pg">Chưa có PG hỗ trợ</option>
+              </select>
+              <select id="nttt8AssignStaffFilter" class="nttt8-form-select" style="width: 175px;" onchange="renderNTTT8AreaAssignmentTable()">
+                <option value="all">Tất cả nhân viên chính</option>
+              </select>
+              <select id="nttt8AssignPgFilter" class="nttt8-form-select" style="width: 175px;" onchange="renderNTTT8AreaAssignmentTable()">
+                <option value="all">Tất cả PG hỗ trợ</option>
+              </select>
+            </div>
+
+            <div class="nttt8-table-wrap">
+              <table class="nttt8-data-table">
+                <thead>
+                  <tr>
+                    <th style="width: 70px;">Khu</th>
+                    <th style="min-width: 190px;">Tên Khu Vực / Ngành Hàng</th>
+                    <th style="width: 135px;">Trạng Thái</th>
+                    <th style="min-width: 195px;">Nhân Viên Chính Phụ Trách</th>
+                    <th style="min-width: 240px;">PG Hỗ Trợ (Chọn 1 hoặc nhiều PG)</th>
+                    <th style="min-width: 160px;">Ghi Chú Phân Công</th>
+                    <th style="width: 90px; text-align: center;">Chi Tiết</th>
+                  </tr>
+                </thead>
+                <tbody id="nttt8AreaAssignTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ==================== TAB 4: PHÂN CHIA KHU VỰC NHANH ==================== -->
+          <div class="nttt8-manager-pane hidden" id="nttt8PaneQuick">
+            <div class="nttt8-quick-assign-grid">
+              <!-- Cột 1: Chọn danh sách nhân viên tham gia -->
+              <div class="nttt8-quick-panel">
+                <div class="nttt8-quick-panel-header">
+                  <h4><i class="fa-solid fa-user-check"></i> 1. Chọn Nhân Viên Tham Gia</h4>
+                  <div style="display: flex; gap: 6px;">
+                    <button type="button" class="nttt8-btn" onclick="toggleAllNTTT8QuickStaff(true)">Chọn tất cả</button>
+                    <button type="button" class="nttt8-btn" onclick="toggleAllNTTT8QuickStaff(false)">Bỏ chọn</button>
+                  </div>
+                </div>
+                <div class="nttt8-quick-checklist" id="nttt8QuickStaffChecklist"></div>
+              </div>
+
+              <!-- Cột 2: Chọn các khu vực cần phân công -->
+              <div class="nttt8-quick-panel">
+                <div class="nttt8-quick-panel-header">
+                  <h4><i class="fa-solid fa-table-cells"></i> 2. Chọn Khu Vực Cần Phân Công</h4>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <select id="nttt8QuickZoneSelect" class="nttt8-form-select" style="width: 135px; padding: 3px 8px; font-size: 11.5px;" onchange="renderNTTT8QuickSetupLists()">
+                      <option value="all">Tất cả khu vực</option>
+                      <option value="unassigned">Chỉ ô CHƯA PHÂN CÔNG</option>
+                      <option value="A">Chỉ Khu vực A</option>
+                      <option value="B">Chỉ Khu vực B</option>
+                      <option value="C">Chỉ Khu vực C</option>
+                      <option value="D">Chỉ Khu vực D</option>
+                    </select>
+                    <button type="button" class="nttt8-btn" onclick="toggleAllNTTT8QuickAreas(true)">Chọn tất cả</button>
+                    <button type="button" class="nttt8-btn" onclick="toggleAllNTTT8QuickAreas(false)">Bỏ chọn</button>
+                  </div>
+                </div>
+                <div class="nttt8-quick-checklist" id="nttt8QuickAreaChecklist"></div>
+              </div>
+            </div>
+
+            <!-- Thanh điều khiển tạo bản xem trước phân công -->
+            <div class="nttt8-quick-action-strip">
+              <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <label class="nttt8-toggle-pill">
+                  <input type="checkbox" id="chk8NTTTQuickAutoMatchPg" checked>
+                  <span>✨ Tự động gợi ý PG hỗ trợ theo Thương hiệu / Ngành hàng</span>
+                </label>
+                <span style="font-size: 12px; color: #475569; font-weight: 600;">
+                  <i class="fa-solid fa-circle-info" style="color: #0284c7;"></i> Kết quả bên dưới chỉ là <strong>Bản Xem Trước</strong>, bạn có thể chỉnh sửa từng dòng trước khi nhấn <strong>Xác nhận lưu phân công</strong>.
+                </span>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="nttt8-btn" onclick="loadCurrentNTTT8ToQuickPreview()">
+                  <i class="fa-solid fa-list-check"></i> Nạp khu vực đã chọn để chỉnh sửa tay
+                </button>
+                <button type="button" class="nttt8-btn nttt8-btn-action-amber" onclick="generateNTTT8QuickAutoDistribution()">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> Chia Đều Tự Động &amp; Xem Trước
+                </button>
+              </div>
+            </div>
+
+            <!-- Bảng xem trước & chỉnh sửa kết quả phân công trước khi lưu -->
+            <div class="nttt8-quick-preview-box">
+              <div class="nttt8-quick-preview-header">
+                <h4><i class="fa-solid fa-eye"></i> 3. Xem Trước &amp; Chỉnh Sửa Kết Quả Phân Công Trước Khi Lưu</h4>
+                <span id="nttt8QuickPreviewSummary" class="nttt8-quick-summary-badge">Chưa có bản xem trước</span>
+              </div>
+              <div class="nttt8-table-wrap" style="max-height: 290px;">
+                <table class="nttt8-data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 65px;">Khu</th>
+                      <th style="min-width: 180px;">Khu Vực / Ngành Hàng</th>
+                      <th style="width: 140px;">Nhân Viên Hiện Tại</th>
+                      <th style="min-width: 195px;">Nhân Viên Chính Mới (Chỉnh sửa)</th>
+                      <th style="min-width: 220px;">PG Hỗ Trợ (Chỉnh sửa)</th>
+                      <th style="min-width: 145px;">Ghi Chú</th>
+                      <th style="width: 70px; text-align: center;">Bỏ dòng</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nttt8QuickPreviewTableBody"></tbody>
+                </table>
+              </div>
+              <div class="nttt8-quick-preview-footer">
+                <button type="button" class="nttt8-btn" onclick="clearNTTT8QuickPreview()">Xóa bảng xem trước</button>
+                <button type="button" class="nttt8-btn nttt8-btn-action-emerald" id="btn8NTTTConfirmQuickAssign" onclick="confirmSaveNTTT8QuickAssignment()">
+                  <i class="fa-solid fa-check-double"></i> XÁC NHẬN LƯU PHÂN CÔNG
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="nttt8-modal-footer nttt8-manager-footer">
+          <div style="font-size: 12px; color: #475569; font-weight: 600;">
+            <i class="fa-solid fa-database" style="color: #0284c7;"></i> Dữ liệu Nhân viên, PG và Phân công được lưu bền vững trên trình duyệt &amp; đồng bộ Cloud Firestore.
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="nttt8-btn" onclick="closeNTTT8StaffPgManagerModal()">Đóng</button>
+            <button type="button" class="nttt8-btn nttt8-btn-primary" onclick="saveAllNTTT8ManagerChanges(true)">
+              <i class="fa-solid fa-check"></i> Lưu &amp; Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DÁN NHANH NHIỀU DÒNG (NHÂN VIÊN HOẶC PG) -->
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTBulkImport" onclick="if(event.target === this) closeNTTT8BulkImportModal()">
+      <div class="nttt8-modal-card" style="max-width: 580px;">
+        <div class="nttt8-modal-header">
+          <h3 id="nttt8BulkImportTitle"><i class="fa-solid fa-paste" style="color: #0284c7; margin-right: 6px;"></i>Nhập Danh Sách Bằng Cách Dán Nhiều Dòng</h3>
+          <button type="button" class="nttt8-modal-close" onclick="closeNTTT8BulkImportModal()">&times;</button>
+        </div>
+        <div class="nttt8-modal-body">
+          <input type="hidden" id="nttt8BulkImportMode" value="staff">
+          <p id="nttt8BulkImportHint" style="font-size: 12.5px; color: #475569; margin: 0; line-height: 1.45;">
+            Dán mỗi người trên 1 dòng. Có thể chỉ nhập <strong>Họ và tên</strong>, hoặc nhập đầy đủ cách nhau bởi dấu phẩy <code>,</code> / gạch đứng <code>|</code> / phím Tab từ Excel.
+          </p>
+          <textarea id="nttt8BulkImportTextarea" class="nttt8-form-textarea" rows="7" placeholder="VD:&#10;NGUYỄN VĂN AN | 0901234567 | Nhân viên bán hàng | Điện lạnh&#10;TRẦN THỊ BÌNH | 0912345678 | Tư vấn viên | Gia dụng&#10;LÊ HOÀNG NAM"></textarea>
+          <div id="nttt8BulkImportError" class="nttt8-form-error-msg hidden"></div>
+        </div>
+        <div class="nttt8-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeNTTT8BulkImportModal()">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="confirmExecuteNTTT8BulkImport()">
+            <i class="fa-solid fa-file-import"></i> Nạp Danh Sách
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CẢNH BÁO & XỬ LÝ KHU VỰC KHI XÓA HOẶC NGỪNG HOẠT ĐỘNG NHÂN VIÊN / PG ĐANG ĐƯỢC PHÂN CÔNG -->
+    <div class="nttt8-modal-backdrop hidden" id="modal8NTTTStaffReassignConfirm" onclick="if(event.target === this) closeNTTT8ReassignConfirmModal()">
+      <div class="nttt8-modal-card" style="max-width: 540px;">
+        <div class="nttt8-modal-header" style="background: #fffbeb; border-bottom-color: #fde68a;">
+          <h3 style="color: #92400e;"><i class="fa-solid fa-triangle-exclamation" style="color: #d97706; margin-right: 6px;"></i><span id="nttt8ReassignModalTitle">Xử Lý Khu Vực Đang Phụ Trách</span></h3>
+          <button type="button" class="nttt8-modal-close" onclick="closeNTTT8ReassignConfirmModal()">&times;</button>
+        </div>
+        <div class="nttt8-modal-body">
+          <p id="nttt8ReassignModalDesc" style="font-size: 13px; color: #334155; font-weight: 600; margin: 0; line-height: 1.45;"></p>
+          <div id="nttt8ReassignAffectedAreasBox" class="nttt8-affected-areas-box"></div>
+          <div class="nttt8-form-group" id="nttt8ReassignOptionGroup">
+            <label for="nttt8ReassignReplacementSelect">Phương án xử lý các khu vực liên quan:</label>
+            <select id="nttt8ReassignReplacementSelect" class="nttt8-form-select">
+              <option value="__UNASSIGN__">⚠️ Gỡ phân công (Chuyển các khu vực này về "CHƯA PHÂN CÔNG")</option>
+            </select>
+          </div>
+        </div>
+        <div class="nttt8-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeNTTT8ReassignConfirmModal()">Hủy thao tác</button>
+          <button type="button" class="btn btn-primary" style="background: #d97706; border-color: #b45309;" onclick="confirmExecuteNTTT8ReassignAction()">
+            <i class="fa-solid fa-check"></i> Xác Nhận Thực Hiện
+          </button>
         </div>
       </div>
     </div>
@@ -2279,6 +2885,6 @@
   <script src="flyer.js?v=20261029_8nttt"></script>
 
   <!-- 8NTTT Floorplan Module Script -->
-  <script src="nttt8.js?v=20261029_export_fix_v2"></script>
+  <script src="nttt8.js?v=20261029_staff_pg_manager"></script>
 </body>
 </html>
