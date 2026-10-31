@@ -27,7 +27,7 @@
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="flyer.css?v=20261020_dirty_check">
+  <link rel="stylesheet" href="flyer.css?v=20261031_fix_modal_and_sync">
   <link rel="stylesheet" href="nttt8.css?v=20261029_vach_pk_top">
 </head>
 <body>
@@ -2726,7 +2726,7 @@
   </div>
 
   <!-- Modal 5: Thêm / Chỉnh Sửa Ca Phân Lịch Tờ Rơi -->
-  <div class="modal-backdrop hidden" id="modalFlyerAssignmentForm">
+  <div class="modal-backdrop hidden" id="modalFlyerAssignmentForm" onclick="if(event.target === this) closeFlyerAssignmentModal()">
     <div class="modal-card" style="max-width: 540px; width: 95%;">
       <div class="modal-header">
         <div class="modal-title-group">
@@ -2973,7 +2973,7 @@
   <script src="app.js?v=20261029_fb_opt"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261031_fix_add_staff"></script>
+  <script src="flyer.js?v=20261031_fix_modal_and_sync"></script>
 
   <!-- 8NTTT Floorplan Module Script -->
   <script src="nttt8.js?v=20261029_fb_opt"></script>

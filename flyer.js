@@ -18,6 +18,8 @@ const FLYER_STORAGE_STAFF = 'PHANCA_TOROI_STAFF_V1';
 const FLYER_STORAGE_GROUPS = 'PHANCA_TOROI_GROUPS_V1';
 const FLYER_STORAGE_SCHEDULE = 'PHANCA_TOROI_SCHEDULE_V1';
 const FLYER_STORAGE_ASSIGNMENTS = 'PHANCA_TOROI_ASSIGNMENTS_V1';
+const FLYER_STORAGE_SELECTED_DATE = 'PHANCA_TOROI_SELECTED_DATE_V1';
+const FLYER_STORAGE_DIRTY_SYNC = 'PHANCA_TOROI_DIRTY_SYNC_V1';
 const FLYER_STORAGE_ACTIVE_TAB = 'PHANCA_CURRENT_APP_TAB';
 
 // Cấu hình Firebase Document độc lập (Tuyệt đối không chạm vào schedule_master)
@@ -220,6 +222,7 @@ async function executeFlyerSaveToFirebase() {
 
     await flyerDb.collection(colName).doc(FLYER_FIRESTORE_DOC).set(payload, { merge: true });
     lastSavedFlyerSignature = nowSig;
+    try { localStorage.removeItem(FLYER_STORAGE_DIRTY_SYNC); } catch (err) {}
     recordFlyerQuota('write', 1);
     updateFlyerSyncStatus('synced');
 
@@ -374,6 +377,24 @@ function setupFlyerRealtimeListener() {
           return; // Bỏ qua phản hồi từ chính lần ghi của trình duyệt này
         }
 
+        // Nếu trình duyệt vừa lưu cục bộ (VD: bấm F5 ngay sau khi thêm nhân viên) mà chưa kịp đẩy lên Firebase,
+        // giữ nguyên dữ liệu mới nhất ở localStorage và đồng bộ ngược lên Firebase thay vì bị ghi đè.
+        let hasUnsyncedLocal = false;
+        try {
+          hasUnsyncedLocal = localStorage.getItem(FLYER_STORAGE_DIRTY_SYNC) === '1';
+        } catch (err) {}
+        if (wasInitial && hasUnsyncedLocal) {
+          if (data && data.customTableTitle && !FlyerState.customTableTitle) {
+            FlyerState.customTableTitle = data.customTableTitle;
+            try { localStorage.setItem('flyer_custom_table_title', data.customTableTitle); } catch (e) {}
+          }
+          renderFlyerStats();
+          renderFlyerTable();
+          pendingFlyerForce = true;
+          executeFlyerSaveToFirebase();
+          return;
+        }
+
         recordFlyerQuota('read', 1);
         const incomingSig = getFlyerDataSignature(data);
         if (!wasInitial && incomingSig && incomingSig === lastSavedFlyerSignature) {
@@ -399,6 +420,7 @@ function setupFlyerRealtimeListener() {
 // ==========================================================================
 
 function initFlyerModule() {
+  loadFlyerSelectedDate();
   loadFlyerStaff();
   loadFlyerGroups();
   loadFlyerSchedule();
@@ -427,6 +449,34 @@ function initFlyerModule() {
 
   // Khởi tạo kết nối Firebase riêng biệt
   initFlyerFirebase();
+}
+
+function saveFlyerSelectedDate() {
+  try {
+    localStorage.setItem(FLYER_STORAGE_SELECTED_DATE, JSON.stringify({
+      tableDateTitle: FlyerState.tableDateTitle || '22/10',
+      currentDateKey: FlyerState.currentDateKey || '2026-10-22',
+      calYear: FlyerState.calYear || 2026,
+      calMonth: (FlyerState.calMonth !== undefined) ? FlyerState.calMonth : 9
+    }));
+  } catch (e) {}
+}
+
+function loadFlyerSelectedDate() {
+  try {
+    const raw = localStorage.getItem(FLYER_STORAGE_SELECTED_DATE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.tableDateTitle) {
+        FlyerState.tableDateTitle = String(parsed.tableDateTitle).trim();
+        FlyerState.currentDateKey = parsed.currentDateKey || generateDateKeyFromStr(FlyerState.tableDateTitle);
+        if (typeof parsed.calYear === 'number') FlyerState.calYear = parsed.calYear;
+        if (typeof parsed.calMonth === 'number') FlyerState.calMonth = parsed.calMonth;
+        const dateInput = document.getElementById('flyerTableDateTitleInput');
+        if (dateInput) dateInput.value = FlyerState.tableDateTitle;
+      }
+    }
+  } catch (e) {}
 }
 
 function getFlyerWeekKey() {
@@ -466,7 +516,10 @@ function loadFlyerStaff() {
 function saveFlyerStaff(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_STAFF, JSON.stringify(FlyerState.staffList));
-    if (!skipFirebase) saveFlyerToFirebase();
+    if (!skipFirebase) {
+      try { localStorage.setItem(FLYER_STORAGE_DIRTY_SYNC, '1'); } catch (err) {}
+      saveFlyerToFirebase();
+    }
   } catch (e) {
     console.error('Lỗi lưu FlyerStaff:', e);
   }
@@ -507,7 +560,10 @@ function ensureDefaultGroups() {
 function saveFlyerGroups(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_GROUPS, JSON.stringify(FlyerState.groupList));
-    if (!skipFirebase) saveFlyerToFirebase();
+    if (!skipFirebase) {
+      try { localStorage.setItem(FLYER_STORAGE_DIRTY_SYNC, '1'); } catch (err) {}
+      saveFlyerToFirebase();
+    }
   } catch (e) {
     console.error('Lỗi lưu FlyerGroups:', e);
   }
@@ -529,7 +585,10 @@ function loadFlyerSchedule() {
 function saveFlyerSchedule(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_SCHEDULE, JSON.stringify(FlyerState.scheduleData));
-    if (!skipFirebase) saveFlyerToFirebase();
+    if (!skipFirebase) {
+      try { localStorage.setItem(FLYER_STORAGE_DIRTY_SYNC, '1'); } catch (err) {}
+      saveFlyerToFirebase();
+    }
   } catch (e) {
     console.error('Lỗi lưu FlyerSchedule:', e);
   }
@@ -559,7 +618,10 @@ function loadFlyerAssignments() {
 function saveFlyerAssignments(skipFirebase = false) {
   try {
     localStorage.setItem(FLYER_STORAGE_ASSIGNMENTS, JSON.stringify(FlyerState.assignmentsList));
-    if (!skipFirebase) saveFlyerToFirebase();
+    if (!skipFirebase) {
+      try { localStorage.setItem(FLYER_STORAGE_DIRTY_SYNC, '1'); } catch (err) {}
+      saveFlyerToFirebase();
+    }
   } catch (e) {
     console.error('Lỗi lưu FlyerAssignments:', e);
   }
@@ -1095,6 +1157,7 @@ function selectFlyerDate(year, month, day) {
   FlyerState.calMonth = month;
   FlyerState.tableDateTitle = dayStr;
   FlyerState.currentDateKey = fullKey;
+  saveFlyerSelectedDate();
 
   const dateInput = document.getElementById('flyerTableDateTitleInput');
   if (dateInput) dateInput.value = dayStr;
@@ -1193,6 +1256,7 @@ function copyFlyerScheduleFromDate(srcDateStr) {
 
   // 5. Lưu ngay tức thì vào LocalStorage và Firebase
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
   renderFlyerStats();
   renderFlyerTable();
 
@@ -1227,6 +1291,8 @@ function setupFlyerTableFilters() {
   if (dateTitleInput) {
     dateTitleInput.addEventListener('input', (e) => {
       FlyerState.tableDateTitle = e.target.value.trim();
+      FlyerState.currentDateKey = generateDateKeyFromStr(FlyerState.tableDateTitle);
+      saveFlyerSelectedDate();
       renderFlyerScheduleTable();
     });
   }
@@ -1803,6 +1869,7 @@ function saveFlyerLocationFromModal() {
   });
 
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
   closeFlyerLocationModal();
   renderFlyerTable();
 
@@ -1825,6 +1892,10 @@ function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift =
   const saveBtnText = document.getElementById('btnSaveAssignmentModalText');
 
   if (!modal) return;
+
+  // Đóng lịch chọn ngày nếu đang mở để tránh che khuất modal
+  const calPopover = document.getElementById('flyerCalendarPopover');
+  if (calPopover) calPopover.classList.add('hidden');
 
   const activeDate = (FlyerState.tableDateTitle || '22/10').trim();
 
@@ -2143,6 +2214,7 @@ function deleteFlyerGroupShift(groupKey) {
 
   // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
 
   renderFlyerStats();
   renderFlyerTable();
@@ -2266,6 +2338,16 @@ function saveFlyerAssignmentFromModal() {
     const staff = staffPool.find(s => String(s.id) === String(staffId));
     if (!staff) return;
 
+    // Chống tạo nhân viên trùng lặp trong cùng ca trực & cùng ngày
+    const normStaffName = String(staff.name || '').trim().toUpperCase();
+    const alreadyExists = FlyerState.assignmentsList.some(as =>
+      normalizeFlyerDate(as.dateStr || '22/10') === activeNorm &&
+      as.shiftId === shiftId &&
+      (String(as.staffName || '').trim().toUpperCase() === normStaffName ||
+       (!as.staffName && String(as.staffId) === String(staff.id)))
+    );
+    if (alreadyExists) return;
+
     const newAssignment = {
       id: 'as_' + Date.now() + '_' + addedCount + '_' + Math.random().toString(36).substr(2, 6),
       staffId: staff.id,
@@ -2313,6 +2395,7 @@ function saveFlyerAssignmentFromModal() {
 
   // Tự động lưu ngay lập tức lên Firebase và LocalStorage
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
 
   closeFlyerAssignmentModal();
   renderFlyerStats();
@@ -2334,6 +2417,7 @@ function deleteFlyerAssignment(assignmentId) {
 
   // Lưu cục bộ và LƯU NGAY LẬP TỨC LÊN FIREBASE
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
 
   renderFlyerStats();
   renderFlyerTable();
@@ -2375,6 +2459,7 @@ function clearCurrentDayFlyerSchedule() {
 
   // Tự động lưu ngay lập tức lên Firebase và LocalStorage
   saveFlyerAssignments(false);
+  flushPendingFlyerSave();
 
   renderFlyerStats();
   renderFlyerTable();

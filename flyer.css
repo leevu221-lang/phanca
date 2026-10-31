@@ -1764,6 +1764,41 @@
 }
 
 /* Multi-staff checklist modal & Shift pills */
+#modalFlyerAssignmentForm:not(.hidden),
+#modalFlyerLocationModal:not(.hidden),
+#modalEditGroupTitle:not(.hidden) {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 2500 !important;
+  animation: none !important;
+}
+
+#modalFlyerAssignmentForm .modal-card {
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#modalFlyerAssignmentForm .modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+@media (max-width: 768px) {
+  #modalFlyerAssignmentForm {
+    padding: 10px !important;
+  }
+  #modalFlyerAssignmentForm .modal-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 94vh !important;
+  }
+  #modalFlyerAssignmentForm .flyer-staff-checklist {
+    max-height: 240px;
+  }
+}
+
 .flyer-shift-picker-group {
   display: flex;
   gap: 6px;
