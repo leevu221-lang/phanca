@@ -2769,6 +2769,18 @@
             <input type="hidden" id="assignModalShiftSelect" value="sang">
           </div>
 
+          <!-- Thanh thêm nhanh nhân viên / PG mới trực tiếp vào danh sách & tích chọn -->
+          <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 8px 10px; border: 1px dashed #93c5fd; border-radius: 8px; flex-wrap: wrap;">
+            <input type="text" id="assignQuickNewStaffName" placeholder="➕ Nhập tên NV / PG mới nếu chưa có trong danh sách..." style="flex: 1; min-width: 160px; padding: 6px 10px; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); quickAddStaffInAssignmentModal(); }">
+            <select id="assignQuickNewStaffRole" style="padding: 6px 8px; font-size: 0.8rem; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155;">
+              <option value="NV">NV</option>
+              <option value="PG">PG</option>
+            </select>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="quickAddStaffInAssignmentModal()" style="padding: 6px 10px; font-size: 0.78rem; font-weight: 700; color: #0284c7; border-color: #7dd3fc; background: #e0f2fe; white-space: nowrap;">
+              <i class="fa-solid fa-user-plus"></i> Thêm & Chọn
+            </button>
+          </div>
+
           <!-- Thanh tìm kiếm & Nút Chọn Tất Cả / Bỏ Chọn -->
           <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap;">
             <div style="position: relative; flex: 1; min-width: 180px;">
@@ -2961,7 +2973,7 @@
   <script src="app.js?v=20261029_fb_opt"></script>
 
   <!-- Flyer Module Script -->
-  <script src="flyer.js?v=20261029_fb_opt"></script>
+  <script src="flyer.js?v=20261031_fix_add_staff"></script>
 
   <!-- 8NTTT Floorplan Module Script -->
   <script src="nttt8.js?v=20261029_fb_opt"></script>

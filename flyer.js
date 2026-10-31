@@ -1857,6 +1857,9 @@ function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift =
 
   } else {
     // Chế độ thêm nhiều nhân viên vào lịch theo checklist (Đúng theo yêu cầu người dùng)
+    FlyerState.presetDayIdx = (typeof presetDay === 'number') ? presetDay : null;
+    FlyerState.presetGroupId = presetLocation || null;
+
     if (idInput) idInput.value = '';
     if (multiWrap) multiWrap.classList.remove('hidden');
     if (singleWrap) singleWrap.classList.add('hidden');
@@ -1870,13 +1873,16 @@ function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift =
       targetShift = FlyerState.tableShiftFilter;
     }
 
-    selectFlyerAddShift(targetShift, false);
-
-    // Reset ô tìm kiếm
+    // Reset ô tìm kiếm và ô thêm nhanh trước khi render
     const searchInput = document.getElementById('assignStaffCheckSearch');
     if (searchInput) searchInput.value = '';
+    const quickNameInput = document.getElementById('assignQuickNewStaffName');
+    if (quickNameInput) quickNameInput.value = '';
 
+    modal.classList.remove('hidden');
+    selectFlyerAddShift(targetShift, false);
     renderMultiStaffChecklist();
+    return;
   }
 
   modal.classList.remove('hidden');
@@ -1919,39 +1925,51 @@ function selectFlyerAddShift(shiftId, reRender = true) {
   }
 }
 
-function renderMultiStaffChecklist() {
+function renderMultiStaffChecklist(autoCheckIds = []) {
   const container = document.getElementById('assignStaffChecklistContainer');
   if (!container) return;
 
   const currentShift = document.getElementById('assignModalShiftSelect')?.value || 'sang';
+  const activeNorm = normalizeFlyerDate(FlyerState.tableDateTitle || '22/10');
+
   // Tập hợp các nhân sự đã có trong ca này của ngày đang xem (chung cả bảng)
-  const staffInThisShift = new Set();
+  const staffIdsInThisShift = new Set();
+  const staffNamesInThisShift = new Set();
   FlyerState.assignmentsList.forEach(as => {
     if (normalizeFlyerDate(as.dateStr || '22/10') === activeNorm &&
         as.shiftId === currentShift) {
-      staffInThisShift.add(as.staffId);
+      if (as.staffName && String(as.staffName).trim()) {
+        staffNamesInThisShift.add(String(as.staffName).trim().toUpperCase());
+      } else if (as.staffId) {
+        staffIdsInThisShift.add(String(as.staffId));
+      }
     }
   });
 
-  const staffList = (FlyerState.staffList && FlyerState.staffList.length > 0)
-    ? FlyerState.staffList
-    : DEFAULT_FLYER_STAFF;
+  if (!Array.isArray(FlyerState.staffList) || FlyerState.staffList.length === 0) {
+    FlyerState.staffList = [...DEFAULT_FLYER_STAFF];
+  }
+  const staffList = FlyerState.staffList;
 
   if (staffList.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; color: #64748b; padding: 24px 10px; font-size: 0.85rem;">
-        Chưa có nhân sự nào trong danh mục. Hãy bấm nút Thêm Nhân Sự để tạo danh sách trước.
+        Chưa có nhân sự nào trong danh mục. Hãy nhập tên ở ô thêm nhanh phía trên để tạo ngay.
       </div>
     `;
     updateStaffChecklistCount();
     return;
   }
 
+  const autoCheckSet = new Set((autoCheckIds || []).map(id => String(id)));
   const searchQuery = (document.getElementById('assignStaffCheckSearch')?.value || '').toLowerCase().trim();
 
   let html = '';
   staffList.forEach(s => {
-    const isInShift = staffInThisShift.has(s.id);
+    const normName = String(s.name || '').trim().toUpperCase();
+    const isInShift = staffNamesInThisShift.has(normName) || staffIdsInThisShift.has(String(s.id));
+    const isAutoChecked = !isInShift && autoCheckSet.has(String(s.id));
+
     const roleBadge = s.role === 'PG'
       ? '<span class="flyer-badge-role role-pg">PG</span>'
       : '<span class="flyer-badge-role role-nv">NV</span>';
@@ -1965,8 +1983,8 @@ function renderMultiStaffChecklist() {
     const displayStyle = isMatch ? 'display: flex;' : 'display: none;';
 
     html += `
-      <label class="flyer-staff-check-item ${isInShift ? 'in-shift' : ''}" style="${displayStyle}" data-id="${s.id}" data-name="${s.name.toLowerCase()}" data-inshift="${isInShift ? '1' : '0'}">
-        <input type="checkbox" value="${s.id}" class="flyer-staff-cb" ${isInShift ? 'disabled' : ''} onchange="onStaffChecklistChange(this)">
+      <label class="flyer-staff-check-item ${isInShift ? 'in-shift' : ''} ${isAutoChecked ? 'selected' : ''}" style="${displayStyle}" data-id="${s.id}" data-name="${s.name.toLowerCase()}" data-inshift="${isInShift ? '1' : '0'}">
+        <input type="checkbox" value="${s.id}" class="flyer-staff-cb" ${isInShift ? 'disabled' : ''} ${isAutoChecked ? 'checked' : ''} onchange="onStaffChecklistChange(this)">
         <div class="flyer-staff-check-info">
           <span class="flyer-staff-check-name">${s.name}</span>
           ${roleBadge}
@@ -1979,6 +1997,63 @@ function renderMultiStaffChecklist() {
 
   container.innerHTML = html;
   updateStaffChecklistCount();
+}
+
+/**
+ * Thêm nhanh nhân viên / PG mới ngay trong popup Chọn Nhân Viên Thêm Vào Lịch
+ */
+function quickAddStaffInAssignmentModal() {
+  const nameInput = document.getElementById('assignQuickNewStaffName');
+  const roleSelect = document.getElementById('assignQuickNewStaffRole');
+  const rawName = nameInput ? nameInput.value.trim().toUpperCase() : '';
+  const role = roleSelect ? roleSelect.value : 'NV';
+
+  if (!rawName) {
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Vui lòng nhập họ tên nhân viên / PG cần thêm!', 'warning');
+    }
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  // Giữ lại các nhân sự đang được tick chọn hiện tại
+  const currentCheckedIds = Array.from(
+    document.querySelectorAll('#assignStaffChecklistContainer input.flyer-staff-cb:checked:not(:disabled)')
+  ).map(cb => String(cb.value));
+
+  if (!Array.isArray(FlyerState.staffList)) {
+    FlyerState.staffList = [...DEFAULT_FLYER_STAFF];
+  }
+
+  let targetStaff = FlyerState.staffList.find(s => String(s.name || '').trim().toUpperCase() === rawName);
+  if (!targetStaff) {
+    targetStaff = {
+      id: (role === 'PG' ? 'pg_' : 'nv_') + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      name: rawName,
+      role: role,
+      group: 'TÊN NHÓM 1',
+      phone: '',
+      note: ''
+    };
+    FlyerState.staffList.unshift(targetStaff);
+    saveFlyerStaff(false);
+    renderQuickAssignStaffCheckboxes();
+    renderFlyerStats();
+  }
+
+  if (nameInput) nameInput.value = '';
+  const searchInput = document.getElementById('assignStaffCheckSearch');
+  if (searchInput) searchInput.value = '';
+
+  if (!currentCheckedIds.includes(String(targetStaff.id))) {
+    currentCheckedIds.push(String(targetStaff.id));
+  }
+
+  renderMultiStaffChecklist(currentCheckedIds);
+
+  if (typeof showToast === 'function') {
+    showToast(`✅ Đã thêm & tích chọn "${rawName}"! Bấm "Thêm Vào Lịch" để hoàn tất.`, 'success');
+  }
 }
 
 function onStaffChecklistChange(checkbox) {
@@ -2159,27 +2234,52 @@ function saveFlyerAssignmentFromModal() {
   const commonLocation = existingShiftItems.find(it => it.location && it.location.trim())?.location || defaultLocation;
 
   const weekKey = getFlyerWeekKey();
+  const staffPool = (Array.isArray(FlyerState.staffList) && FlyerState.staffList.length > 0)
+    ? FlyerState.staffList
+    : DEFAULT_FLYER_STAFF;
+
+  // Tính thứ trong tuần theo ngày đang chọn (hoặc theo ô đã chọn từ bảng ma trận)
+  let computedDayIdx = (typeof FlyerState.presetDayIdx === 'number' && FlyerState.presetDayIdx >= 0 && FlyerState.presetDayIdx <= 6)
+    ? FlyerState.presetDayIdx
+    : 2;
+  if (typeof FlyerState.presetDayIdx !== 'number') {
+    const mDate = activeNorm.match(/^(\d{1,2})\/(\d{1,2})$/);
+    if (mDate) {
+      const dNum = parseInt(mDate[1], 10);
+      const mNum = parseInt(mDate[2], 10) - 1;
+      const yNum = FlyerState.calYear || 2026;
+      const jsDay = new Date(yNum, mNum, dNum).getDay();
+      if (!isNaN(jsDay)) {
+        computedDayIdx = (jsDay + 6) % 7;
+      }
+    }
+  }
+  const dayObj = FLYER_DAYS[computedDayIdx] || FLYER_DAYS[0];
+  const targetGroupId = FlyerState.presetGroupId || 'all';
+  const targetGroupObj = FlyerState.groupList.find(g => g.id === targetGroupId);
+  const targetGroupName = targetGroupObj ? targetGroupObj.name : 'Chung';
+
   let addedCount = 0;
 
   checkedCbs.forEach(cb => {
     const staffId = cb.value;
-    const staff = FlyerState.staffList.find(s => s.id === staffId);
+    const staff = staffPool.find(s => String(s.id) === String(staffId));
     if (!staff) return;
 
     const newAssignment = {
-      id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      id: 'as_' + Date.now() + '_' + addedCount + '_' + Math.random().toString(36).substr(2, 6),
       staffId: staff.id,
       staffName: staff.name,
       role: staff.role || 'NV',
       phone: staff.phone || '',
-      dayIdx: 0,
-      dayName: 'Thứ Hai',
-      dayShort: 'T2',
+      dayIdx: computedDayIdx,
+      dayName: dayObj.name,
+      dayShort: dayObj.short,
       shiftId,
       shiftName: shiftInfo.name,
       shiftTime: defaultShiftTime,
-      groupId: 'all',
-      groupName: 'Chung',
+      groupId: targetGroupId,
+      groupName: targetGroupName,
       location: commonLocation,
       note: '500 tờ',
       dateStr,
@@ -2190,6 +2290,26 @@ function saveFlyerAssignmentFromModal() {
     FlyerState.assignmentsList.push(newAssignment);
     addedCount++;
   });
+
+  FlyerState.presetDayIdx = null;
+  FlyerState.presetGroupId = null;
+
+  // Nếu bộ lọc hiện tại đang ẩn ca hoặc vai trò vừa thêm, tự động mở bộ lọc để hiển thị nhân viên vừa thêm
+  if (FlyerState.tableShiftFilter && FlyerState.tableShiftFilter !== 'all' && FlyerState.tableShiftFilter !== shiftId) {
+    FlyerState.tableShiftFilter = 'all';
+    const shiftFilterEl = document.getElementById('flyerTableShiftFilter');
+    if (shiftFilterEl) shiftFilterEl.value = 'all';
+  }
+  if (FlyerState.tableRoleFilter && FlyerState.tableRoleFilter !== 'all') {
+    FlyerState.tableRoleFilter = 'all';
+    const roleFilterEl = document.getElementById('flyerTableRoleFilter');
+    if (roleFilterEl) roleFilterEl.value = 'all';
+  }
+  if (FlyerState.tableSearchQuery) {
+    FlyerState.tableSearchQuery = '';
+    const searchInputEl = document.getElementById('flyerTableSearchInput');
+    if (searchInputEl) searchInputEl.value = '';
+  }
 
   // Tự động lưu ngay lập tức lên Firebase và LocalStorage
   saveFlyerAssignments(false);
@@ -2306,7 +2426,11 @@ function renderFlyerMatrixTable() {
         : FlyerState.groupList.filter(g => g.id === FlyerState.filterGroup);
 
       groupsToRender.forEach((group, gIdx) => {
-        const slotItems = weekAssignments.filter(as => as.dayIdx === dayIdx && as.shiftId === shift.id && (as.groupId === group.id || as.location.includes(group.name)));
+        const slotItems = weekAssignments.filter(as =>
+          as.dayIdx === dayIdx &&
+          as.shiftId === shift.id &&
+          (as.groupId === group.id || (gIdx === 0 && (!as.groupId || as.groupId === 'all')) || (as.location && as.location.includes(group.name)))
+        );
 
         html += `
           <div class="flyer-group-slot">
@@ -2314,7 +2438,7 @@ function renderFlyerMatrixTable() {
               <span class="flyer-group-tag group-${(gIdx % 4) + 1}" style="color: ${group.color};">
                 <i class="fa-solid fa-users-viewfinder"></i> ${group.name}
               </span>
-              <button type="button" class="flyer-btn-add-mini" title="Thêm nhanh" onclick="openFlyerAssignmentModal()">
+              <button type="button" class="flyer-btn-add-mini" title="Thêm nhanh" onclick="openFlyerAssignmentModal(null, ${dayIdx}, '${shift.id}', '${group.id}')">
                 <i class="fa-solid fa-plus"></i>
               </button>
             </div>
@@ -2540,6 +2664,8 @@ function handleApplyQuickAssign() {
     : FLYER_SHIFTS.filter(s => s.id === shiftVal);
 
   const weekKey = getFlyerWeekKey();
+  const dateStr = (FlyerState.tableDateTitle || '22/10').trim();
+  const dateKey = FlyerState.currentDateKey || generateDateKeyFromStr(dateStr);
   let addedCount = 0;
 
   selectedDays.forEach(dayIdx => {
@@ -2556,7 +2682,7 @@ function handleApplyQuickAssign() {
 
         if (!exists) {
           FlyerState.assignmentsList.push({
-            id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            id: 'as_' + Date.now() + '_' + addedCount + '_' + Math.random().toString(36).substr(2, 4),
             staffId: staff.id,
             staffName: staff.name,
             role: staff.role,
@@ -2571,6 +2697,8 @@ function handleApplyQuickAssign() {
             groupName: groupInfo.name,
             location: `${groupInfo.name} - ${groupInfo.location}`,
             note: '500 tờ',
+            dateStr,
+            dateKey,
             weekKey
           });
           addedCount++;
@@ -2631,6 +2759,8 @@ function runAutoBalanceFlyerSchedule() {
     : FlyerState.groupList.filter(g => g.id === targetGroup);
 
   const weekKey = getFlyerWeekKey();
+  const dateStr = (FlyerState.tableDateTitle || '22/10').trim();
+  const dateKey = FlyerState.currentDateKey || generateDateKeyFromStr(dateStr);
 
   // Xóa các ca cũ của tuần này nếu chia lại
   FlyerState.assignmentsList = FlyerState.assignmentsList.filter(as => as.weekKey !== weekKey && as.weekKey);
@@ -2647,7 +2777,7 @@ function runAutoBalanceFlyerSchedule() {
           staffCursor++;
 
           FlyerState.assignmentsList.push({
-            id: 'as_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            id: 'as_' + Date.now() + '_' + totalAssigned + '_' + Math.random().toString(36).substr(2, 4),
             staffId: staff.id,
             staffName: staff.name,
             role: staff.role,
@@ -2662,6 +2792,8 @@ function runAutoBalanceFlyerSchedule() {
             groupName: group.name,
             location: `${group.name} - ${group.location}`,
             note: '500 tờ',
+            dateStr: dayIdx === 0 ? dateStr : `${dayInfo.short}`,
+            dateKey,
             weekKey
           });
           totalAssigned++;
@@ -2824,7 +2956,10 @@ function handleSaveStaffForm() {
 
   const name = nameInput ? nameInput.value.trim().toUpperCase() : '';
   const role = roleSelect ? roleSelect.value : 'NV';
-  const groupVal = groupSelect ? groupSelect.options[groupSelect.selectedIndex].text.split(' (')[0] : 'Nhóm 1';
+  const selectedOpt = (groupSelect && groupSelect.selectedIndex >= 0)
+    ? groupSelect.options[groupSelect.selectedIndex]
+    : null;
+  const groupVal = selectedOpt ? selectedOpt.text.split(' (')[0] : 'Nhóm 1';
   const phone = phoneInput ? phoneInput.value.trim() : '';
   const note = noteInput ? noteInput.value.trim() : '';
 
@@ -3276,6 +3411,7 @@ window.confirmSaveGroupTitleModal = confirmSaveGroupTitleModal;
 window.copyFlyerScheduleFromGroup = copyFlyerScheduleFromGroup;
 window.renderFlyerGroupTabs = renderFlyerGroupTabs;
 window.renderMultiStaffChecklist = renderMultiStaffChecklist;
+window.quickAddStaffInAssignmentModal = quickAddStaffInAssignmentModal;
 window.onStaffChecklistChange = onStaffChecklistChange;
 window.selectAllStaffChecklist = selectAllStaffChecklist;
 window.filterMultiStaffChecklist = filterMultiStaffChecklist;
