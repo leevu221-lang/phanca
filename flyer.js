@@ -1661,13 +1661,15 @@ function renderShiftsHtmlForList(itemsList, dateTitle) {
         ? `CẢ NGÀY ${item.dateStr || dateTitle}`
         : `${itemTime} NGÀY ${item.dateStr || dateTitle}`;
 
+      const formattedStaffName = formatFlyerStaffNameHtml(displayName);
+
       html += `
         <tr>
           <!-- 1. STT: Đếm lại từ 1 cho từng ca y hệt ảnh mẫu -->
           <td class="td-stt"><strong>${idx + 1}</strong></td>
 
-          <!-- 2. NHÂN VIÊN: In hoa đậm -->
-          <td class="td-staff"><strong>${displayName}</strong></td>
+          <!-- 2. NHÂN VIÊN: In hoa đậm (chữ (PG) tô đỏ) -->
+          <td class="td-staff"><strong>${formattedStaffName}</strong></td>
 
           <!-- 3. THỜI GIAN & NGÀY: Căn giữa, in đậm -->
           <td class="td-datetime"><strong>${timeText}</strong></td>
@@ -1706,6 +1708,19 @@ function renderShiftsHtmlForList(itemsList, dateTitle) {
   });
 
   return html;
+}
+
+/**
+ * Định dạng hiển thị tên nhân viên:
+ * Nếu tên nhân viên có (PG) thì tô đỏ chữ (PG)
+ */
+function formatFlyerStaffNameHtml(name) {
+  if (!name) return '';
+  const escaped = String(name)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return escaped.replace(/\(\s*PG\s*\)/gi, '<span class="flyer-pg-highlight" style="color: #dc2626 !important; font-weight: 900;">(PG)</span>');
 }
 
 /**
@@ -1919,7 +1934,7 @@ function openFlyerAssignmentModal(editId = null, presetDay = null, presetShift =
 
     let displayName = item.staffName;
     if (item.role === 'PG' && !displayName.includes('(PG)')) displayName += ' (PG)';
-    if (nameDisplay) nameDisplay.textContent = displayName;
+    if (nameDisplay) nameDisplay.innerHTML = formatFlyerStaffNameHtml(displayName);
     if (singleShift) singleShift.value = item.shiftId || 'sang';
     const singleGroup = document.getElementById('assignSingleGroupSelect');
     if (singleGroup) singleGroup.value = item.groupId || 'g1';
@@ -2057,7 +2072,7 @@ function renderMultiStaffChecklist(autoCheckIds = []) {
       <label class="flyer-staff-check-item ${isInShift ? 'in-shift' : ''} ${isAutoChecked ? 'selected' : ''}" style="${displayStyle}" data-id="${s.id}" data-name="${s.name.toLowerCase()}" data-inshift="${isInShift ? '1' : '0'}">
         <input type="checkbox" value="${s.id}" class="flyer-staff-cb" ${isInShift ? 'disabled' : ''} ${isAutoChecked ? 'checked' : ''} onchange="onStaffChecklistChange(this)">
         <div class="flyer-staff-check-info">
-          <span class="flyer-staff-check-name">${s.name}</span>
+          <span class="flyer-staff-check-name">${formatFlyerStaffNameHtml(s.name)}</span>
           ${roleBadge}
           ${groupText}
         </div>
@@ -2542,7 +2557,7 @@ function renderFlyerMatrixTable() {
               <div class="flyer-assigned-pill ${pillClass}">
                 <div class="flyer-pill-left">
                   ${roleBadge}
-                  <span title="${item.staffName}">${item.staffName}</span>
+                  <span title="${item.staffName}">${formatFlyerStaffNameHtml(item.staffName)}</span>
                 </div>
                 <button type="button" class="flyer-pill-remove" title="Xóa ca này" onclick="deleteFlyerAssignment('${item.id}')">
                   <i class="fa-solid fa-xmark"></i>
@@ -2623,7 +2638,7 @@ function renderFlyerSummaryTable() {
       html += `
         <tr>
           <td>${idx + 1}</td>
-          <td><strong>${item.staff.name}</strong></td>
+          <td><strong>${formatFlyerStaffNameHtml(item.staff.name)}</strong></td>
           <td>${roleBadge}</td>
           <td><span style="color: #0369a1; font-weight: 700;">${item.staff.group || 'Chưa gán'}</span></td>
           <td>${item.sang > 0 ? `<span style="font-weight: 700; color: #0284c7;">${item.sang}</span>` : '0'}</td>
@@ -2707,7 +2722,7 @@ function renderQuickAssignStaffCheckboxes() {
       <label class="flyer-staff-option">
         <input type="checkbox" name="quickStaff" value="${staff.id}">
         ${roleBadge}
-        <span style="font-weight: 700; flex: 1;">${staff.name}</span>
+        <span style="font-weight: 700; flex: 1;">${formatFlyerStaffNameHtml(staff.name)}</span>
         <span style="font-size: 0.74rem; color: #64748b;">${staff.group || ''}</span>
       </label>
     `;
@@ -3007,7 +3022,7 @@ function renderFlyerStaffTableModal() {
           <div style="display: flex; align-items: center;">
             <div class="flyer-staff-avatar ${avatarClass}">${initial}</div>
             <div>
-              <strong style="color: #0f172a; font-size: 0.95rem;">${staff.name}</strong>
+              <strong style="color: #0f172a; font-size: 0.95rem;">${formatFlyerStaffNameHtml(staff.name)}</strong>
               ${staff.note ? `<div style="font-size: 0.75rem; color: #64748b;">${staff.note}</div>` : ''}
             </div>
           </div>

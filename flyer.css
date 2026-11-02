@@ -1317,6 +1317,12 @@
   letter-spacing: 0.3px;
 }
 
+.flyer-sample-table td.td-staff .flyer-pg-highlight,
+.flyer-pg-highlight {
+  color: #dc2626 !important;
+  font-weight: 900 !important;
+}
+
 .flyer-sample-table td.td-datetime {
   text-align: center;
   font-weight: 900 !important;
